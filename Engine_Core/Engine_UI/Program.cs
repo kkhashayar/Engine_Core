@@ -26,6 +26,7 @@ void PlayThePosition()
         Console.WriteLine();
         Boards.DisplayBoard();
         int move = 0;
+
         move = Search.GetBestMove(8);
         //move = Search.GetBestMoveWithIterativeDeepening(6); 
 
@@ -448,3 +449,4 @@ static void MakeEngineMove(int depth, StreamWriter log)
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
 }
+
