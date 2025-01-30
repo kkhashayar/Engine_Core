@@ -28,7 +28,7 @@ void PlayThePosition()
         int move = 0;
 
         // move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(8); 
+        move = Search.GetBestMoveWithIterativeDeepening(10, 5); 
         
         Console.Beep(1000, 500);
         
@@ -71,7 +71,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11");
+    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
     Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
@@ -146,6 +146,8 @@ static void DebugSearchMethods()
 // r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0          mate in 4
 // br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0     mate in 4
 // rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11      mate in 7
+
+// 8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1                    mate in 10
 // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 //empty_board "8/8/8/8/8/8/8/8 b - - "
 //start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
