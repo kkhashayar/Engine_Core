@@ -8,10 +8,8 @@ namespace Engine_Core
     {
         public static List<int> ExecutablePv = new List<int>(); 
         public static long nodes;
-        
-        // Max number ply in search 
+      
         public static int maxPly = 64;
-
 
         public static int[,] killerMoves = new int[2, maxPly];
         public static int[,] historyMoves = new int[12, 64];
@@ -39,12 +37,13 @@ namespace Engine_Core
 
 
             ClearKillerAndHistoryMoves();
-            ClearPV();  
+            ClearPV();
 
-            for(int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
+            for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
             {
                 nodes = 0;
                 score = Negamax(-50000, 50000, currentDepth);
+
                 Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
 
                 ExecutablePv.Clear();
@@ -53,17 +52,21 @@ namespace Engine_Core
                     ExecutablePv.Add(pvTable[0, i]);
                 }
 
+                if (Math.Abs(score) >= 48000) // Found a forced mate!
+                {
+                    bestMove = pvTable[0, 0]; // Store the best move
+                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
+                    return bestMove; // Immediately return the best move.
+                }
+
+
                 if (score > bestScore)
                 {
                     bestScore = score;
                     bestMove = pvTable[0, 0];
                 }
-
-                if (bestScore >= 48000)
-                {
-                    break;
-                }
             }
+
 
             nodes = 0; // Reset nodes counter
             ClearKillerAndHistoryMoves();
