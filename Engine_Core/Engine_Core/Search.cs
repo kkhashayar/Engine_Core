@@ -27,14 +27,14 @@ namespace Engine_Core
 
         // Negamax single call – no iterative deepening yet
 
-        public static int GetBestMoveWithIterativeDeepening(int maxDepth)
+        public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
         {
             int score = 0;
             nodes = 0;
             ply = 0;
             int bestScore = 0;
             int bestMove = 0; 
-
+            var startTime = DateTime.UtcNow;   
 
             ClearKillerAndHistoryMoves();
             ClearPV();
@@ -42,6 +42,9 @@ namespace Engine_Core
             for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
             {
                 nodes = 0;
+
+                var depthStartTime = DateTime.UtcNow;   
+
                 score = Negamax(-50000, 50000, currentDepth);
 
                 Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
@@ -51,6 +54,9 @@ namespace Engine_Core
                 {
                     ExecutablePv.Add(pvTable[0, i]);
                 }
+
+                
+
 
                 if (Math.Abs(score) >= 48000) // Found a forced mate!
                 {
@@ -65,6 +71,21 @@ namespace Engine_Core
                     bestScore = score;
                     bestMove = pvTable[0, 0];
                 }
+
+
+                if((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+                {
+                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
+                    continue;
+                }
+
+                // If total max time is exceeded, stop completely
+                if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
+                {
+                    Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
+                    break;
+                }
+
             }
 
 
