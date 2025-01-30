@@ -27,18 +27,22 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        move = Search.GetBestMove(8);
-        //move = Search.GetBestMoveWithIterativeDeepening(6); 
-
-
+        // move = Search.GetBestMove(8);
+        move = Search.GetBestMoveWithIterativeDeepening(8); 
+        
         Console.Beep(1000, 500);
+        
         if(MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
+        
         Boards.ApplyTheMove(move);
+        
         GameHistory.Add(Globals.MoveToString(move)+" ");
+        
         if (Boards.whiteCheckmate || Boards.blackCheckmate) break;
+        
         Boards.DisplayBoard();
          
-        Console.ReadKey();  
+        //Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
@@ -67,7 +71,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("r3r1k1/ppqb1ppp/8/4p1NQ/8/2P5/PP3PPP/R3R1K1 b - - 0 1");
+    IO.FenReader("rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11");
     Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
