@@ -6,6 +6,11 @@ namespace Engine_Core
 {
     public static class Search
     {
+        // Variables needed for late move reduction 
+        private static int FullDepthMoves = 4;
+        private static int ReductionLimit = 3;
+
+
         public static List<int> ExecutablePv = new List<int>(); 
         public static long nodes;
       
@@ -621,3 +626,18 @@ namespace Engine_Core
         }
     }
 }
+
+
+
+
+/*
+ *      Inspired by Code monkey King channel
+ * 
+ *            MOVE ORDERING MAP   
+ *            1. PV Move
+ *            2. Captures in MVV-LVA order  
+ *            3. 1st Killer moves
+ *            4. 2nd Killer moves
+ *            5. History moves
+ *            6. Unsorted moves
+ */
