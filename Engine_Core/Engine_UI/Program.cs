@@ -451,7 +451,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
 
         // Iterative deepening with fixed time  
         // More complex search, LMR -> Late move reduction, Force Move finder based on time and depth. Note: This can takes longer time 
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(8, 1);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(7, 5);
 
 
         if (bestMove != 0)
