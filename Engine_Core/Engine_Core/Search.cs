@@ -55,9 +55,9 @@ namespace Engine_Core
                     ExecutablePv.Add(pvTable[0, i]);
                 }
 
-                
 
 
+                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
                 if (Math.Abs(score) >= 48000) // Found a forced mate!
                 {
                     bestMove = pvTable[0, 0]; // Store the best move
