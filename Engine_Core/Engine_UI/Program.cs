@@ -28,7 +28,7 @@ void PlayThePosition()
         int move = 0;
 
         // move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 5); 
+        move = Search.GetBestMoveWithIterativeDeepening(10, 0);  // I am not sure about this. 
         
         Console.Beep(1000, 500);
         
@@ -71,7 +71,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
+    IO.FenReader("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
     Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
@@ -151,7 +151,7 @@ static void DebugSearchMethods()
 // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 //empty_board "8/8/8/8/8/8/8/8 b - - "
 //start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
-//tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
+//tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
 //killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 //cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
