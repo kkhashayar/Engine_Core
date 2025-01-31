@@ -28,7 +28,7 @@ void PlayThePosition()
         int move = 0;
 
         // move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 0);  // I am not sure about this. 
+        move = Search.GetBestMoveWithIterativeDeepening(8, 1);  // I am not sure about this. 
         
         Console.Beep(1000, 500);
         
