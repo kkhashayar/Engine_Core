@@ -90,11 +90,11 @@ void Run()
 
     //PerftTeste.RunPerft(5, true);
 
-    PlayThePosition();
+    // PlayThePosition();
 
     // DebugSearchMethods();
 
-    // WinBoardLoop();
+    WinBoardLoop();
 
 }
 
