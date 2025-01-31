@@ -65,14 +65,28 @@ void PlayThePosition()
     }
 }
 
+// Possible bug postion = rnb1kbnr/ppp2ppp/8/8/3qp3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 
+// 6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1                mate in 3
+// rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0           mate in 3
+// r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0          mate in 4
+// br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0     mate in 4
+// rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11      mate in 7
+
+// 8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1                    mate in 10
+// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+//empty_board "8/8/8/8/8/8/8/8 b - - "
+//start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
+//tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+//killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+//cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-    Boards.DisplayBoard();
+    //IO.FenReader("8/1p3pkp/6p1/6P1/5n2/p5q1/PP1Q2P1/3R2K1 w - - 1 0");
+    //Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
 
@@ -432,7 +446,14 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        int bestMove = Search.GetBestMove(depth);
+        // Fixed depth search
+        // int bestMove = Search.GetBestMove(depth);
+
+        // Iterative deepening with fixed time  
+        // More complex search, LMR -> Late move reduction, Force Move finder based on time and depth. Note: This can takes longer time 
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(8, 1);
+
+
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state
