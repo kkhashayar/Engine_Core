@@ -71,16 +71,16 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
-    Boards.DisplayBoard();
+    //IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
+    //Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     // DebugSearchMethods();
 
-    // WinBoardLoop();
+    WinBoardLoop();
 
 }
 
