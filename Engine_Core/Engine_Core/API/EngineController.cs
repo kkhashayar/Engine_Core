@@ -3,8 +3,25 @@
 namespace Engine_Core.API;
 
 [ApiController]
-[System.Web.Mvc.Route("api/[controller]")]
-public class EngineController : System.Web.Mvc.ControllerBase, IEngineServices
+[Route("api/engine")]
+public class EngineController : ControllerBase, IEngineServices
 {
+    [HttpPost("start")]
+    public void StartNewGame()
+    {
+        // Implementation to start a new game
+    }
 
+    [HttpPost("stop")]
+    public void StopGame()
+    {
+        // Implementation to stop the game
+    }
+
+    [HttpPost("move")]
+    public string SendMove([FromBody] Move move)
+    {
+        // Implementation to handle move
+        return "Move received";
+    }
 }

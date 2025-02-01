@@ -2,5 +2,7 @@
 
 public interface IEngineServices
 {
-     
+    void StartNewGame();
+    void StopGame();
+    string SendMove(Move move);
 }
