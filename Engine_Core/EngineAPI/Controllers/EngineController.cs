@@ -15,6 +15,14 @@ public class EngineController : ControllerBase
         _engineService = engineService;
     }
 
+    [HttpGet("status")]
+    public async Task<ActionResult<string>> GetStatus()
+    {
+        var response = await _engineService.GetStatus();
+        if (response == null)
+            return NotFound();
+        return Ok(response);
+    }
 
 
     [HttpGet("newgame")]

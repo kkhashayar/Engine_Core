@@ -1,14 +1,26 @@
+
+
+using Engine_API.Interfaces;
 using Engine_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
+
+// Adding controllers 
 builder.Services.AddControllers();
-builder.Services.AddHostedService<EngineHostService>(); 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+// Register engine background service 
+builder.Services.AddTransient<EngineHostService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<EngineHostService>());
+
+// Register engine Service 
+builder.Services.AddScoped<IEngineService, EngineService>(); 
+
+
 
 var app = builder.Build();
 

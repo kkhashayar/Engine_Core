@@ -202,6 +202,15 @@ static void WinBoardLoop()
 
                 switch (command)
                 {
+
+                    case "status":
+                        {
+                            string response = "# Status command acknowledged";
+                            Console.WriteLine(response);
+                            log.WriteLine($"Sent: {response}");
+                            break;
+                        }
+
                     case "xboard":
                         {
                             string response = "# WinBoard engine ready";
