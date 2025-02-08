@@ -6,6 +6,11 @@ namespace Engine_Core
 {
     public static class Search
     {
+        // Variables needed for late move reduction 
+        private static int FullDepthMoves = 4;
+        private static int ReductionLimit = 3;
+
+
         public static List<int> ExecutablePv = new List<int>(); 
         public static long nodes;
       
@@ -55,9 +60,9 @@ namespace Engine_Core
                     ExecutablePv.Add(pvTable[0, i]);
                 }
 
-                
 
 
+                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
                 if (Math.Abs(score) >= 48000) // Found a forced mate!
                 {
                     bestMove = pvTable[0, 0]; // Store the best move
@@ -229,16 +234,16 @@ namespace Engine_Core
             // Keep track of this ply's PV length
             pvLength[ply] = ply;
 
+            // Base condition 
             if (depth == 0) return Quiescence(alpha, beta);
 
             // we are too deep, there is an owerflow of arrays relying on max ply constant
             // most likely we are not going to reach this point
+            // Safety check
             if (ply > maxPly - 1)
             {
                 return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);   
             }
-
-
 
             nodes++;
 
@@ -278,6 +283,9 @@ namespace Engine_Core
             int oldAlpha = alpha;
             int bestMove = 0;
 
+
+            // LMR tracking variable. 
+            int moveSearched = 0;   
             // Loop through moves
             int i = 0;
             while (i < moveList.counter)
@@ -298,16 +306,54 @@ namespace Engine_Core
                 if (!legal)
                 {
                     MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                    i++;
+                    i++;  // Not sure about this!
                     continue;
                 }
 
                 legalMoves++;
+                // Track how many moves we have searched    
+                moveSearched++;
                 ply++;
 
-                int score = -Negamax(-beta, -alpha, depth - 1);
+                // =============================
+                // LMR logic starts here
+                // =============================
+                // We only reduce if:
+                // 1) we’ve already searched a few moves
+                // 2) there's enough depth to reduce
+                // 3) we’re not in check
+                // 4) it's not a capture
+                // 5) there's no promotion
 
-                ply--;
+                bool isCapture = MoveGenerator.GetMoveCapture(move);
+                int promoted = MoveGenerator.GetMovePromoted(move); // 0 if no promotion move
+
+
+                bool canReduce = moveSearched > FullDepthMoves && depth > ReductionLimit && !inCheck && !isCapture && promoted == 0;
+                int newDepth = depth - 1; // Reduced depth
+
+                int score = 0; 
+                if (canReduce)
+                {
+                    // First reduced search
+                    score = -Negamax(-beta, -alpha, depth - 1);
+                    if (score > alpha)
+                        score = -Negamax(-beta, -alpha, newDepth);
+                }
+                else
+                {
+                    score = -Negamax(-beta, -alpha, newDepth); 
+                }
+                // =============================
+                // LMR logic ends here
+                // =============================
+
+                ply--;  
+
+                //score = -Negamax(-beta, -alpha, depth - 1);
+
+                //ply--;
+                
                 MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
 
                 // Alpha-beta pruning
@@ -621,3 +667,18 @@ namespace Engine_Core
         }
     }
 }
+
+
+
+
+/*
+ *      Inspired by Code monkey King channel
+ * 
+ *            MOVE ORDERING MAP   
+ *            1. PV Move
+ *            2. Captures in MVV-LVA order  
+ *            3. 1st Killer moves
+ *            4. 2nd Killer moves
+ *            5. History moves
+ *            6. Unsorted moves
+ */
