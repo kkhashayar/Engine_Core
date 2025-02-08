@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine_Core", "Engine_Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine_UI", "Engine_UI\Engine_UI.csproj", "{C433176B-D7B6-469E-ACED-724E68BEBE89}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine_API", "EngineAPI\Engine_API.csproj", "{7D2A1003-808D-414F-A47D-78235A1F652E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C433176B-D7B6-469E-ACED-724E68BEBE89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C433176B-D7B6-469E-ACED-724E68BEBE89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C433176B-D7B6-469E-ACED-724E68BEBE89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D2A1003-808D-414F-A47D-78235A1F652E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D2A1003-808D-414F-A47D-78235A1F652E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D2A1003-808D-414F-A47D-78235A1F652E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D2A1003-808D-414F-A47D-78235A1F652E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

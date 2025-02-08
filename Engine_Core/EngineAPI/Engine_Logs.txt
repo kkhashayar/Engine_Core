@@ -1,0 +1,70 @@
+[01-Feb-25 2:53:33 PM] Engine started.
+Sent: # WinBoard engine ready
+[04-Feb-25 2:25:29 PM] Engine started.
+Sent: # WinBoard engine ready
+[05-Feb-25 9:16:08 AM] Engine started.
+Sent: # WinBoard engine ready
+[05-Feb-25 9:46:38 AM] Engine started.
+Sent: # WinBoard engine ready
+[05-Feb-25 10:05:41 AM] Engine started.
+Sent: # WinBoard engine ready
+[05-Feb-25 10:13:29 AM] Engine started.
+Sent: # WinBoard engine ready
+[05-Feb-25 10:16:12 AM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: status
+Sent: # Status command acknowledged
+[05-Feb-25 10:21:30 AM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+[05-Feb-25 10:46:19 AM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+[05-Feb-25 1:51:15 PM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+[07-Feb-25 3:46:30 PM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+Received: quit
+Sent: # Unknown or unhandled command: quit
+[08-Feb-25 9:24:04 AM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+Received: status
+Sent: # Status command acknowledged
+Received: status
+Sent: # Status command acknowledged
+Received: new
+Sent: # New game started
+Received: new
+Sent: # New game started
+Received: quit
+Sent: # Unknown or unhandled command: quit
+Received: quit
+Sent: # Unknown or unhandled command: quit
+Received: quit
+Sent: # Unknown or unhandled command: quit
+[08-Feb-25 9:47:06 AM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged

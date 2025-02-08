@@ -1,4 +1,8 @@
-﻿using Engine_Core;
+﻿
+
+
+// Entry point for using WinBoard or low-level engine functions.
+using Engine_Core;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -71,16 +75,16 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
-    Boards.DisplayBoard();
+    //IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
+    //Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(5, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     // DebugSearchMethods();
 
-    // WinBoardLoop();
+    WinBoardLoop();
 
 }
 
@@ -202,6 +206,15 @@ static void WinBoardLoop()
 
                 switch (command)
                 {
+
+                    case "status":
+                        {
+                            string response = "# Status command acknowledged";
+                            Console.WriteLine(response);
+                            log.WriteLine($"Sent: {response}");
+                            break;
+                        }
+
                     case "xboard":
                         {
                             string response = "# WinBoard engine ready";
