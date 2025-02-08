@@ -1,8 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Engine_API.Services
 {
@@ -16,7 +12,7 @@ namespace Engine_API.Services
             _logger = logger;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Starting Chess Engine...");
 
@@ -40,8 +36,33 @@ namespace Engine_API.Services
                     bool started = _engineProcess.Start();
                     _logger.LogInformation($"Engine started: {started}");
 
+                    // Read output continuously
+                    _engineProcess.OutputDataReceived += (sender, args) =>
+                    {
+                        if (!string.IsNullOrEmpty(args.Data))
+                        {
+                            _logger.LogInformation($"Engine Output: {args.Data}");
+                        }
+                    };
+
+                    _engineProcess.ErrorDataReceived += (sender, args) =>
+                    {
+                        if (!string.IsNullOrEmpty(args.Data))
+                        {
+                            _logger.LogError($"Engine Error: {args.Data}");
+                        }
+                    };
+
                     _engineProcess.BeginOutputReadLine();
                     _engineProcess.BeginErrorReadLine();
+
+                    // Keep the process running and monitor it
+                    await Task.Run(() => _engineProcess.WaitForExit(), stoppingToken);
+
+                    if (_engineProcess.HasExited)
+                    {
+                        _logger.LogWarning("Engine process has exited unexpectedly.");
+                    }
                 }
                 else
                 {
@@ -56,9 +77,8 @@ namespace Engine_API.Services
             {
                 _logger.LogError($"Failed to start engine: {ex.Message}");
             }
-
-            return Task.CompletedTask;
         }
+
 
 
         public override async Task StopAsync(CancellationToken stoppingToken)

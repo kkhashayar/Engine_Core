@@ -1,5 +1,6 @@
 ﻿using Engine_API.Interfaces;
 using Engine_API.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Engine_API.Controllers;
@@ -19,8 +20,9 @@ public class EngineController : ControllerBase
     public async Task<ActionResult<string>> GetStatus()
     {
         var response = await _engineService.GetStatus();
-        if (response == null)
-            return NotFound();
+       
+        if (response == null) return NotFound();    
+
         return Ok(response);
     }
 
@@ -29,8 +31,8 @@ public class EngineController : ControllerBase
     public async Task<ActionResult<string>> GetNewGame()
     {
         var response = await _engineService.GetNewGame();
-        if (response == null)
-            return NotFound();
+        
+        if (response == null)  return NoContent();
         return Ok(response);
     }
 
@@ -38,8 +40,10 @@ public class EngineController : ControllerBase
     public async Task<ActionResult<string>> StopGame()
     {
         var response = await _engineService.StopGame();
-        if (response == null)
-            return NotFound();
+        
+        if (response == null) return NotFound();
+        
+        
         return Ok(response);
     }
 
@@ -47,8 +51,9 @@ public class EngineController : ControllerBase
     public async Task<ActionResult<string>> SendMove([FromBody] Move move)
     {
         var response = await _engineService.SendMove(move);
-        if (response == null)
-            return NotFound();
+        
+        if (response == null)  return NotFound();
+       
         return Ok(response);
     }
 

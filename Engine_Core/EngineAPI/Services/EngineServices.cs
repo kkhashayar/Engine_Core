@@ -19,7 +19,8 @@ namespace Engine_API.Services
             if (engineProcess == null || engineProcess.HasExited)
                 return Task.FromResult("Engine is not running");
 
-            engineProcess.StandardInput.WriteLine("new");
+            
+            engineProcess.StandardInput.WriteLine("new"); //--> Winboard command
             return Task.FromResult("New game started");
         }
 
@@ -29,7 +30,7 @@ namespace Engine_API.Services
             if (engineProcess == null || engineProcess.HasExited)
                 return Task.FromResult("Engine is not running");
 
-            engineProcess.StandardInput.WriteLine("quit");
+            engineProcess.StandardInput.WriteLine("stop"); //--> Winboard command
             return Task.FromResult("Game stopped");
         }
 
@@ -39,7 +40,7 @@ namespace Engine_API.Services
             if (engineProcess == null || engineProcess.HasExited)
                 return Task.FromResult("Engine is not running");
 
-            engineProcess.StandardInput.WriteLine($"usermove {move.ToString()}");
+            engineProcess.StandardInput.WriteLine($"{move.ToString()}"); //--> Winboard command
             return Task.FromResult($"Move {move.ToString()} sent to engine");
         }
 
@@ -50,7 +51,7 @@ namespace Engine_API.Services
                 return Task.FromResult("Engine is not running");
 
             engineProcess.StandardInput.WriteLine("status");
-            return Task.FromResult("Engine status requested");
+            return Task.FromResult("Running");
         }
     }
 }

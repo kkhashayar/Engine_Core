@@ -1,4 +1,8 @@
-﻿using Engine_Core;
+﻿
+
+
+// Entry point for using WinBoard or low-level engine functions.
+using Engine_Core;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 

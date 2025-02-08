@@ -14,11 +14,11 @@ builder.Services.AddSwaggerGen();
 
 
 // Register engine background service 
-builder.Services.AddTransient<EngineHostService>();
+builder.Services.AddSingleton<EngineHostService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<EngineHostService>());
 
 // Register engine Service 
-builder.Services.AddScoped<IEngineService, EngineService>(); 
+builder.Services.AddTransient<IEngineService, EngineService>(); 
 
 
 
