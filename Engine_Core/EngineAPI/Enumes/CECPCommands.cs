@@ -46,5 +46,7 @@ public enum CECPCommands
     memory =     41, // Set memory usage
     cores =      42, // Set number of CPU cores
     egtpath =    43, // Set tablebase path
-    option =     44  // Engine-specific options
+    option =     44,  // Engine-specific options
+    status =     45,
+    stop =       46
 }
