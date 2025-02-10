@@ -1,4 +1,5 @@
-﻿using Engine_API.Enumes;
+﻿using Engine_API.Authorization;
+using Engine_API.Enumes;
 using Engine_API.Interfaces;
 using Engine_API.Models;
 using Engine_API.Validators;
@@ -22,6 +23,7 @@ public class EngineController : ControllerBase
 
 
     // GET: Handle CECP commands that fetch information 
+    [EngineApiKeyAuthorize("1ea567708d9d43f0acad7abfa8a192e8")]
     [HttpGet]
     public async Task<ActionResult<string>> HandleGetCommands([FromQuery]CECPCommands command)
     {
@@ -41,6 +43,7 @@ public class EngineController : ControllerBase
 
 
     // POST: Handle CECP commands that send data like moves.
+    [EngineApiKeyAuthorize("1ea567708d9d43f0acad7abfa8a192e8")]
     [HttpPost]
     public async Task<ActionResult<string>> HandlePostCommands([FromQuery]CECPCommands command, Move? move)
     {
