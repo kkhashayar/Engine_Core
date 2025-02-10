@@ -104,3 +104,9 @@ Received: status
 Sent: # Status command acknowledged
 Received: new
 Sent: # New game started
+[10-Feb-25 6:58:13 PM] Engine started.
+Sent: # WinBoard engine ready
+[10-Feb-25 7:04:12 PM] Engine started.
+Sent: # WinBoard engine ready
+Received: status
+Sent: # Status command acknowledged
