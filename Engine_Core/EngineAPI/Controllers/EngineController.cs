@@ -1,6 +1,7 @@
 ﻿using Engine_API.Enumes;
 using Engine_API.Interfaces;
 using Engine_API.Models;
+using Engine_API.Validators;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,11 +20,13 @@ public class EngineController : ControllerBase
 
 
     // GET: Handle CECP commands that fetch information 
-    [HttpGet("{command}")]
-    public async Task<ActionResult<string>> HandleGetCommands(CECPCommands command)
+    [HttpGet]
+    public async Task<ActionResult<string>> HandleGetCommands([FromQuery]CECPCommands command)
     {
+        if (!CECPValidator.GetCommands.Contains(command)) return BadRequest("Command is not available");
         string? response = command switch
         {
+            
             CECPCommands.status => await _engineService.GetStatus(),
             CECPCommands.newGame => await _engineService.GetNewGame(),
             CECPCommands.stop => await _engineService.StopGame(),
@@ -37,8 +40,9 @@ public class EngineController : ControllerBase
 
     // POST: Handle CECP commands that send data like moves.
     [HttpPost("{command}")]
-    public async Task<ActionResult<string>> HandlePostCommands(CECPCommands command, Move? move)
+    public async Task<ActionResult<string>> HandlePostCommands([FromQuery]CECPCommands command, Move? move)
     {
+        if (!CECPValidator.PostCommands.Contains(command)) return BadRequest("Command is not available");
         string? response = command switch
         {
             CECPCommands.usermove => await _engineService.SendMove(move),

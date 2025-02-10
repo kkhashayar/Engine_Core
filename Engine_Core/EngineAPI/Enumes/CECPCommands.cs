@@ -51,3 +51,4 @@ public enum CECPCommands
     status =     45,
     stop =       46
 }
+
