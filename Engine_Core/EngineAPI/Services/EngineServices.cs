@@ -53,5 +53,10 @@ namespace Engine_API.Services
             engineProcess.StandardInput.WriteLine("status");
             return Task.FromResult("Running");
         }
+
+        public void KillEngine()
+        {
+            _engineHostService.KillEngine();
+        }
     }
 }

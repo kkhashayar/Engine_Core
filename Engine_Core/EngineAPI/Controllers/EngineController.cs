@@ -12,10 +12,12 @@ namespace Engine_API.Controllers;
 public class EngineController : ControllerBase
 {
     private readonly IEngineService _engineService;
+    
 
     public EngineController(IEngineService engineService)
     {
         _engineService = engineService;
+       
     }
 
 
@@ -39,7 +41,7 @@ public class EngineController : ControllerBase
 
 
     // POST: Handle CECP commands that send data like moves.
-    [HttpPost("{command}")]
+    [HttpPost]
     public async Task<ActionResult<string>> HandlePostCommands([FromQuery]CECPCommands command, Move? move)
     {
         if (!CECPValidator.PostCommands.Contains(command)) return BadRequest("Command is not available");

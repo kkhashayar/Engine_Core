@@ -109,5 +109,22 @@ namespace Engine_API.Services
             return _engineProcess;
         }
 
+        public void KillEngine()
+        {
+            if(_engineProcess != null && !_engineProcess.HasExited)
+            {
+                _engineProcess.Kill();  
+                _engineProcess.WaitForExit();   
+                _engineProcess.Dispose();   
+                _engineProcess = null;  
+                _logger.LogInformation($"Engine process terminated.");     
+            }
+
+            else
+            {
+                _logger.LogInformation("No running process has found.");
+            }
+        }
+
     }
 }
