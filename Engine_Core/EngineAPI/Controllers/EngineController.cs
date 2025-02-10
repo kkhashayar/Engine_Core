@@ -1,5 +1,7 @@
-﻿using Engine_API.Interfaces;
+﻿using Engine_API.Enumes;
+using Engine_API.Interfaces;
 using Engine_API.Models;
+using Engine_API.Validators;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,51 +12,48 @@ namespace Engine_API.Controllers;
 public class EngineController : ControllerBase
 {
     private readonly IEngineService _engineService;
+    
 
     public EngineController(IEngineService engineService)
     {
         _engineService = engineService;
-    }
-
-    [HttpGet("status")]
-    public async Task<ActionResult<string>> GetStatus()
-    {
-        var response = await _engineService.GetStatus();
        
-        if (response == null) return NotFound();    
-
-        return Ok(response);
     }
 
 
-    [HttpGet("newgame")]
-    public async Task<ActionResult<string>> GetNewGame()
+    // GET: Handle CECP commands that fetch information 
+    [HttpGet]
+    public async Task<ActionResult<string>> HandleGetCommands([FromQuery]CECPCommands command)
     {
-        var response = await _engineService.GetNewGame();
-        
-        if (response == null)  return NoContent();
+        if (!CECPValidator.GetCommands.Contains(command)) return BadRequest("Command is not available");
+        string? response = command switch
+        {
+            
+            CECPCommands.status => await _engineService.GetStatus(),
+            CECPCommands.newGame => await _engineService.GetNewGame(),
+            CECPCommands.stop => await _engineService.StopGame(),
+            _ => null
+        }; 
+
+        if(response == null) return BadRequest(response);   
         return Ok(response);
     }
 
-    [HttpGet("stopgame")]
-    public async Task<ActionResult<string>> StopGame()
+
+    // POST: Handle CECP commands that send data like moves.
+    [HttpPost]
+    public async Task<ActionResult<string>> HandlePostCommands([FromQuery]CECPCommands command, Move? move)
     {
-        var response = await _engineService.StopGame();
-        
-        if (response == null) return NotFound();
-        
-        
+        if (!CECPValidator.PostCommands.Contains(command)) return BadRequest("Command is not available");
+        string? response = command switch
+        {
+            CECPCommands.usermove => await _engineService.SendMove(move),
+            _ => null
+        };
+
+        if (response == null) return BadRequest(); 
         return Ok(response);
     }
 
-    [HttpPost("sendmove")]
-    public async Task<ActionResult<string>> SendMove([FromBody] Move move)
-    {
-        var response = await _engineService.SendMove(move);
-        
-        if (response == null)  return NotFound();
-       
-        return Ok(response);
-    }
 
 }
