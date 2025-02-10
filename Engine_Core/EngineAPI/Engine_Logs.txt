@@ -68,3 +68,5 @@ Sent: # Unknown or unhandled command: quit
 Sent: # WinBoard engine ready
 Received: status
 Sent: # Status command acknowledged
+[09-Feb-25 12:40:41 PM] Engine started.
+Sent: # WinBoard engine ready
