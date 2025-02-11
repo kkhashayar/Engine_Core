@@ -14,7 +14,7 @@ steps:
       git config --global user.name "kkhashayar"
       
       
-      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core
       
       
       git push github master
