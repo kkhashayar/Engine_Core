@@ -43,7 +43,7 @@ public class EngineController : ControllerBase
 
 
     // POST: Handle CECP commands that send data like moves.
-    [EngineApiKeyAuthorize("1ea567708d9d43f0acad7abfa8a192e8")]
+    [EngineApiKeyAuthorize("1ea567708d9d43f0acad7abfa8a192e8")] // test
     [HttpPost]
     public async Task<ActionResult<string>> HandlePostCommands([FromQuery]CECPCommands command, Move? move)
     {
