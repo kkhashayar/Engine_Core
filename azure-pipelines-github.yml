@@ -14,7 +14,7 @@ steps:
       git config --global user.name "kkhashayar"
       
       # Add GitHub as a remote repository
-      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Corr.git
       
       # Push changes from Azure DevOps to GitHub
       git push github master
