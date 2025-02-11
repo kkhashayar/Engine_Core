@@ -1,23 +1,23 @@
 trigger:
   branches:
     include:
-      - master  # Runs when code is pushed/merged to master
+      - master  
 
 pool:
-  vmImage: windows-latest  # Use Windows for .NET projects
+  vmImage: windows-latest  
 
 steps:
-  - checkout: self  # Get the latest code from Azure DevOps repo
+  - checkout: self  
 
   - script: |
       git config --global user.email "frankdezz@gmail.com"
       git config --global user.name "kkhashayar"
       
-      # Add GitHub as a remote repository
+      
       git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Corr.git
       
-      # Push changes from Azure DevOps to GitHub
+      
       git push github master
     displayName: 'Push Changes to GitHub'
     env:
-      GitHubPAT: $(GitHubPAT)  # Securely use the stored GitHub token
+      GitHubPAT: $(GitHubPAT) 
