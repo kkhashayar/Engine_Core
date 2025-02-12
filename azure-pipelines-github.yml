@@ -1,23 +1,21 @@
-trigger:
-  branches:
-    include:
-      - master  
+- script: |
+    git config --global user.email "frankdezz@gmail.com"
+    git config --global user.name "kkhashayar"
 
-pool:
-  vmImage: windows-latest  
+    # Ensure correct branch
+  
+    git branch
+    git checkout -b master || git checkout master
+    git pull github master
+    git push --set-upstream github master
+  displayName: 'Push Changes to GitHub'
 
-steps:
-  - checkout: self  
 
-  - script: |
-      git config --global user.email "frankdezz@gmail.com"
-      git config --global user.name "kkhashayar"
-      
-      
-          git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
-      
-      
-      git push github master
-    displayName: 'Push Changes to GitHub'
-    env:
-      GitHubPAT: $(GitHubPAT) 
+    # Add GitHub as a remote
+    git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+
+    # Push changes
+    git push --set-upstream github main
+  displayName: 'Push Changes to GitHub'
+  env:
+    GitHubPAT: $(GitHubPAT)  # Secure GitHub authentication
