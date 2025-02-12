@@ -1,21 +1,29 @@
-- script: |
-    git config --global user.email "frankdezz@gmail.com"
-    git config --global user.name "kkhashayar"
+trigger:
+  branches:
+    include:
+      - master  # Runs when code is pushed/merged to master
 
-    # Ensure correct branch
-  
-    git branch
-    git checkout -b master || git checkout master
-    git pull github master
-    git push --set-upstream github master
-  displayName: 'Push Changes to GitHub'
+pool:
+  vmImage: windows-latest  # Use Windows for .NET projects
 
+steps:
+  - checkout: self  # Get the latest code from Azure DevOps repo
 
-    # Add GitHub as a remote
-    git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+  - script: |
+      git config --global user.email "frankdezz@gmail.com"
+      git config --global user.name "kkhashayar"
 
-    # Push changes
-    git push --set-upstream github main
-  displayName: 'Push Changes to GitHub'
-  env:
-    GitHubPAT: $(GitHubPAT)  # Secure GitHub authentication
+      # Ensure correct branch
+      git branch
+      git checkout -b master || git checkout master
+      git pull origin master
+
+      # Add GitHub as a remote (ensure it's not duplicated)
+      git remote remove github || echo "No existing remote"
+      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+
+      # Push changes from Azure DevOps to GitHub
+      git push --set-upstream github master
+    displayName: 'Push Changes to GitHub'
+    env:
+      GitHubPAT: $(GitHubPAT)  # Securely use GitHub token from Azure DevOps Library
