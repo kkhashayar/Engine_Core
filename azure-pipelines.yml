@@ -42,14 +42,14 @@ steps:
     git credential reject https://github.com
 
     # Store GitHub credentials manually
-    echo "https://kkhashayar:$(GitHubPAT)@github.com" > "%USERPROFILE%\.git-credentials"
+    echo "https://kkhashayar:${GitHubPAT}@github.com" > "$HOME/.git-credentials"
     git config --global credential.helper store
 
     # Remove old GitHub remote if exists
     git remote remove github || echo "No existing remote"
 
     # Add GitHub remote using PAT authentication
-    git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+    git remote add github https://kkhashayar:${GitHubPAT}@github.com/kkhashayar/Engine_Core.git
 
     # Ensure correct branch
     git fetch --all
@@ -59,5 +59,6 @@ steps:
     # Force authentication for push
     git push --set-upstream github master
   displayName: 'Push Changes to GitHub'
+  shell: bash
   env:
-    GitHubPAT: $(GitHubPAT)  # Ensure secure authentication
+    GitHubPAT: $(GitHubPAT)
