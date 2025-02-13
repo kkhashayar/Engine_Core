@@ -62,3 +62,4 @@ steps:
   shell: bash
   env:
     GitHubPAT: $(GitHubPAT)
+
