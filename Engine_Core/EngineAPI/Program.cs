@@ -26,7 +26,7 @@ builder.Services.AddSwaggerGen( option =>
 });
 
 
-// Register engine background service 
+// Register engine background service // test 
 builder.Services.AddSingleton<EngineHostService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<EngineHostService>());
 
