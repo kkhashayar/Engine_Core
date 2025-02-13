@@ -20,7 +20,9 @@ steps:
 
       # Add GitHub as a remote (ensure it's not duplicated)
       git remote remove github || echo "No existing remote"
-      git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+      git remote add github https://$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
+      git config credential.helper store
+
 
       # Push changes from Azure DevOps to GitHub
       git push --set-upstream github master
