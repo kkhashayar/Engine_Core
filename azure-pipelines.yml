@@ -34,10 +34,10 @@ steps:
     configuration: '$(buildConfiguration)'
 
 # 🔥 **GitHub Sync Section Starts Here** 🔥
-- task: Script@2
+- task: Bash@3
   displayName: 'Push Changes to GitHub'
   inputs:
-    shell: 'bash'
+    targetType: inline
     script: |
       git config --global user.email "frankdezz@gmail.com"
       git config --global user.name "kkhashayar"
