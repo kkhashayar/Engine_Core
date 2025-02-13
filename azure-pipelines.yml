@@ -41,23 +41,23 @@ steps:
     # Remove any old credentials
     git credential reject https://github.com || echo "No credentials to remove"
 
-    # Set credentials manually (non-interactive)
+    # Set credentials manually (Windows & Linux compatible)
     git config --global credential.helper store
     echo "https://kkhashayar:$(GitHubPAT)@github.com" > ~/.git-credentials
+    echo "https://kkhashayar:$(GitHubPAT)@github.com" > "%USERPROFILE%\.git-credentials"
 
-    # Remove old GitHub remote if exists
+    # Ensure GitHub remote is set correctly
     git remote remove github || echo "No existing remote"
-
-    # Add GitHub remote using PAT authentication
     git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
 
     # Ensure correct branch
     git fetch --all
     git checkout master || git checkout -b master
-    git pull github master
+    git pull github master --allow-unrelated-histories || echo "Branch already up to date"
 
-    # Push changes from Azure DevOps to GitHub
-    git push --set-upstream github master
+    # Force authentication for push
+    git push --set-upstream github master --force
   displayName: 'Push Changes to GitHub'
   env:
     GitHubPAT: $(GitHubPAT)  # Ensure secure authentication
+
