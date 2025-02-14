@@ -52,10 +52,10 @@ steps:
     git checkout master || git checkout -b master
     git reset --hard github/master
 
-    # Push changes
+    # Detect changes, commit, and push
+    git add -A
+    git commit -m "Automated commit from Azure DevOps" || echo "No changes to commit"
     git push github master
   displayName: 'Push Changes to GitHub'
   env:
     GitHubPAT: $(GitHubPAT)  # Secure authentication
-
-
