@@ -38,20 +38,18 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-# 🔥 **GitHub Sync Section Starts Here** 🔥
+# **GitHub Sync Section** 
 - script: |
     git config --global user.email "frankdezz@gmail.com"
     git config --global user.name "kkhashayar"
 
     # Ensure GitHub remote is set up correctly
-    if git remote | findstr /C:"github"; then
-      git remote remove github
-    fi
+    git remote remove github 2>nul || echo "No existing remote"
     git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
 
     # Fetch latest changes and reset local branch
     git fetch github master
-    git checkout master
+    git checkout master || git checkout -b master
     git reset --hard github/master
 
     # Push changes
