@@ -46,12 +46,7 @@ steps:
     # Ensure GitHub remote is set up correctly
     git remote remove github 2>nul || echo "No existing remote"
     git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
-
-    # Fetch latest changes and reset local branch
-    git fetch github master
-    git checkout master || git checkout -b master
-    git reset --hard github/master
-
+    
     # Detect changes, commit, and push
     git add -A
     git commit -m "Automated commit from Azure DevOps" || echo "No changes to commit"
