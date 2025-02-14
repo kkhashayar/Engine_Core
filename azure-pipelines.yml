@@ -46,11 +46,17 @@ steps:
     # Ensure GitHub remote is set up correctly
     git remote remove github 2>nul || echo "No existing remote"
     git remote add github https://kkhashayar:$(GitHubPAT)@github.com/kkhashayar/Engine_Core.git
-    
-    # Detect changes, commit, and push
+
+    # Ensure we are on master (fix detached HEAD issue)
+    git checkout -B master
+
+    # Stage and commit any last changes
     git add -A
     git commit -m "Automated commit from Azure DevOps" || echo "No changes to commit"
+
+    # Push directly to GitHub master
     git push github master
   displayName: 'Push Changes to GitHub'
   env:
     GitHubPAT: $(GitHubPAT)  # Secure authentication
+
