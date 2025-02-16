@@ -533,7 +533,7 @@ namespace Engine_Core
             return (int)Pieces.P;
         }
 
-        /////////////////////////////////////////////////// PRIVATE METHODS
+        /////////////////////////////////////////////////// PRIVATE METHODS. 
 
         // Not sure if I implement it correctly 
         private static int Quiescence(int alpha, int beta)
