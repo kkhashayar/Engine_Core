@@ -30,8 +30,7 @@ namespace Engine_Core
         private const int NEG_INF = -50000;
         private const int POS_INF = 50000;
 
-        // Negamax single call – no iterative deepening yet
-
+        // Negamax call with iterative deepening 
         public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
         {
             int score = 0;
@@ -111,6 +110,7 @@ namespace Engine_Core
             return bestMove;
         }
 
+        // Fixed depth search 
         public static int GetBestMove(int depth)
         {
             int score = 0;
@@ -418,78 +418,7 @@ namespace Engine_Core
 
        
 
-        // Not sure if I implement it correctly 
-        private static int Quiescence(int alpha, int beta)
-        {
-            nodes++;
-
-            int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
-
-            if (eval >= beta)
-            {
-                return beta;
-            }
-            if (eval > alpha)
-            {
-                alpha = eval;
-            }
-
-            // Generate only captures
-            MoveObjects moveList = new MoveObjects();
-            MoveGenerator.GenerateMoves(moveList);
-            SortMoves(moveList);
-
-            int i = 0;
-            while (i < moveList.counter)
-            {
-                int move = moveList.moves[i];
-
-                // Only consider captures
-                bool capture = MoveGenerator.GetMoveCapture(move);
-                if (!capture)
-                {
-                    i++;
-                    continue;
-                }
-
-                // Save
-                MoveGenerator.CopyGameState(
-                    out ulong[] bbCopy,
-                    out ulong[] occCopy,
-                    out Colors sideCopy,
-                    out int castleCopy,
-                    out int enpassCopy
-                );
-
-                // Must be legal capture
-                bool legal = MoveGenerator.IsLegal(move, true);
-                if (!legal)
-                {
-                    MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                    i++;
-                    continue;
-                }
-
-                ply++;
-                int score = -Quiescence(-beta, -alpha);
-                ply--;
-
-                MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-
-                if (score >= beta)
-                {
-                    return beta;
-                }
-                if (score > alpha)
-                {
-                    alpha = score;
-                }
-
-                i++;
-            }
-
-            return alpha;
-        }
+        
 
         // Sort moves by MVV-LVA, killer, history (bubble sort)
         public static void SortMoves(MoveObjects moveList)
@@ -604,7 +533,80 @@ namespace Engine_Core
             return (int)Pieces.P;
         }
 
-        
+        /////////////////////////////////////////////////// PRIVATE METHODS ////////////////////////////////////////////
+
+        // Not sure if I implement it correctly 
+        private static int Quiescence(int alpha, int beta)
+        {
+            nodes++;
+
+            int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+
+            if (eval >= beta)
+            {
+                return beta;
+            }
+            if (eval > alpha)
+            {
+                alpha = eval;
+            }
+
+            // Generate only captures
+            MoveObjects moveList = new MoveObjects();
+            MoveGenerator.GenerateMoves(moveList);
+            SortMoves(moveList);
+
+            int i = 0;
+            while (i < moveList.counter)
+            {
+                int move = moveList.moves[i];
+
+                // Only consider captures
+                bool capture = MoveGenerator.GetMoveCapture(move);
+                if (!capture)
+                {
+                    i++;
+                    continue;
+                }
+
+                // Save
+                MoveGenerator.CopyGameState(
+                    out ulong[] bbCopy,
+                    out ulong[] occCopy,
+                    out Colors sideCopy,
+                    out int castleCopy,
+                    out int enpassCopy
+                );
+
+                // Must be legal capture
+                bool legal = MoveGenerator.IsLegal(move, true);
+                if (!legal)
+                {
+                    MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+                    i++;
+                    continue;
+                }
+
+                ply++;
+                int score = -Quiescence(-beta, -alpha);
+                ply--;
+
+                MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+
+                if (score >= beta)
+                {
+                    return beta;
+                }
+                if (score > alpha)
+                {
+                    alpha = score;
+                }
+
+                i++;
+            }
+
+            return alpha;
+        }
         private static void ClearKillerAndHistoryMoves()
         {
             int i = 0;
