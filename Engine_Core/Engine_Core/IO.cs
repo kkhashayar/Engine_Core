@@ -5,7 +5,7 @@ namespace Engine_Core;
 
 public static class IO
 {
-    public static string GetCurrentFEN()
+    public static string FenWriter()
     {
         string fen = "";
 
@@ -17,7 +17,7 @@ public static class IO
                 int square = rank * 8 + file;
                 int piece = -1;
 
-                for (int bbPiece = (int)Enumes.Pieces.P; bbPiece <= (int)Enumes.Pieces.k; bbPiece++)
+                for (int bbPiece = (int)Pieces.P; bbPiece <= (int)Pieces.k; bbPiece++)
                 {
                     if (Globals.GetBit(Boards.Bitboards[bbPiece], square))
                     {
@@ -37,24 +37,24 @@ public static class IO
                         fen += emptySquares.ToString();
                         emptySquares = 0;
                     }
-                    fen += Enumes.AsciiPieces[0][piece];
+                    fen += AsciiPieces[0][piece];
                 }
             }
             if (emptySquares > 0) fen += emptySquares.ToString();
             if (rank < 7) fen += "/";
         }
 
-        fen += (Boards.Side == (int)Enumes.Colors.white) ? " w " : " b ";
+        fen += (Boards.Side == (int)Colors.white) ? " w " : " b ";
 
         // Castling rights
         string castling = "";
-        if ((Boards.CastlePerm & (int)Enumes.Castling.WKCA) != 0) castling += "K";
-        if ((Boards.CastlePerm & (int)Enumes.Castling.WQCA) != 0) castling += "Q";
-        if ((Boards.CastlePerm & (int)Enumes.Castling.BKCA) != 0) castling += "k";
-        if ((Boards.CastlePerm & (int)Enumes.Castling.BQCA) != 0) castling += "q";
+        if ((Boards.CastlePerm & (int)Castling.WKCA) != 0) castling += "K";
+        if ((Boards.CastlePerm & (int)Castling.WQCA) != 0) castling += "Q";
+        if ((Boards.CastlePerm & (int)Castling.BKCA) != 0) castling += "k";
+        if ((Boards.CastlePerm & (int)Castling.BQCA) != 0) castling += "q";
         fen += castling.Length > 0 ? castling : "-";
 
-        fen += " " + (Boards.EnpassantSquare != (int)Enumes.Squares.NoSquare ? Globals.SquareToCoordinates[Boards.EnpassantSquare] : "-");
+        fen += " " + (Boards.EnpassantSquare != (int)Squares.NoSquare ? Globals.SquareToCoordinates[Boards.EnpassantSquare] : "-");
 
         return fen;
     }
