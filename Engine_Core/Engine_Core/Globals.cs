@@ -1,10 +1,25 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using static Engine_Core.Enumes;
 namespace Engine_Core;
 
 public static class Globals
 {
- 
+
+    public static readonly Dictionary<string, int> CoordinatesToSquare = SquareToCoordinates
+    .Select((coord, index) => new { coord, index }).ToDictionary(x => x.coord, x => x.index);
+
+    public static int GetPieceOnSquare(int square)
+    {
+        for (int piece = (int)Pieces.P; piece <= (int)Pieces.k; piece++)
+        {
+            if (GetBit(Boards.Bitboards[piece], square))
+                return piece;
+        }
+        return -1; // No piece found
+    }
+
+    
     private static readonly Random random = new Random();
     // Mapping from square index to coordinates
     public static readonly string[] SquareToCoordinates =
@@ -294,5 +309,9 @@ public static class Globals
 
         Console.WriteLine("SetOccupancy tests passed.");
     }
+
+
+
+
 
 }
