@@ -114,3 +114,5 @@ Sent: # Status command acknowledged
 Sent: # WinBoard engine ready
 Received: status
 Sent: # Status command acknowledged
+[17-Feb-25 1:58:25 PM] Engine started.
+Sent: # WinBoard engine ready

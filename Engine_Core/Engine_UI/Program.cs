@@ -84,7 +84,13 @@ void Run()
 
     // DebugSearchMethods();
 
-    WinBoardLoop();
+
+    // Testing png loader 
+    PgnProcessor.LoadPGNFile(@"D:\Data\Chess-Data_ML\lichess_db_standard_rated_2025-01.pgn");
+
+
+
+    // WinBoardLoop();
 
 }
 

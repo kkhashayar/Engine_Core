@@ -63,25 +63,25 @@ public static class PgnProcessor
         // Reset board to starting position
         IO.FenReader("");
 
-        for (int i = 0; i < moves.Count - 1; i++)
-        {
-            // Extract FEN before making the move
-            string fen = IO.FenWriter();
+        //for (int i = 0; i < moves.Count - 1; i++)
+        //{
+        //    // Extract FEN before making the move
+        //    string fen = IO.FenWriter();
 
-            // Convert UCI move to bitcoded move
-            int bestMove = Globals.ConvertUciMoveToBitcode(moves[i]);
+        //    // Convert UCI move to bitcoded move
+        //    int bestMove = Globals.ConvertUciMoveToBitcode(moves[i]);
 
-            // Store training data
-            StoreTrainingData(fen, bestMove);
+        //    // Store training data
+        //    //StoreTrainingData(fen, bestMove);
 
-            // Apply move to update board position
-            Boards.ApplyTheMove(bestMove);
-        }
+        //    // Apply move to update board position
+        //    Boards.ApplyTheMove(bestMove);
+        //}
     }
 
-    public static void StoreTrainingData(string fen, int bestMove)
-    {
-        TrainingEngine.AddTrainingSample(fen, bestMove);
-    }
+    //public static void StoreTrainingData(string fen, int bestMove)
+    //{
+    //    TrainingEngine.AddTrainingSample(fen, bestMove);
+    //}
 
 }
