@@ -12,12 +12,13 @@ public static class PgnProcessor
         }
 
         List<string> games = new List<string>();
-        string gameMoves = ""; 
+        string gameMoves = "";
 
 
-
+        int counter = 0; 
         foreach(string line in File.ReadLines(filePath))
         {
+            counter++;  
             if (line.StartsWith("["))
             {
                 // ignoring metadata like event etc..
@@ -30,9 +31,10 @@ public static class PgnProcessor
                     games.Add(gameMoves.Trim());
                     gameMoves = "";
                 }
-                continue;   
+                continue;
+                
             }
-
+            Console.WriteLine($"{counter} Game added..");
             gameMoves += " " + line;
         }
 
