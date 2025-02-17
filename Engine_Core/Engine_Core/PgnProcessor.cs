@@ -66,7 +66,7 @@ public static class PgnProcessor
         for (int i = 0; i < moves.Count - 1; i++)
         {
             // Extract FEN before making the move
-            string fen = IO.GetCurrentFEN();
+            string fen = IO.FenWriter();
 
             // Convert UCI move to bitcoded move
             int bestMove = Globals.ConvertUciMoveToBitcode(moves[i]);

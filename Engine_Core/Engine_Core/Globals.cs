@@ -242,6 +242,46 @@ public static class Globals
     }
 
 
+    // Converting UCI notation to bitcoded moves 
+    public static int ConvertUciMoveToBitcode(string uciMove)
+    {
+        if (uciMove.Length < 4) return 0; 
+
+        // Extract source and target squares
+        int sourceSquare = Globals.CoordinatesToSquare[uciMove.Substring(0, 2)];
+        int targetSquare = Globals.CoordinatesToSquare[uciMove.Substring(2, 2)];
+
+        // Determine the piece on the source square
+        int piece = -1;
+        for (int i = 0; i < Boards.Bitboards.Length; i++)
+        {
+            if (Globals.GetBit(Boards.Bitboards[i], sourceSquare))
+            {
+                piece = i;
+                break;
+            }
+        }
+        if (piece == -1) return 0; // No piece found at source
+
+        // Check if the move is a promotion (5th character in UCI string)
+        int promoted = 0;
+        if (uciMove.Length == 5)
+        {
+            char promotedChar = uciMove[4];
+            promoted = Enumes.charPieces.ContainsKey(promotedChar) ? Enumes.charPieces[promotedChar] : 0;
+        }
+
+        // Determine special move flags
+        bool isCapture = Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare);
+        bool isDoublePush = Math.Abs(sourceSquare - targetSquare) == 16 && (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p);
+        bool isEnPassant = (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p) && targetSquare == Boards.EnpassantSquare;
+        bool isCastling = (piece == (int)Enumes.Pieces.K || piece == (int)Enumes.Pieces.k) && Math.Abs(sourceSquare - targetSquare) == 2;
+
+        // Encode move using your existing method
+        return MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, promoted, isCapture, isDoublePush, isEnPassant, isCastling);
+    }
+
+
     private static int GetXORShiftedNumber32Bit()
     {
         /*
