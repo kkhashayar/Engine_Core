@@ -39,7 +39,7 @@ public static class PgnProcessor
         }
 
         Console.WriteLine($"Loaded {games.Count} games fro, PGN");
-
+        return ;
         foreach (string game in games) 
         {
             ProcessGame(game);
