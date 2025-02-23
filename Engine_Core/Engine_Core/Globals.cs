@@ -6,8 +6,7 @@ namespace Engine_Core;
 public static class Globals
 {
 
-    public static readonly Dictionary<string, int> CoordinatesToSquare = SquareToCoordinates
-    .Select((coord, index) => new { coord, index }).ToDictionary(x => x.coord, x => x.index);
+
 
     public static int GetPieceOnSquare(int square)
     {
@@ -19,7 +18,7 @@ public static class Globals
         return -1; // No piece found
     }
 
-    
+
     private static readonly Random random = new Random();
     // Mapping from square index to coordinates
     public static readonly string[] SquareToCoordinates =
@@ -33,6 +32,19 @@ public static class Globals
         "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
         "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
     };
+
+    public static readonly int[] CoordinateToSquare =
+    {
+        0,  1,  2,  3,  4,  5,  6,  7,
+        8,  9, 10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23,
+        24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33, 34, 35, 36, 37, 38, 39,
+        40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53, 54, 55,
+        56, 57, 58, 59, 60, 61, 62, 63
+    };
+
 
     //**********************************  Bit methods  **********************************
 
@@ -158,11 +170,11 @@ public static class Globals
                 else if (usedAttacks[magicIndex] != attacks[index])
                 {
                     fail = 1;
-                    
+
                 }
             }
             // if works :) 
-            if(fail == 0) 
+            if (fail == 0)
             {
                 return magicNumber;
             }
@@ -242,32 +254,53 @@ public static class Globals
     }
 
 
-    // Converting UCI notation to bitcoded moves 
+    // Convert UCI notation to bitcoded moves 
     public static int ConvertUciMoveToBitcode(string uciMove)
     {
-        if (uciMove.Length < 4) return 0; 
+        if (string.IsNullOrEmpty(uciMove) || uciMove.Length < 2) return 0; // Invalid UCI move
 
-        // Extract source and target squares
-        int sourceSquare = Globals.CoordinatesToSquare[uciMove.Substring(0, 2)];
-        int targetSquare = Globals.CoordinatesToSquare[uciMove.Substring(2, 2)];
+        // Remove non-move characters like "x", "+", "#", and "="
+        string sanitizedMove = uciMove.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "");
 
-        // Determine the piece on the source square
+        // Extract target square (always last two characters)
+        var targetSquareStr = sanitizedMove.Substring(sanitizedMove.Length - 2, 2);
+        var targetSquareTest = targetSquareStr;
+        //if (!Globals.CoordinatesToSquare.ContainsKey(targetSquareStr)) return 0; // Invalid target square
+        int targetSquare = Globals.CoordinatesToSquare[targetSquareStr];
+
+        int sourceSquare = -1;
         int piece = -1;
-        for (int i = 0; i < Boards.Bitboards.Length; i++)
-        {
-            if (Globals.GetBit(Boards.Bitboards[i], sourceSquare))
-            {
-                piece = i;
-                break;
-            }
-        }
-        if (piece == -1) return 0; // No piece found at source
-
-        // Check if the move is a promotion (5th character in UCI string)
         int promoted = 0;
-        if (uciMove.Length == 5)
+
+        // **Case 1: Standard UCI format (e2e4, g1f3)**
+        if (sanitizedMove.Length >= 4 && char.IsLetter(sanitizedMove[0]) && char.IsDigit(sanitizedMove[1]))
         {
-            char promotedChar = uciMove[4];
+            sourceSquare = Globals.CoordinatesToSquare[sanitizedMove.Substring(0, 2)];
+            piece = GetPieceFromBitboards(sourceSquare);
+        }
+        // **Case 2: Algebraic Notation (Nc3, Bf2, etc.)**
+        else
+        {
+            char pieceChar = sanitizedMove[0];
+            if (!Enumes.charPieces.ContainsKey(pieceChar)) return 0; // Invalid piece
+
+            piece = Enumes.charPieces[pieceChar];
+
+            // Check if there is a disambiguation rank/file (like `Nbd2`, `R1e1`)
+            string disambiguation = "";
+            if (sanitizedMove.Length == 4) disambiguation = sanitizedMove[1].ToString();
+            if (sanitizedMove.Length == 5) disambiguation = sanitizedMove.Substring(1, 2);
+
+            // Find the correct source square
+            sourceSquare = FindPieceSourceSquare(piece, targetSquare, disambiguation);
+        }
+
+        if (sourceSquare == -1 || piece == -1) return 0; // Invalid move
+
+        // Handle promotions
+        if (sanitizedMove.Length == 5 && char.IsLetter(sanitizedMove[4]))
+        {
+            char promotedChar = sanitizedMove[4];
             promoted = Enumes.charPieces.ContainsKey(promotedChar) ? Enumes.charPieces[promotedChar] : 0;
         }
 
@@ -277,9 +310,64 @@ public static class Globals
         bool isEnPassant = (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p) && targetSquare == Boards.EnpassantSquare;
         bool isCastling = (piece == (int)Enumes.Pieces.K || piece == (int)Enumes.Pieces.k) && Math.Abs(sourceSquare - targetSquare) == 2;
 
-        // Encode move using your existing method
+        // Encode move using existing method
         return MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, promoted, isCapture, isDoublePush, isEnPassant, isCastling);
     }
+
+    // **Find the source square for a given piece that can move to the target**
+    private static int FindPieceSourceSquare(int piece, int targetSquare, string disambiguation)
+    {
+        List<int> possibleSources = new List<int>();
+
+        for (int i = 0; i < 64; i++) // Loop over all board squares
+        {
+            if (Globals.GetBit(Boards.Bitboards[piece], i))
+            {
+                // Check if this piece at 'i' can move to targetSquare
+
+                possibleSources.Add(i);
+
+            }
+        }
+
+        // **If only one possible source, return it**
+        if (possibleSources.Count == 1) return possibleSources[0];
+
+        // **If multiple sources, disambiguate**
+        foreach (int square in possibleSources)
+        {
+            string coord = Globals.SquareToCoordinates[square];
+
+            // If disambiguation is a rank (1-8)
+            if (disambiguation.Length == 1 && char.IsDigit(disambiguation[0]) && coord[1] == disambiguation[0])
+                return square;
+
+            // If disambiguation is a file (a-h)
+            if (disambiguation.Length == 1 && char.IsLetter(disambiguation[0]) && coord[0] == disambiguation[0])
+                return square;
+
+            // If full square name (like "Nbd2")
+            if (disambiguation.Length == 2 && coord == disambiguation)
+                return square;
+        }
+
+        return -1; // No valid source found
+    }
+
+    // **Find which piece is at a given square**
+    private static int GetPieceFromBitboards(int square)
+    {
+        for (int i = 0; i < Boards.Bitboards.Length; i++)
+        {
+            if (Globals.GetBit(Boards.Bitboards[i], square))
+            {
+                return i; // Found piece type
+            }
+        }
+        return -1; // No piece found
+    }
+
+
 
 
     private static int GetXORShiftedNumber32Bit()

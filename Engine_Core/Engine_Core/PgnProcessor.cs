@@ -1,50 +1,49 @@
-﻿namespace Engine_Core;
+﻿using System.Runtime.InteropServices;
+
+namespace Engine_Core;
 
 public static class PgnProcessor
 {
-    public static void LoadPGNFile(string filePath)
+    public static void LoadPGNFile(string filePath, int maxGamesToProcess)
     {
-        // Checks if file exists in give path
         if (!File.Exists(filePath))
         {
             Console.WriteLine($"Error: File {filePath} not found");
-            return; 
+            return;
         }
 
         List<string> games = new List<string>();
         string gameMoves = "";
+        int processedGames = 0;
 
-
-        int counter = 0; 
-        foreach(string line in File.ReadLines(filePath))
+        foreach (string line in File.ReadLines(filePath))
         {
-            counter++;  
+            if (processedGames >= maxGamesToProcess)
+                break;
+
             if (line.StartsWith("["))
-            {
-                // ignoring metadata like event etc..
-                continue;
-            }
+                continue; // Skip metadata
+
             if (string.IsNullOrEmpty(line))
             {
                 if (!string.IsNullOrEmpty(gameMoves))
                 {
                     games.Add(gameMoves.Trim());
                     gameMoves = "";
+                    processedGames++;
                 }
                 continue;
-                
             }
-            Console.WriteLine($"{counter} Game added..");
+
             gameMoves += " " + line;
         }
 
-        Console.WriteLine($"Loaded {games.Count} games fro, PGN");
-        return ;
-        foreach (string game in games) 
+        Console.WriteLine($"Loaded {games.Count} games from PGN (Processing {maxGamesToProcess} games).");
+
+        foreach (string game in games)
         {
             ProcessGame(game);
         }
-
     }
 
     public static void ProcessGame(string game)
@@ -54,36 +53,39 @@ public static class PgnProcessor
 
         foreach (string token in tokens)
         {
-            if (token.Contains(".")) continue;
+            if (token.Contains(".") || token.Contains("{") 
+                                    || token.Contains("}") 
+                                    || token.Contains("[")
+                                    || token.Contains("%")
+                                    || token.Contains("]")) 
+                continue;
             if (token == "1-0" || token == "0-1" || token == "1/2-1/2") break;
 
             moves.Add(token);
         }
-
+        var testMoves = moves; 
+        
         if (moves.Count < 2) return;
 
-        // Reset board to starting position
         IO.FenReader("");
 
-        //for (int i = 0; i < moves.Count - 1; i++)
-        //{
-        //    // Extract FEN before making the move
-        //    string fen = IO.FenWriter();
+        for (int i = 0; i < moves.Count - 1; i++)
+        {
+            string fen = IO.FenWriter();
+            
+            
+            int bestMove = Globals.ConvertUciMoveToBitcode(moves[i]);
 
-        //    // Convert UCI move to bitcoded move
-        //    int bestMove = Globals.ConvertUciMoveToBitcode(moves[i]);
-
-        //    // Store training data
-        //    //StoreTrainingData(fen, bestMove);
-
-        //    // Apply move to update board position
-        //    Boards.ApplyTheMove(bestMove);
-        //}
+            if(bestMove != 0)
+            {
+                StoreTrainingData(fen, bestMove);
+                Boards.ApplyTheMove(bestMove);
+            }
+        }
     }
 
-    //public static void StoreTrainingData(string fen, int bestMove)
-    //{
-    //    TrainingEngine.AddTrainingSample(fen, bestMove);
-    //}
-
+    public static void StoreTrainingData(string fen, int bestMove)
+    {
+        TrainingEngine.AddTrainingSample(fen, bestMove);
+    }
 }
