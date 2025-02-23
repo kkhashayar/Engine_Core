@@ -307,7 +307,7 @@ public static class Globals
         if (string.IsNullOrEmpty(uciMove) || uciMove.Length < 2) return 0; // Invalid UCI move
 
         // ============================
-        // 1️⃣ Handle Castling Moves (O-O, O-O-O)
+        // 1️ Handle Castling Moves (O-O, O-O-O)
         // ============================
         if (uciMove == "O-O" || uciMove == "O-O-O")
         {
@@ -315,7 +315,7 @@ public static class Globals
         }
 
         // ============================
-        // 2️⃣ Preprocess Move Notation
+        // 2️ Preprocess Move Notation
         // ============================
         string sanitizedMove = uciMove.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "");
 
@@ -329,7 +329,7 @@ public static class Globals
         int promoted = 0;
 
         // ============================
-        // 3️⃣ Handle Standard 4-Digit UCI Moves (e2e4, g1f3)
+        // 3️ Handle Standard 4-Digit UCI Moves (e2e4, g1f3)
         // ============================
 
         // Check if it is standard format or not 
@@ -359,7 +359,7 @@ public static class Globals
             sourceSquare = FindPieceSourceSquare(piece, targetSquare, disambiguation);
         }
         // ============================
-        // 4️⃣ Handle 3-Digit Algebraic Notation (Nc3, Bf2, etc.)
+        // 4️ Handle 3-Digit Algebraic Notation (Nc3, Bf2, etc.)
         // ============================
         else if (sanitizedMove.Length == 3)
         {
@@ -370,7 +370,7 @@ public static class Globals
             sourceSquare = FindPieceSourceSquare(piece, targetSquare, ""); // No disambiguation
         }
         // ============================
-        // 5️⃣ Handle 4-5 Digit Disambiguation Moves (R8d7, Rae1, etc.)
+        // 5️ Handle 4-5 Digit Disambiguation Moves (R8d7, Rae1, etc.)
         // ============================
         else if (sanitizedMove.Length >= 4)
         {
@@ -388,7 +388,7 @@ public static class Globals
         }
 
         // ============================
-        // 6️⃣ Validate and Handle Promotions
+        // 6️ Validate and Handle Promotions
         // ============================
         if (sourceSquare == -1 || piece == -1) return 0; // Invalid move
 
@@ -399,7 +399,7 @@ public static class Globals
         }
 
         // ============================
-        // 7️⃣ Determine Move Flags
+        // 7️ Determine Move Flags
         // ============================
         bool isCapture = Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare);
         bool isDoublePush = Math.Abs(sourceSquare - targetSquare) == 16 && (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p);
@@ -407,7 +407,7 @@ public static class Globals
         bool isCastling = (piece == (int)Enumes.Pieces.K || piece == (int)Enumes.Pieces.k) && Math.Abs(sourceSquare - targetSquare) == 2;
 
         // ============================
-        // 8️⃣ Encode and Return Move
+        // 8️ Encode and Return Move
         // ============================
         return MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, promoted, isCapture, isDoublePush, isEnPassant, isCastling);
     }
