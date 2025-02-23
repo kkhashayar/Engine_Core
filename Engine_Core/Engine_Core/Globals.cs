@@ -253,106 +253,188 @@ public static class Globals
         Console.WriteLine("Magic number fucked ");
         return 0UL;
     }
+    private static int FindPieceSourceSquare(int piece, int targetSquare, string disambiguation)
+    {
+        List<int> possibleSources = new List<int>();
+
+        // Loop through all squares on the board
+        for (int square = 0; square < 64; square++)
+        {
+            if (Globals.GetBit(Boards.Bitboards[piece], square))
+            {
+                // If piece can legally move to the target, store it as a candidate
+
+                possibleSources.Add(square);
+
+            }
+        }
+
+        // No valid source square found
+        if (possibleSources.Count == 0) return -1;
+
+        // If only one valid source, return it
+        if (possibleSources.Count == 1) return possibleSources[0];
+
+        // **Disambiguation Handling (e.g., R8d7, R1d7)**
+        foreach (int candidate in possibleSources)
+        {
+            string candidateCoord = Globals.SquareToCoordinates[candidate];
+
+            if (disambiguation.Length == 1)
+            {
+                // File disambiguation (e.g., "Rae1")
+                if (char.IsLetter(disambiguation[0]) && candidateCoord[0] == disambiguation[0])
+                    return candidate;
+
+                // Rank disambiguation (e.g., "R8d7")
+                if (char.IsDigit(disambiguation[0]) && candidateCoord[1] == disambiguation[0])
+                    return candidate;
+            }
+            else if (disambiguation.Length == 2)
+            {
+                // Full coordinate disambiguation (e.g., "Qh4h5")
+                if (candidateCoord == disambiguation) return candidate;
+            }
+        }
+
+        // No match found
+        return -1;
+    }
 
 
-    // Convert UCI notation to bitcoded moves 
     public static int ConvertUciMoveToBitcode(string uciMove)
     {
         if (string.IsNullOrEmpty(uciMove) || uciMove.Length < 2) return 0; // Invalid UCI move
 
-        // Remove non-move characters like "x", "+", "#", and "="
+        // ============================
+        // 1️⃣ Handle Castling Moves (O-O, O-O-O)
+        // ============================
+        if (uciMove == "O-O" || uciMove == "O-O-O")
+        {
+            return HandleCastlingMove(uciMove);
+        }
+
+        // ============================
+        // 2️⃣ Preprocess Move Notation
+        // ============================
         string sanitizedMove = uciMove.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "");
 
-        // Extract target square (always last two characters)
-        var targetSquareStr = sanitizedMove.Substring(sanitizedMove.Length - 2, 2);
-        var targetSquareTest = targetSquareStr;
-        //if (!Globals.CoordinatesToSquare.ContainsKey(targetSquareStr)) return 0; // Invalid target square
+        // Extract the last two characters as the target square
+        string targetSquareStr = sanitizedMove.Substring(sanitizedMove.Length - 2, 2);
+        if (!Globals.CoordinateToSquare.ContainsKey(targetSquareStr)) return 0; // Invalid target square
         int targetSquare = Globals.CoordinateToSquare[targetSquareStr];
 
         int sourceSquare = -1;
         int piece = -1;
         int promoted = 0;
 
-        // **Case 1: Standard UCI format (e2e4, g1f3)**
-        if (sanitizedMove.Length >= 4 && char.IsLetter(sanitizedMove[0]) && char.IsDigit(sanitizedMove[1]))
+        // ============================
+        // 3️⃣ Handle Standard 4-Digit UCI Moves (e2e4, g1f3)
+        // ============================
+
+        // Check if it is standard format or not 
+        bool IsUciFormat = Globals.CoordinateToSquare.ContainsKey(sanitizedMove.Substring(0, 2));
+
+        if (sanitizedMove.Length == 4  && IsUciFormat)
         {
             sourceSquare = Globals.CoordinateToSquare[sanitizedMove.Substring(0, 2)];
             piece = GetPieceFromBitboards(sourceSquare);
         }
-        // **Case 2: Algebraic Notation (Nc3, Bf2, etc.)**
-        else
+        else if(!IsUciFormat)
         {
+            // **It's not a standard move, so assume the first character is a piece**
             char pieceChar = sanitizedMove[0];
-            if (!Enumes.charPieces.ContainsKey(pieceChar)) return 0; // Invalid piece
+
+            if (!Enumes.charPieces.ContainsKey(pieceChar)) return 0; // Invalid piece notation
 
             piece = Enumes.charPieces[pieceChar];
 
-            // Check if there is a disambiguation rank/file (like `Nbd2`, `R1e1`)
+            // **Extract Disambiguation (if present)**
+            string disambiguation = "";
+
+            if (sanitizedMove.Length == 4) disambiguation = sanitizedMove[1].ToString(); // R8d7
+            if (sanitizedMove.Length == 5) disambiguation = sanitizedMove.Substring(1, 2); // Rae1
+
+            // **Find Correct Source Square for Ambiguous Moves**
+            sourceSquare = FindPieceSourceSquare(piece, targetSquare, disambiguation);
+        }
+        // ============================
+        // 4️⃣ Handle 3-Digit Algebraic Notation (Nc3, Bf2, etc.)
+        // ============================
+        else if (sanitizedMove.Length == 3)
+        {
+            char pieceChar = sanitizedMove[0];
+            if (!Enumes.charPieces.ContainsKey(pieceChar)) return 0; // Invalid piece notation
+
+            piece = Enumes.charPieces[pieceChar];
+            sourceSquare = FindPieceSourceSquare(piece, targetSquare, ""); // No disambiguation
+        }
+        // ============================
+        // 5️⃣ Handle 4-5 Digit Disambiguation Moves (R8d7, Rae1, etc.)
+        // ============================
+        else if (sanitizedMove.Length >= 4)
+        {
+            char pieceChar = sanitizedMove[0];
+            if (!Enumes.charPieces.ContainsKey(pieceChar)) return 0; // Invalid piece notation
+
+            piece = Enumes.charPieces[pieceChar];
+
+            // Extract disambiguation if present
             string disambiguation = "";
             if (sanitizedMove.Length == 4) disambiguation = sanitizedMove[1].ToString();
             if (sanitizedMove.Length == 5) disambiguation = sanitizedMove.Substring(1, 2);
 
-            // Find the correct source square
             sourceSquare = FindPieceSourceSquare(piece, targetSquare, disambiguation);
         }
 
+        // ============================
+        // 6️⃣ Validate and Handle Promotions
+        // ============================
         if (sourceSquare == -1 || piece == -1) return 0; // Invalid move
 
-        // Handle promotions
         if (sanitizedMove.Length == 5 && char.IsLetter(sanitizedMove[4]))
         {
             char promotedChar = sanitizedMove[4];
             promoted = Enumes.charPieces.ContainsKey(promotedChar) ? Enumes.charPieces[promotedChar] : 0;
         }
 
-        // Determine special move flags
+        // ============================
+        // 7️⃣ Determine Move Flags
+        // ============================
         bool isCapture = Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare);
         bool isDoublePush = Math.Abs(sourceSquare - targetSquare) == 16 && (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p);
         bool isEnPassant = (piece == (int)Enumes.Pieces.P || piece == (int)Enumes.Pieces.p) && targetSquare == Boards.EnpassantSquare;
         bool isCastling = (piece == (int)Enumes.Pieces.K || piece == (int)Enumes.Pieces.k) && Math.Abs(sourceSquare - targetSquare) == 2;
 
-        // Encode move using existing method
+        // ============================
+        // 8️⃣ Encode and Return Move
+        // ============================
         return MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, promoted, isCapture, isDoublePush, isEnPassant, isCastling);
     }
 
-    // **Find the source square for a given piece that can move to the target**
-    private static int FindPieceSourceSquare(int piece, int targetSquare, string disambiguation)
+
+    private static int HandleCastlingMove(string uciMove)
     {
-        List<int> possibleSources = new List<int>();
+        int sourceSquare, targetSquare, piece;
 
-        for (int i = 0; i < 64; i++) // Loop over all board squares
+        if (Boards.Side == (int)Enumes.Colors.white)
         {
-            if (Globals.GetBit(Boards.Bitboards[piece], i))
-            {
-                // Check if this piece at 'i' can move to targetSquare
+            sourceSquare = Globals.CoordinateToSquare["e1"];
+            piece = (int)Enumes.Pieces.K;
 
-                possibleSources.Add(i);
+            targetSquare = uciMove == "O-O" ? Globals.CoordinateToSquare["g1"] : Globals.CoordinateToSquare["c1"];
+        }
+        else
+        {
+            sourceSquare = Globals.CoordinateToSquare["e8"];
+            piece = (int)Enumes.Pieces.k;
 
-            }
+            targetSquare = uciMove == "O-O" ? Globals.CoordinateToSquare["g8"] : Globals.CoordinateToSquare["c8"];
         }
 
-        // **If only one possible source, return it**
-        if (possibleSources.Count == 1) return possibleSources[0];
+        bool isCastling = true;
 
-        // **If multiple sources, disambiguate**
-        foreach (int square in possibleSources)
-        {
-            string coord = Globals.SquareToCoordinates[square];
-
-            // If disambiguation is a rank (1-8)
-            if (disambiguation.Length == 1 && char.IsDigit(disambiguation[0]) && coord[1] == disambiguation[0])
-                return square;
-
-            // If disambiguation is a file (a-h)
-            if (disambiguation.Length == 1 && char.IsLetter(disambiguation[0]) && coord[0] == disambiguation[0])
-                return square;
-
-            // If full square name (like "Nbd2")
-            if (disambiguation.Length == 2 && coord == disambiguation)
-                return square;
-        }
-
-        return -1; // No valid source found
+        return MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, isCastling);
     }
 
     // **Find which piece is at a given square**
