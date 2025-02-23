@@ -89,10 +89,10 @@ void Run()
     string pgnFilePath = @"D:\Data\Chess-Data_ML\lichess_db_standard_rated_2025-01.pgn";
     string outputFilePath = @"D:\Data\Chess-Data_ML\Training_Result\training_data.txt";
 
-    PgnProcessor.LoadPGNFile(pgnFilePath, 10);
+    PgnProcessor.LoadPGNFile(pgnFilePath, 100000);
 
     // Saving the  extracted training data
-    TrainingEngine.SaveTrainingData(outputFilePath);        
+    //TrainingEngine.SaveTrainingData(outputFilePath);        
 
 
 
