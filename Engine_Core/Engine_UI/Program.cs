@@ -3,6 +3,7 @@
 
 // Entry point for using WinBoard or low-level engine functions.
 using Engine_Core;
+using Microsoft.ML;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -83,6 +84,17 @@ void Run()
     //PlayThePosition();
 
     // DebugSearchMethods();
+
+
+    //*********************************  SML FLOW TEST  *********************************// 
+    //TriggerTrainingFlow();
+    //*********************************  SML FLOW TEST  *********************************// 
+
+    // Saving the  extracted training data
+    //TrainingEngine.SaveTrainingData(outputFilePath);        
+
+
+
 
     WinBoardLoop();
 
@@ -469,3 +481,37 @@ static void MakeEngineMove(int depth, StreamWriter log)
     }
 }
 
+static void TriggerTrainingFlow()
+{
+    string pgnFilePath = @"D:\Data\Chess-Data_ML\lichess_db_standard_rated_2025-01.pgn";
+    //PgnProcessor.LoadPGNFile(pgnFilePath, 10000000);
+
+    Console.WriteLine("Starting to load and use the trained data in context...");
+    Thread.Sleep(1000);
+
+
+    var trainingDatapath = @"D:\Data\Chess-Data_ML\Training_Result\training_data.txt";
+    var context = new MLContext();
+
+    var dataView = context.Data.LoadFromTextFile<TrainingData>(
+        trainingDatapath,
+        separatorChar: ',',
+        hasHeader: false
+    );
+
+    Console.WriteLine("Creating pipeline..........");
+    Thread.Sleep(1000);
+
+    var pipeline = context.Transforms.Conversion.MapValueToKey("Label", "BestMove")
+        .Append(context.Transforms.Text.FeaturizeText("FENFeatures", "FEN"))
+        .Append(context.Transforms.Concatenate("Features", "FENFeatures"))
+        .Append(context.MulticlassClassification.Trainers.SdcaMaximumEntropy("Label", "Features"))
+        .Append(context.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
+
+    var model = pipeline.Fit(dataView);
+
+    Console.WriteLine("Saving the trained model in zip file");
+    Thread.Sleep(1000);
+
+    context.Model.Save(model, dataView.Schema, "chess_model.zip");
+}

@@ -796,6 +796,9 @@ public static class MoveGenerator
             }
         }
     }
+
+    
+
 }
 /*
  * Move encoding: 
