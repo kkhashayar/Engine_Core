@@ -1,9 +1,13 @@
-﻿namespace Engine_Core;
+﻿using Microsoft.ML.Data;
+
+namespace Engine_Core;
 
 public class TrainingData
 {
+    [LoadColumn(0)]
     public string FEN { get; set; }
-    public int BestMove { get; set; }
+    [LoadColumn(1)]
+    public float BestMove { get; set; }
 }
 
 
