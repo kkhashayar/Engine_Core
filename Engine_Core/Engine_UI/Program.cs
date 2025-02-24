@@ -86,10 +86,12 @@ void Run()
 
 
     //*********************************  SML FLOW TEST  *********************************// 
-    string pgnFilePath = @"D:\Data\Chess-Data_ML\lichess_db_standard_rated_2025-01.pgn";
-    string outputFilePath = @"D:\Data\Chess-Data_ML\Training_Result\training_data.txt";
 
-    PgnProcessor.LoadPGNFile(pgnFilePath, 100000);
+    string pgnFilePath = @"D:\Data\Chess-Data_ML\lichess_db_standard_rated_2025-01.pgn";
+    //string outputFilePath = @"D:\Data\Chess-Data_ML\Training_Result\training_data.txt";
+
+    PgnProcessor.LoadPGNFile(pgnFilePath, 10000000);
+    //*********************************  SML FLOW TEST  *********************************// 
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
