@@ -29,8 +29,8 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        // move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(8, 10); 
+        //move = Search.GetBestMove(8);
+        move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
         
         Console.Beep(1000, 500);
         
@@ -76,9 +76,9 @@ void Run()
     IO.FenReader("r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0");
     //Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(5, true);
+    PerftTeste.RunPerft(5, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     // DebugSearchMethods();
 
