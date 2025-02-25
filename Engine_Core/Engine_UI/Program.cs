@@ -201,7 +201,7 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 8;           // Default search depth
+            int depth = 6;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
