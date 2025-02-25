@@ -416,49 +416,82 @@ public static class Search
         return alpha;
     }
 
-   
 
-    
+
+
 
     // Sort moves by MVV-LVA, killer, history (bubble sort)
-    public static void SortMoves(MoveObjects moveList)
-    {
-        int count = moveList.counter;
+    //public static void SortMoves(MoveObjects moveList)
+    //{
+    //    int count = moveList.counter;
 
-        // Simple array for scores
+    //    // Simple array for scores
+    //    int[] scores = new int[count];
+    //    int index = 0;
+    //    while (index < count)
+    //    {
+    //        int move = moveList.moves[index];
+    //        scores[index] = ScoreMove(move);
+    //        index++;
+    //    }
+
+    //    // Bubble-sort by descending
+    //    int current = 0;
+    //    while (current < count)
+    //    {
+    //        int next = current + 1;
+    //        while (next < count)
+    //        {
+    //            if (scores[current] < scores[next])
+    //            {
+    //                // Swap scores
+    //                int tempScore = scores[current];
+    //                scores[current] = scores[next];
+    //                scores[next] = tempScore;
+
+    //                // Swap moves
+    //                int tempMove = moveList.moves[current];
+    //                moveList.moves[current] = moveList.moves[next];
+    //                moveList.moves[next] = tempMove;
+    //            }
+    //            next++;
+    //        }
+    //        current++;
+    //    }
+    //}
+
+    // Using Insertion sort.  will see if it works faster , but for sure will use less memory
+    public static void SortMoves(MoveObjects movelIst)
+    {
+        int count = movelIst.counter;
         int[] scores = new int[count];
-        int index = 0;
-        while (index < count)
+
+
+        for (int i = 0; i < count; i++)
         {
-            int move = moveList.moves[index];
-            scores[index] = ScoreMove(move);
-            index++;
+            scores[i] = ScoreMove(movelIst.moves[i]);
+
         }
 
-        // Bubble-sort by descending
-        int current = 0;
-        while (current < count)
+        // Insertion sort using descending order 
+        for (int i = 1; i < count; i++)
         {
-            int next = current + 1;
-            while (next < count)
-            {
-                if (scores[current] < scores[next])
-                {
-                    // Swap scores
-                    int tempScore = scores[current];
-                    scores[current] = scores[next];
-                    scores[next] = tempScore;
+            int keyMove = movelIst.moves[i];
+            int keyScore = scores[i];
+            int j = i - 1;
 
-                    // Swap moves
-                    int tempMove = moveList.moves[current];
-                    moveList.moves[current] = moveList.moves[next];
-                    moveList.moves[next] = tempMove;
-                }
-                next++;
+            while (j >= 0 && scores[j] < keyScore)
+            {
+                movelIst.moves[j+1] = movelIst.moves[j];    
+                scores[j + 1] = scores[j];
+                j--;
             }
-            current++;
+            movelIst.moves[j + 1] = keyMove;
+            scores[j + 1] = keyScore;       
+
         }
     }
+
 
     // Score move – MVV-LVA plus killers/history
     public static int ScoreMove(int move)
