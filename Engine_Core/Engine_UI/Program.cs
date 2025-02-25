@@ -1,7 +1,4 @@
-﻿
-
-
-// Entry point for using WinBoard or low-level engine functions.
+﻿// Entry point for using WinBoard or low-level engine functions.
 using Engine_Core;
 using Microsoft.ML;
 
@@ -32,8 +29,8 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        // move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 5); 
+        //move = Search.GetBestMove(8);
+        move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
         
         Console.Beep(1000, 500);
         
@@ -76,10 +73,10 @@ void Run()
 {
     InitAll();
 
-    //IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
+    IO.FenReader("r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0");
     //Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(5, true);
+    PerftTeste.RunPerft(5, true);
 
     //PlayThePosition();
 
@@ -96,7 +93,7 @@ void Run()
 
 
 
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 
@@ -171,6 +168,9 @@ static void DebugSearchMethods()
 //killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
 //cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
 
+// Very complex position: "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0"
+
+
 // Console.WriteLine("Size: " + (Boards.OccupanciesBitBoards.Length * sizeof(ulong)));
 // need this variables to restore the game state    
 // ulong[] bitboardsCopy, occupanciesCopy;
@@ -201,7 +201,7 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 8;           // Default search depth
+            int depth = 6;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
