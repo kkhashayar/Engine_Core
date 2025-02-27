@@ -29,8 +29,8 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        //move = Search.GetBestMove(8);
-        move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
+        move = Search.GetBestMove(6);
+        //move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
         
         Console.Beep(1000, 500);
         
