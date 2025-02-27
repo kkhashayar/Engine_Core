@@ -398,18 +398,18 @@ public static class MoveGenerator
                         {
                             if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, false, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                                 if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2 &&
                                     !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare - 8))
                                 {
-                                    MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare - 8, piece, 0, false, true, false, false));
+                                    AddMove(moveList, EncodeMove(sourceSquare, targetSquare - 8, piece, 0, false, true, false, false));
                                 }
                             }
                         }
@@ -419,14 +419,14 @@ public static class MoveGenerator
                             targetSquare = Globals.GetLs1bIndex(attacks);
                             if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, true, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                             }
                             Globals.PopBit(ref attacks, targetSquare);
                         }
@@ -437,7 +437,7 @@ public static class MoveGenerator
                             if (enpassantAttacks != 0UL)
                             {
                                 int targetEnpassant = Globals.GetLs1bIndex(enpassantAttacks);
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
                             }
                         }
                         Globals.PopBit(ref bitboard, sourceSquare);
@@ -453,7 +453,7 @@ public static class MoveGenerator
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e1, Enumes.Colors.black) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.f1, Enumes.Colors.black) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.g1, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.g1, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -466,7 +466,7 @@ public static class MoveGenerator
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e1, Enumes.Colors.black) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.d1, Enumes.Colors.black) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.c1, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.c1, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -485,18 +485,18 @@ public static class MoveGenerator
                         {
                             if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, false, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                                 if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7 &&
                                     !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare + 8))
                                 {
-                                    MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare + 8, piece, 0, false, true, false, false));
+                                   AddMove(moveList, EncodeMove(sourceSquare, targetSquare + 8, piece, 0, false, true, false, false));
                                 }
                             }
                         }
@@ -506,14 +506,14 @@ public static class MoveGenerator
                             targetSquare = Globals.GetLs1bIndex(attacks);
                             if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, true, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                             }
                             Globals.PopBit(ref attacks, targetSquare);
                         }
@@ -524,7 +524,7 @@ public static class MoveGenerator
                             if (enpassantAttacks != 0UL)
                             {
                                 int targetEnpassant = Globals.GetLs1bIndex(enpassantAttacks);
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
                             }
                         }
                         Globals.PopBit(ref bitboard, sourceSquare);
@@ -540,7 +540,7 @@ public static class MoveGenerator
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e8, Enumes.Colors.white) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.f8, Enumes.Colors.white) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.g8, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.g8, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -553,7 +553,7 @@ public static class MoveGenerator
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e8, Enumes.Colors.white) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.d8, Enumes.Colors.white) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.c8, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.c8, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -572,11 +572,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -595,11 +595,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -618,11 +618,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Colors.black], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -666,11 +666,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -689,11 +689,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -713,11 +713,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
@@ -736,11 +736,11 @@ public static class MoveGenerator
                         targetSquare = Globals.GetLs1bIndex(attacks);
                         if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
                         Globals.PopBit(ref attacks, targetSquare);
                     }
