@@ -1,4 +1,5 @@
-﻿using static Engine_Core.Enumes;
+﻿using System.Numerics;
+using static Engine_Core.Enumes;
 
 namespace Engine_Core;
 
@@ -84,30 +85,30 @@ public static class MoveGenerator
         for (int i = 0; i < moveList.counter; i++)
         {
             int move = moveList.moves[i];
-            int source = MoveGenerator.GetMoveStartSquare(move);
-            int target = MoveGenerator.GetMoveTarget(move);
-            int promoted = MoveGenerator.GetMovePromoted(move);
-            int piece = MoveGenerator.GetMovePiece(move);
+            int source = GetMoveStartSquare(move);
+            int target = GetMoveTarget(move);
+            int promoted = GetMovePromoted(move);
+            int piece = GetMovePiece(move);
 
             char pieceChar = Enumes.AsciiPieces[0][piece];
 
             char promotedChar = ' ';
             if (promoted != 0)
             {
-                promotedChar = MoveGenerator.promotedPieces[promoted];
+                promotedChar = promotedPieces[promoted];
             }
 
             int captureVal = 0;
-            if (MoveGenerator.GetMoveCapture(move)) captureVal = 1;
+            if (GetMoveCapture(move)) captureVal = 1;
 
             int doubleVal = 0;
-            if (MoveGenerator.GetMoveDouble(move)) doubleVal = 1;
+            if (GetMoveDouble(move)) doubleVal = 1;
 
             int enpassVal = 0;
-            if (MoveGenerator.GetMoveEnpassant(move)) enpassVal = 1;
+            if (GetMoveEnpassant(move)) enpassVal = 1;
 
             int castleVal = 0;
-            if (MoveGenerator.GetMoveCastling(move)) castleVal = 1;
+            if (GetMoveCastling(move)) castleVal = 1;
 
             Console.WriteLine(
                 "      {0}{1}{2}   {3}         {4}         {5}         {6}         {7}",
@@ -220,9 +221,9 @@ public static class MoveGenerator
         bool castling = GetMoveCastling(move);
 
         // Remove piece from source
-        Globals.PopBit(ref Boards.Bitboards[piece], sourceSquare);
+        PopBit(ref Boards.Bitboards[piece], sourceSquare);
         // Place piece on target
-        Globals.SetBit(ref Boards.Bitboards[piece], targetSquare);
+        SetBit(ref Boards.Bitboards[piece], targetSquare);
 
         // Handle captures
         if (capture)
@@ -241,9 +242,9 @@ public static class MoveGenerator
 
             for (int bbPiece = startPiece; bbPiece <= endPiece; bbPiece++)
             {
-                if (Globals.GetBit(Boards.Bitboards[bbPiece], targetSquare))
+                if (GetBit(Boards.Bitboards[bbPiece], targetSquare))
                 {
-                    Globals.PopBit(ref Boards.Bitboards[bbPiece], targetSquare);
+                    PopBit(ref Boards.Bitboards[bbPiece], targetSquare);
                     break;
                 }
             }
@@ -254,13 +255,13 @@ public static class MoveGenerator
         {
             if (Boards.Side == (int)Colors.white)
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.P], targetSquare);
+                PopBit(ref Boards.Bitboards[(int)Pieces.P], targetSquare);
             }
             else
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.p], targetSquare);
+                PopBit(ref Boards.Bitboards[(int)Pieces.p], targetSquare);
             }
-            Globals.SetBit(ref Boards.Bitboards[promoted], targetSquare);
+            SetBit(ref Boards.Bitboards[promoted], targetSquare);
         }
 
         // Handle en passant
@@ -268,11 +269,11 @@ public static class MoveGenerator
         {
             if (Boards.Side == (int)Colors.white)
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.p], targetSquare + 8);
+                PopBit(ref Boards.Bitboards[(int)Pieces.p], targetSquare + 8);
             }
             else
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.P], targetSquare - 8);
+                PopBit(ref Boards.Bitboards[(int)Pieces.P], targetSquare - 8);
             }
         }
 
@@ -297,23 +298,23 @@ public static class MoveGenerator
         {
             if (targetSquare == (int)Squares.g1) // white king side
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.h1);
-                Globals.SetBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.f1);
+                PopBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.h1);
+                SetBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.f1);
             }
             else if (targetSquare == (int)Squares.c1) // white queen side
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.a1);
-                Globals.SetBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.d1);
+                PopBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.a1);
+                SetBit(ref Boards.Bitboards[(int)Pieces.R], (int)Squares.d1);
             }
             else if (targetSquare == (int)Squares.g8) // black king side
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.h8);
-                Globals.SetBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.f8);
+                PopBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.h8);
+                SetBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.f8);
             }
             else if (targetSquare == (int)Squares.c8) // black queen side
             {
-                Globals.PopBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.a8);
-                Globals.SetBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.d8);
+                PopBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.a8);
+                SetBit(ref Boards.Bitboards[(int)Pieces.r], (int)Squares.d8);
             }
         }
 
@@ -348,7 +349,7 @@ public static class MoveGenerator
         int kingSquare;
         if (Boards.Side == (int)Colors.white)
         {
-            kingSquare = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            kingSquare = GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
             if (kingSquare != -1)
             {
                 if (Attacks.IsSquareAttacked(kingSquare, Colors.white) != 0)
@@ -360,7 +361,7 @@ public static class MoveGenerator
         }
         else
         {
-            kingSquare = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            kingSquare = GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
             if (kingSquare != -1)
             {
                 if (Attacks.IsSquareAttacked(kingSquare, Colors.black) != 0)
@@ -377,6 +378,13 @@ public static class MoveGenerator
     //***********************  Move Generator Main Loop  ***************************//
     public static void GenerateMoves(MoveObjects moveList)
     {
+        // Trying to create a local copy, maybe have some positive impact 
+        ulong localOccupancyBoth = Boards.OccupanciesBitBoards[(int)Colors.both];
+        ulong localOccupancyWhite = Boards.OccupanciesBitBoards[(int)Colors.white];
+        ulong localOccupancyBlack = Boards.OccupanciesBitBoards[(int)Colors.black];
+
+        int sideToMove = Boards.Side;
+
         moveList.counter = 0;
         int sourceSquare, targetSquare;
         ulong bitboard, attacks;
@@ -391,44 +399,44 @@ public static class MoveGenerator
                 {
                     while (bitboard != 0UL)
                     {
-                        sourceSquare = Globals.GetLs1bIndex(bitboard);
+                        sourceSquare = GetLs1bIndex(bitboard);
                         targetSquare = sourceSquare - 8;
                         if (targetSquare >= (int)Enumes.Squares.a8 &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare))
+                            !GetBit(localOccupancyBoth, targetSquare))
                         {
                             if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, false, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                                 if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2 &&
-                                    !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare - 8))
+                                    !GetBit(localOccupancyBoth, targetSquare - 8))
                                 {
-                                    MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare - 8, piece, 0, false, true, false, false));
+                                    AddMove(moveList, EncodeMove(sourceSquare, targetSquare - 8, piece, 0, false, true, false, false));
                                 }
                             }
                         }
-                        attacks = Attacks.PawnAttacks[(int)Enumes.Colors.white, sourceSquare] & Boards.OccupanciesBitBoards[(int)Enumes.Colors.black];
+                        attacks = Attacks.PawnAttacks[(int)Enumes.Colors.white, sourceSquare] & localOccupancyBlack;
                         while (attacks != 0UL)
                         {
-                            targetSquare = Globals.GetLs1bIndex(attacks);
+                            targetSquare = GetLs1bIndex(attacks);
                             if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.Q, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.R, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.B, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.N, true, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                             }
-                            Globals.PopBit(ref attacks, targetSquare);
+                            PopBit(ref attacks, targetSquare);
                         }
                         if (Boards.EnpassantSquare != (int)Enumes.Squares.NoSquare)
                         {
@@ -436,37 +444,37 @@ public static class MoveGenerator
                                                      (1UL << Boards.EnpassantSquare);
                             if (enpassantAttacks != 0UL)
                             {
-                                int targetEnpassant = Globals.GetLs1bIndex(enpassantAttacks);
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
+                                int targetEnpassant = GetLs1bIndex(enpassantAttacks);
+                                AddMove(moveList, EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
                             }
                         }
-                        Globals.PopBit(ref bitboard, sourceSquare);
+                        PopBit(ref bitboard, sourceSquare);
                     }
                 }
                 if (piece == (int)Enumes.Pieces.K)
                 {
                     if ((Boards.CastlePerm & (int)Enumes.Castling.WKCA) != 0)
                     {
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.f1) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.g1))
+                        if (!GetBit(localOccupancyBoth, (int)Enumes.Squares.f1) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.g1))
                         {
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e1, Enumes.Colors.black) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.f1, Enumes.Colors.black) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.g1, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.g1, piece, 0, false, false, false, true));
                             }
                         }
                     }
                     if ((Boards.CastlePerm & (int)Enumes.Castling.WQCA) != 0)
                     {
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.d1) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.c1) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.b1))
+                        if (!GetBit(localOccupancyBoth, (int)Enumes.Squares.d1) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.c1) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.b1))
                         {
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e1, Enumes.Colors.black) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.d1, Enumes.Colors.black) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.c1, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e1, (int)Enumes.Squares.c1, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -478,44 +486,44 @@ public static class MoveGenerator
                 {
                     while (bitboard != 0UL)
                     {
-                        sourceSquare = Globals.GetLs1bIndex(bitboard);
+                        sourceSquare = GetLs1bIndex(bitboard);
                         targetSquare = sourceSquare + 8;
                         if (targetSquare <= (int)Enumes.Squares.h1 &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare))
+                            !GetBit(localOccupancyBoth, targetSquare))
                         {
                             if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, false, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, false, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                                 if (sourceSquare >= (int)Enumes.Squares.a7 && sourceSquare <= (int)Enumes.Squares.h7 &&
-                                    !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], targetSquare + 8))
+                                    !GetBit(localOccupancyBoth, targetSquare + 8))
                                 {
-                                    MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare + 8, piece, 0, false, true, false, false));
+                                   AddMove(moveList, EncodeMove(sourceSquare, targetSquare + 8, piece, 0, false, true, false, false));
                                 }
                             }
                         }
-                        attacks = Attacks.PawnAttacks[(int)Enumes.Colors.black, sourceSquare] & Boards.OccupanciesBitBoards[(int)Enumes.Colors.white];
+                        attacks = Attacks.PawnAttacks[(int)Enumes.Colors.black, sourceSquare] & localOccupancyWhite;
                         while (attacks != 0UL)
                         {
-                            targetSquare = Globals.GetLs1bIndex(attacks);
+                            targetSquare = GetLs1bIndex(attacks);
                             if (sourceSquare >= (int)Enumes.Squares.a2 && sourceSquare <= (int)Enumes.Squares.h2)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, true, false, false, false));
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.q, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.r, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.b, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, (int)Enumes.Pieces.n, true, false, false, false));
                             }
                             else
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                                AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                             }
-                            Globals.PopBit(ref attacks, targetSquare);
+                            PopBit(ref attacks, targetSquare);
                         }
                         if (Boards.EnpassantSquare != (int)Enumes.Squares.NoSquare)
                         {
@@ -523,37 +531,37 @@ public static class MoveGenerator
                                                      (1UL << Boards.EnpassantSquare);
                             if (enpassantAttacks != 0UL)
                             {
-                                int targetEnpassant = Globals.GetLs1bIndex(enpassantAttacks);
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
+                                int targetEnpassant = GetLs1bIndex(enpassantAttacks);
+                                AddMove(moveList, EncodeMove(sourceSquare, targetEnpassant, piece, 0, true, false, true, false));
                             }
                         }
-                        Globals.PopBit(ref bitboard, sourceSquare);
+                        PopBit(ref bitboard, sourceSquare);
                     }
                 }
                 if (piece == (int)Enumes.Pieces.k)
                 {
                     if ((Boards.CastlePerm & (int)Enumes.Castling.BKCA) != 0)
                     {
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.f8) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.g8))
+                        if (!GetBit(localOccupancyBoth, (int)Enumes.Squares.f8) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.g8))
                         {
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e8, Enumes.Colors.white) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.f8, Enumes.Colors.white) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.g8, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.g8, piece, 0, false, false, false, true));
                             }
                         }
                     }
                     if ((Boards.CastlePerm & (int)Enumes.Castling.BQCA) != 0)
                     {
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.d8) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.c8) &&
-                            !Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.both], (int)Enumes.Squares.b8))
+                        if (!GetBit(localOccupancyBoth, (int)Enumes.Squares.d8) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.c8) &&
+                            !GetBit(localOccupancyBoth, (int)Enumes.Squares.b8))
                         {
                             if (Attacks.IsSquareAttacked((int)Enumes.Squares.e8, Enumes.Colors.white) == 0 &&
                                 Attacks.IsSquareAttacked((int)Enumes.Squares.d8, Enumes.Colors.white) == 0)
                             {
-                                MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.c8, piece, 0, false, false, false, true));
+                                AddMove(moveList, EncodeMove((int)Enumes.Squares.e8, (int)Enumes.Squares.c8, piece, 0, false, false, false, true));
                             }
                         }
                     }
@@ -564,46 +572,46 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
+                    sourceSquare = GetLs1bIndex(bitboard);
                     attacks = Attacks.KnightAttacks[sourceSquare] &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.white];
+                              ~localOccupancyWhite;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyBlack, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.n)
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
+                    sourceSquare = GetLs1bIndex(bitboard);
                     attacks = Attacks.KnightAttacks[sourceSquare] &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.black];
+                              ~localOccupancyBlack;
                     while (attacks != 0UL)
                     {
                         targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
+                        if (!GetBit(localOccupancyWhite, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
 
@@ -611,22 +619,22 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetBishopAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Colors.both]) & ~Boards.OccupanciesBitBoards[(int)Colors.white];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetBishopAttacks(sourceSquare, localOccupancyBoth) & ~localOccupancyWhite;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Colors.black], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyBlack, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
 
@@ -634,13 +642,13 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetBishopAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Colors.both]) &
-                              ~Boards.OccupanciesBitBoards[(int)Colors.black];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetBishopAttacks(sourceSquare, localOccupancyBoth) &
+                              ~localOccupancyBlack;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Colors.white], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyWhite, targetSquare))
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
@@ -648,9 +656,9 @@ public static class MoveGenerator
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
 
@@ -658,46 +666,46 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetRookAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Enumes.Colors.both]) &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.white];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetRookAttacks(sourceSquare, localOccupancyBoth) &
+                              ~localOccupancyWhite;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyBlack, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.r)
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetRookAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Enumes.Colors.both]) &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.black];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetRookAttacks(sourceSquare, localOccupancyBoth) &
+                              ~localOccupancyBlack;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyWhite, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
 
@@ -705,46 +713,46 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetQueenAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Enumes.Colors.both]) &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.white];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetQueenAttacks(sourceSquare, localOccupancyBoth) &
+                              ~localOccupancyWhite;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.black], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyBlack, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.q)
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
-                    attacks = Attacks.GetQueenAttacks(sourceSquare, Boards.OccupanciesBitBoards[(int)Enumes.Colors.both]) &
-                              ~Boards.OccupanciesBitBoards[(int)Enumes.Colors.black];
+                    sourceSquare = GetLs1bIndex(bitboard);
+                    attacks = Attacks.GetQueenAttacks(sourceSquare, localOccupancyBoth) &
+                              ~localOccupancyBlack;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Enumes.Colors.white], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyWhite, targetSquare))
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
                         else
                         {
-                            MoveGenerator.AddMove(moveList, MoveGenerator.EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
+                            AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
 
@@ -752,13 +760,13 @@ public static class MoveGenerator
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
+                    sourceSquare = GetLs1bIndex(bitboard);
                     attacks = Attacks.KingAttacks[sourceSquare] &
-                              ~Boards.OccupanciesBitBoards[(int)Colors.white];
+                              ~localOccupancyWhite;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Colors.black], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyBlack, targetSquare))
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
@@ -766,22 +774,22 @@ public static class MoveGenerator
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
             else if (Boards.Side == (int)Colors.black && piece == (int)Pieces.k)
             {
                 while (bitboard != 0UL)
                 {
-                    sourceSquare = Globals.GetLs1bIndex(bitboard);
+                    sourceSquare = GetLs1bIndex(bitboard);
                     attacks = Attacks.KingAttacks[sourceSquare] &
-                              ~Boards.OccupanciesBitBoards[(int)Colors.black];
+                              ~localOccupancyBlack;
                     while (attacks != 0UL)
                     {
-                        targetSquare = Globals.GetLs1bIndex(attacks);
-                        if (!Globals.GetBit(Boards.OccupanciesBitBoards[(int)Colors.white], targetSquare))
+                        targetSquare = GetLs1bIndex(attacks);
+                        if (!GetBit(localOccupancyWhite, targetSquare))
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, false, false, false, false));
                         }
@@ -789,16 +797,35 @@ public static class MoveGenerator
                         {
                             AddMove(moveList, EncodeMove(sourceSquare, targetSquare, piece, 0, true, false, false, false));
                         }
-                        Globals.PopBit(ref attacks, targetSquare);
+                        PopBit(ref attacks, targetSquare);
                     }
-                    Globals.PopBit(ref bitboard, sourceSquare);
+                    PopBit(ref bitboard, sourceSquare);
                 }
             }
         }
     }
+    //***********************  END OF Move Generator Main Loop  ***************************//
 
-    
 
+    private static void SetBit(ref ulong bitboard, int square)
+    {
+        bitboard |= (1UL << square);
+    }
+    private static void PopBit(ref ulong bitboard, int square)
+    {
+        bitboard &= ~(1UL << square);
+    }
+    private static bool GetBit(ulong bitboard, int square)
+    {
+        return (bitboard & (1UL << square)) != 0;
+    }
+
+    private static int GetLs1bIndex(ulong bitboard)
+    {
+        if (bitboard == 0)
+            return -1;
+        return BitOperations.TrailingZeroCount(bitboard);
+    }
 }
 /*
  * Move encoding: 
