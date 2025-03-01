@@ -81,7 +81,7 @@ void Run()
     {
         for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
         {
-            Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]}");
+            Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
         }
     }
     
