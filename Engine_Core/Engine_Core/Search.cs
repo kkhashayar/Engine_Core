@@ -30,6 +30,37 @@ public static class Search
     private const int NEG_INF = -50000;
     private const int POS_INF = 50000;
 
+
+    // **********************************************   ZOBRIST  HASHING 
+    
+    // Random piece keys [piece, squar]  give a random unique number to piece on given square
+    public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
+
+    // Random En-passant key and square 
+    public static ulong[] enpassantKey = new ulong[64];
+    
+    // Random castling keys 
+    public static ulong[] castlingKeys = new ulong[16];
+
+    // Random Side to play key 
+
+    public static ulong sideKey;
+
+    // Set it to public for testing 
+    public static void InitializeHashKeys()
+    {
+        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece ++)
+        {
+            for(int square = 0; square < 64; square++)
+            {
+                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers(); 
+            }
+        }
+    }
+
+    
+    // **********************************************   ZOBRIST  HASHING 
+
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
     {
@@ -733,3 +764,9 @@ public static class Search
 *            5. History moves
 *            6. Unsorted moves
 */
+
+/*
+    In order to implement threefold repetition we need to have unique position identifier. 
+    And using the key "Hash key" to identify position we can additionally implement transposition table 
+    Which will improve acurace and speed of search and overal the engine. 
+ */

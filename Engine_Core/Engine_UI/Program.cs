@@ -74,9 +74,25 @@ void Run()
     InitAll();
 
     IO.FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+    //*******************  ZOBRIST HASHING TEST  
+    Search.InitializeHashKeys();
+    for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
+    {
+        for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
+        {
+            Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]}");
+        }
+    }
+    
+    //*******************  ZOBRIST HASHING TEST
+
+
+
+
     //Boards.DisplayBoard();
 
-    PerftTeste.RunPerft(6, true);
+    //PerftTeste.RunPerft(6, true);
 
     //PlayThePosition();
 

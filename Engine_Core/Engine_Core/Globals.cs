@@ -5,8 +5,16 @@ namespace Engine_Core;
 
 public static class Globals
 {
+    private static readonly Random random = new Random();
 
-
+    /*
+     * In fact there is no need to have a fixed random numbers seeded with specific seed. 
+     * The reason to have fixed random number will be when we are generating 
+     * Magic numbers manually, In that case we have to use the same seed.
+     * But here we already have hard coded magic number, But still there is nothing wrong with having same
+     * random numbers for Zobrist hashing
+     */
+    private static readonly Random fixedRandom = new Random(1804289383);
 
     public static int GetPieceOnSquare(int square)
     {
@@ -17,9 +25,6 @@ public static class Globals
         }
         return -1; // No piece found
     }
-
-
-    private static readonly Random random = new Random();
     // Mapping from square index to coordinates
     public static readonly string[] SquareToCoordinates =
     {
@@ -34,39 +39,33 @@ public static class Globals
     };
 
     public static readonly Dictionary<string, int> CoordinateToSquare = new Dictionary<string, int>
-{
-    { "a8", 0 },  { "b8", 1 },  { "c8", 2 },  { "d8", 3 },  { "e8", 4 },  { "f8", 5 },  { "g8", 6 },  { "h8", 7 },
-    { "a7", 8 },  { "b7", 9 },  { "c7", 10 }, { "d7", 11 }, { "e7", 12 }, { "f7", 13 }, { "g7", 14 }, { "h7", 15 },
-    { "a6", 16 }, { "b6", 17 }, { "c6", 18 }, { "d6", 19 }, { "e6", 20 }, { "f6", 21 }, { "g6", 22 }, { "h6", 23 },
-    { "a5", 24 }, { "b5", 25 }, { "c5", 26 }, { "d5", 27 }, { "e5", 28 }, { "f5", 29 }, { "g5", 30 }, { "h5", 31 },
-    { "a4", 32 }, { "b4", 33 }, { "c4", 34 }, { "d4", 35 }, { "e4", 36 }, { "f4", 37 }, { "g4", 38 }, { "h4", 39 },
-    { "a3", 40 }, { "b3", 41 }, { "c3", 42 }, { "d3", 43 }, { "e3", 44 }, { "f3", 45 }, { "g3", 46 }, { "h3", 47 },
-    { "a2", 48 }, { "b2", 49 }, { "c2", 50 }, { "d2", 51 }, { "e2", 52 }, { "f2", 53 }, { "g2", 54 }, { "h2", 55 },
-    { "a1", 56 }, { "b1", 57 }, { "c1", 58 }, { "d1", 59 }, { "e1", 60 }, { "f1", 61 }, { "g1", 62 }, { "h1", 63 }
-};
-
-
+    {
+        { "a8", 0 },  { "b8", 1 },  { "c8", 2 },  { "d8", 3 },  { "e8", 4 },  { "f8", 5 },  { "g8", 6 },  { "h8", 7 },
+        { "a7", 8 },  { "b7", 9 },  { "c7", 10 }, { "d7", 11 }, { "e7", 12 }, { "f7", 13 }, { "g7", 14 }, { "h7", 15 },
+        { "a6", 16 }, { "b6", 17 }, { "c6", 18 }, { "d6", 19 }, { "e6", 20 }, { "f6", 21 }, { "g6", 22 }, { "h6", 23 },
+        { "a5", 24 }, { "b5", 25 }, { "c5", 26 }, { "d5", 27 }, { "e5", 28 }, { "f5", 29 }, { "g5", 30 }, { "h5", 31 },
+        { "a4", 32 }, { "b4", 33 }, { "c4", 34 }, { "d4", 35 }, { "e4", 36 }, { "f4", 37 }, { "g4", 38 }, { "h4", 39 },
+        { "a3", 40 }, { "b3", 41 }, { "c3", 42 }, { "d3", 43 }, { "e3", 44 }, { "f3", 45 }, { "g3", 46 }, { "h3", 47 },
+        { "a2", 48 }, { "b2", 49 }, { "c2", 50 }, { "d2", 51 }, { "e2", 52 }, { "f2", 53 }, { "g2", 54 }, { "h2", 55 },
+        { "a1", 56 }, { "b1", 57 }, { "c1", 58 }, { "d1", 59 }, { "e1", 60 }, { "f1", 61 }, { "g1", 62 }, { "h1", 63 }
+    };
 
     //**********************************  Bit methods  **********************************
-
     // Set a bit on the bitboard
     public static void SetBit(ref ulong bitboard, int square)
     {
         bitboard |= (1UL << square);
     }
-
     // Get the state of a bit on the bitboard
     public static bool GetBit(ulong bitboard, int square)
     {
         return (bitboard & (1UL << square)) != 0;
     }
-
     // Pop (toggle) a bit on the bitboard if it's set
     public static void PopBit(ref ulong bitboard, int square)
     {
         bitboard &= ~(1UL << square);
     }
-
 
     // Count the number of set bits in the bitboard (Brian Kernighan's way)
     public static int CountBits(ulong bitboard)
@@ -450,9 +449,7 @@ public static class Globals
         return -1; // No piece found
     }
 
-
-
-
+    // **************************************************   RANDOMIZERS
     private static int GetXORShiftedNumber32Bit()
     {
         /*
@@ -470,7 +467,7 @@ public static class Globals
         seed ^= (seed << 17);
         return seed;
     }
-    private static ulong GetRandomU64Numbers()
+    public static ulong GetRandomU64Numbers()
     {
         // define 4 random numbers 
         ulong n1, n2, n3, n4;
@@ -484,6 +481,17 @@ public static class Globals
 
         return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
     }
+
+    public static ulong GetFixedRandom64Numbers()
+    {
+        ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+        ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+        return (high << 32) | low;
+    }
+
+
+    // **************************************************   RANDOMIZERS
+
     public static string MoveToString(int move)
     {
         int source = MoveGenerator.GetMoveStartSquare(move);
@@ -520,9 +528,5 @@ public static class Globals
 
         Console.WriteLine("SetOccupancy tests passed.");
     }
-
-
-
-
 
 }
