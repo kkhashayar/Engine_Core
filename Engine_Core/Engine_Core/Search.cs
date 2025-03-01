@@ -47,7 +47,7 @@ public static class Search
     public static ulong sideKey;
 
     // Set it to public for testing 
-    public static void InitializeHashKeys()
+    public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece ++)
         {

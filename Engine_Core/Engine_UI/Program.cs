@@ -76,7 +76,7 @@ void Run()
     IO.FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     //*******************  ZOBRIST HASHING TEST  
-    Search.InitializeHashKeys();
+    Search.InitializeRandomKeys();
     for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
     {
         for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
