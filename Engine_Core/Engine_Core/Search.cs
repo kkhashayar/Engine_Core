@@ -38,13 +38,15 @@ public static class Search
 
     // Random En-passant key and square 
     public static ulong[] enpassantKey = new ulong[64];
-    
-    // Random castling keys 
-    public static ulong[] castlingKeys = new ulong[16];
 
     // Random Side to play key 
 
     public static ulong sideKey;
+
+    // Random castling keys 
+    public static ulong[] castlingKeys = new ulong[16];
+
+    
 
     // Set it to public for testing 
     public static void InitializeRandomKeys()
@@ -55,6 +57,21 @@ public static class Search
             {
                 pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers(); 
             }
+        }
+
+        // En-passant key 
+        for (int square = 0; (int)square < 64; square++)
+        {
+            enpassantKey[square] = Globals.GetFixedRandom64Numbers();
+        }
+
+        // Side key 
+        sideKey = Globals.GetFixedRandom64Numbers();
+
+        // Castling keys 
+        for (int index = 0; (int) index < 16; index++)
+        {
+            castlingKeys[index] = Globals.GetFixedRandom64Numbers();        
         }
     }
 

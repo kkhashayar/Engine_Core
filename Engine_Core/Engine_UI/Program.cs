@@ -10,6 +10,9 @@ void InitAll()
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
+
+
+    Search.InitializeRandomKeys();
 }
 
 List<string> GameHistory = new List<string>();  
@@ -76,15 +79,31 @@ void Run()
     IO.FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     //*******************  ZOBRIST HASHING TEST  
-    Search.InitializeRandomKeys();
-    for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
-    {
-        for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
-        {
-            Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
-        }
-    }
     
+    //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
+    //{
+    //    for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
+    //    {
+    //        Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
+    //    }
+    //}
+    //Console.WriteLine("******************************************************************");
+    //for(int square = 0; square > 64; square++)
+    //{
+    //    Console.WriteLine(Search.enpassantKey[square]);
+    //}
+    //Console.WriteLine("******************************************************************");
+
+    //Console.WriteLine($"Side key: {Search.sideKey}");
+
+    //Console.WriteLine("******************************************************************");
+
+    //for (int index = 0; index < 16; index++)
+    //{
+    //    Console.WriteLine($"Castle key {Search.castlingKeys[index]}");
+    //}
+
+
     //*******************  ZOBRIST HASHING TEST
 
 
