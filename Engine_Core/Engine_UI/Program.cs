@@ -68,27 +68,29 @@ void PlayThePosition()
     {
         Console.Write(move);
     }
-}
-
+    
+}      
+  
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    IO.FenReader("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
 
-    //*******************  ZOBRIST HASHING TEST  
-    
+    /////******************  ZOBRIST HASHING TEST  
+
+    // Testing generated randoms --> 
     //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
     //{
-    //    for(int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
+    //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
     //    {
     //        Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
     //    }
     //}
     //Console.WriteLine("******************************************************************");
-    //for(int square = 0; square > 64; square++)
+    //for (int square = 0; square > 64; square++)
     //{
     //    Console.WriteLine(Search.enpassantKey[square]);
     //}
@@ -104,30 +106,26 @@ void Run()
     //}
 
 
-    //*******************  ZOBRIST HASHING TEST
+    ////*******************  ZOBRIST HASHING TEST
 
 
 
 
-    //Boards.DisplayBoard();
+    Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(6, true);
+    ////PerftTeste.RunPerft(6, true);
 
-    //PlayThePosition();
+    ////PlayThePosition();
 
-    // DebugSearchMethods();
+    //// DebugSearchMethods();
 
 
-    //*********************************  SML FLOW TEST  *********************************// 
+    ////*********************************  SML FLOW TEST  ********************************/ 
     //TriggerTrainingFlow();
     //*********************************  SML FLOW TEST  *********************************// 
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-
-
-
-
     //WinBoardLoop();
 
 }

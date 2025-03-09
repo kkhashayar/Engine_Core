@@ -6,6 +6,7 @@ namespace Engine_Core;
 
 public static class Search
 {
+    public static ulong PositionHashKey { get; set; }
     // Variables needed for late move reduction 
     private static int FullDepthMoves = 4;
     private static int ReductionLimit = 3;
@@ -46,7 +47,8 @@ public static class Search
     // Random castling keys 
     public static ulong[] castlingKeys = new ulong[16];
 
-    
+    // Almost unique position identifier hash key  / position key 
+    public static ulong positionHashKey; 
 
     // Set it to public for testing 
     public static void InitializeRandomKeys()
@@ -75,6 +77,49 @@ public static class Search
         }
     }
 
+    // Generate hash key. 
+    public static ulong GeneratepositionHashKey()
+    {
+        positionHashKey = 0;
+
+        // Temp board 
+        ulong pieceBitboard; 
+        int square = 0;
+        // loop over pieces 
+        for ( int piece = (int)Pieces.P; (int)piece <= (int) Pieces.k; piece ++)
+        {
+            pieceBitboard = Boards.Bitboards[piece];
+
+            while (pieceBitboard != 0)
+            {
+                // init square occupied by piece 
+                square = Globals.GetLs1bIndex(pieceBitboard);
+                Globals.PopBit(ref pieceBitboard, square);
+                
+                // Testing piece positions
+                //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
+
+                // adding piece hash to position hash!
+                positionHashKey ^= pieceKeysOnSquare[piece, square];
+            }
+        }
+
+        // En-passant 
+        if(enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
+        {
+            positionHashKey ^= enpassantKey[square];
+        }
+        // Castling
+        positionHashKey ^= castlingKeys[Boards.CastlePerm];
+
+        // Hashing the side only if black is to move
+        if(Boards.Side == (int)Colors.black)
+        {
+            positionHashKey ^= sideKey;
+        }
+        return positionHashKey; 
+    }
+    
     
     // **********************************************   ZOBRIST  HASHING 
 
@@ -107,8 +152,6 @@ public static class Search
                 ExecutablePv.Add(pvTable[0, i]);
             }
 
-
-
             // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
             if (Math.Abs(score) >= 48000) // Found a forced mate!
             {
@@ -116,7 +159,6 @@ public static class Search
                 Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
                 return bestMove; // Immediately return the best move.
             }
-
 
             if (score > bestScore)
             {

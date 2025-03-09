@@ -5,7 +5,7 @@ namespace Engine_Core;
 
 public static class Globals
 {
-    private static readonly Random random = new Random();
+     private static readonly Random random = new Random();
 
     /*
      * In fact there is no need to have a fixed random numbers seeded with specific seed. 

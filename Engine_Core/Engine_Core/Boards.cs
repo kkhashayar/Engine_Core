@@ -146,6 +146,7 @@ public static class Boards
             Console.Write("-");
         }
         Console.WriteLine("\n");
+        Console.WriteLine($"Position Key: {Search.positionHashKey}");
     }
 
 
