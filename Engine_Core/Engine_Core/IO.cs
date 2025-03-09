@@ -162,5 +162,9 @@ public static class IO
         // init all occupancies
         Boards.OccupanciesBitBoards[(int)Enumes.Colors.both] |= Boards.OccupanciesBitBoards[(int)Enumes.Colors.white];
         Boards.OccupanciesBitBoards[(int)Enumes.Colors.both] |= Boards.OccupanciesBitBoards[(int)Enumes.Colors.black];
+
+
+        Search.positionHashKey = 0; 
+        Search.GeneratepositionHashKey(); 
     }
 }

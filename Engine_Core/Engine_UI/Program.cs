@@ -10,6 +10,9 @@ void InitAll()
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
+
+
+    Search.InitializeRandomKeys();
 }
 
 List<string> GameHistory = new List<string>();  
@@ -65,34 +68,64 @@ void PlayThePosition()
     {
         Console.Write(move);
     }
-}
-
+    
+}      
+  
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    //Boards.DisplayBoard();
+    IO.FenReader("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
 
-    PerftTeste.RunPerft(6, true);
+    /////******************  ZOBRIST HASHING TEST  
 
-    //PlayThePosition();
+    // Testing generated randoms --> 
+    //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
+    //{
+    //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
+    //    {
+    //        Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
+    //    }
+    //}
+    //Console.WriteLine("******************************************************************");
+    //for (int square = 0; square > 64; square++)
+    //{
+    //    Console.WriteLine(Search.enpassantKey[square]);
+    //}
+    //Console.WriteLine("******************************************************************");
 
-    // DebugSearchMethods();
+    //Console.WriteLine($"Side key: {Search.sideKey}");
+
+    //Console.WriteLine("******************************************************************");
+
+    //for (int index = 0; index < 16; index++)
+    //{
+    //    Console.WriteLine($"Castle key {Search.castlingKeys[index]}");
+    //}
 
 
-    //*********************************  SML FLOW TEST  *********************************// 
+    ////*******************  ZOBRIST HASHING TEST
+
+
+
+
+    Boards.DisplayBoard();
+
+    ////PerftTeste.RunPerft(6, true);
+
+    ////PlayThePosition();
+
+    //// DebugSearchMethods();
+
+
+    ////*********************************  SML FLOW TEST  ********************************/ 
     //TriggerTrainingFlow();
     //*********************************  SML FLOW TEST  *********************************// 
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-
-
-
-
     //WinBoardLoop();
 
 }

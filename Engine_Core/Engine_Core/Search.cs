@@ -6,6 +6,7 @@ namespace Engine_Core;
 
 public static class Search
 {
+    public static ulong PositionHashKey { get; set; }
     // Variables needed for late move reduction 
     private static int FullDepthMoves = 4;
     private static int ReductionLimit = 3;
@@ -29,6 +30,98 @@ public static class Search
     // A typical big negative/positive bound for mate scores
     private const int NEG_INF = -50000;
     private const int POS_INF = 50000;
+
+
+    // **********************************************   ZOBRIST  HASHING 
+    
+    // Random piece keys [piece, squar]  give a random unique number to piece on given square
+    public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
+
+    // Random En-passant key and square 
+    public static ulong[] enpassantKey = new ulong[64];
+
+    // Random Side to play key 
+
+    public static ulong sideKey;
+
+    // Random castling keys 
+    public static ulong[] castlingKeys = new ulong[16];
+
+    // Almost unique position identifier hash key  / position key 
+    public static ulong positionHashKey; 
+
+    // Set it to public for testing 
+    public static void InitializeRandomKeys()
+    {
+        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece ++)
+        {
+            for(int square = 0; square < 64; square++)
+            {
+                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers(); 
+            }
+        }
+
+        // En-passant key 
+        for (int square = 0; (int)square < 64; square++)
+        {
+            enpassantKey[square] = Globals.GetFixedRandom64Numbers();
+        }
+
+        // Side key 
+        sideKey = Globals.GetFixedRandom64Numbers();
+
+        // Castling keys 
+        for (int index = 0; (int) index < 16; index++)
+        {
+            castlingKeys[index] = Globals.GetFixedRandom64Numbers();        
+        }
+    }
+
+    // Generate hash key. 
+    public static ulong GeneratepositionHashKey()
+    {
+        positionHashKey = 0;
+
+        // Temp board 
+        ulong pieceBitboard; 
+        int square = 0;
+        // loop over pieces 
+        for ( int piece = (int)Pieces.P; (int)piece <= (int) Pieces.k; piece ++)
+        {
+            pieceBitboard = Boards.Bitboards[piece];
+
+            while (pieceBitboard != 0)
+            {
+                // init square occupied by piece 
+                square = Globals.GetLs1bIndex(pieceBitboard);
+                Globals.PopBit(ref pieceBitboard, square);
+                
+                // Testing piece positions
+                //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
+
+                // adding piece hash to position hash!
+                positionHashKey ^= pieceKeysOnSquare[piece, square];
+            }
+        }
+
+        // En-passant 
+        if(enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
+        {
+            positionHashKey ^= enpassantKey[square];
+        }
+        // Castling
+        positionHashKey ^= castlingKeys[Boards.CastlePerm];
+
+        // Hashing the side only if black is to move
+        if(Boards.Side == (int)Colors.black)
+        {
+            positionHashKey ^= sideKey;
+        }
+        return positionHashKey; 
+    }
+    
+    
+    // **********************************************   ZOBRIST  HASHING 
 
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
@@ -59,8 +152,6 @@ public static class Search
                 ExecutablePv.Add(pvTable[0, i]);
             }
 
-
-
             // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
             if (Math.Abs(score) >= 48000) // Found a forced mate!
             {
@@ -68,7 +159,6 @@ public static class Search
                 Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
                 return bestMove; // Immediately return the best move.
             }
-
 
             if (score > bestScore)
             {
@@ -733,3 +823,9 @@ public static class Search
 *            5. History moves
 *            6. Unsorted moves
 */
+
+/*
+    In order to implement threefold repetition we need to have unique position identifier. 
+    And using the key "Hash key" to identify position we can additionally implement transposition table 
+    Which will improve acurace and speed of search and overal the engine. 
+ */
