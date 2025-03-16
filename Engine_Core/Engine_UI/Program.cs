@@ -33,7 +33,7 @@ void PlayThePosition()
         int move = 0;
 
         //move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(6, 30); 
+        move = Search.GetBestMoveWithIterativeDeepening(10, 30); 
         
         Console.Beep(1000, 500);
         
@@ -47,7 +47,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        //Console.ReadKey();  
+        Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
@@ -96,7 +96,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
 
     /////******************  ZOBRIST HASHING TEST  
 

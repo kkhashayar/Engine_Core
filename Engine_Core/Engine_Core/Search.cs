@@ -7,7 +7,6 @@ namespace Engine_Core
 {
     public static class Search
     {
-        private const int TTableDepth = 6; 
         // TT flag constants
         private const int FLAG_ALPHA = 0;
         private const int FLAG_BETA = 1;
@@ -106,13 +105,16 @@ namespace Engine_Core
             return positionHashKey;
         }
 
-        // ************************* NEGAMAX ************************* // 
-        // Negamax search with iterative deepening, using Transposition table
+        // **********************************************   NEGAMAX WITH TT 
+
+        // Negamax search with iterative deepening.
         public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
         {
-            //GeneratepositionHashKey();
-            int score = 0;
             
+            GeneratepositionHashKey();
+
+            int score = 0;
+            nodes = 0;
             ply = 0;
             int bestScore = NEG_INF;
             int bestMove = 0;
@@ -171,7 +173,6 @@ namespace Engine_Core
             return bestMove;
         }
 
-        
         private static void FlagCheckmate(MoveObjects moveList)
         {
             if (moveList.counter == 0)
@@ -183,45 +184,40 @@ namespace Engine_Core
             }
         }
 
-        // Negamax search with TT integration.
         private static int Negamax(int alpha, int beta, int depth)
         {
             // Store current ply's PV length.
             pvLength[ply] = ply;
 
-            // TT Lookup: If an entry exists with sufficient depth, use it.
-            //if(depth >= TTableDepth)
-            //{
-            //    if (TranspositionTable.TryGetValue(positionHashKey, out PositionScoreInDepth ttEntry))
-            //    {
-            //        Console.WriteLine($"TT hit: Hash={positionHashKey}, Depth={ttEntry.depth}, Flag={ttEntry.flag}");
-            //        if (ttEntry.depth == depth)
-            //        {
-            //            if (ttEntry.flag == FLAG_EXACT)
-            //                return ttEntry.score;
-            //            else if (ttEntry.flag == FLAG_ALPHA)
-            //                beta = Math.Min(beta, ttEntry.score);
-            //            else if (ttEntry.flag == FLAG_BETA)
-            //                alpha = Math.Max(alpha, ttEntry.score);
-            //            if (alpha >= beta)
-            //                return ttEntry.score;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        Console.WriteLine($"TT miss: Hash={positionHashKey}");
-            //    }
-            //}
-            
+            // Recompute the current position hash key for this board state.
+            ulong currentKey = GeneratepositionHashKey();
 
+            // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
+            if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
+            {
+                Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
+                if (ttEntry.depth == depth)
+                {
+                    return ttEntry.score;
+                }
+            }
+            else
+            {
+
+                Console.WriteLine($"TT miss: Hash={currentKey}");
+            }
+
+            // Terminal condition: if at leaf node, do quiescence search.
             if (depth == 0)
                 return Quiescence(alpha, beta);
 
+            // Safety check for maximum ply.
             if (ply > maxPly - 1)
                 return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
             nodes++;
 
+            // Determine if the side to move is in check.
             bool inCheck = false;
             if (Boards.Side == (int)Colors.white)
             {
@@ -236,6 +232,7 @@ namespace Engine_Core
                     inCheck = true;
             }
 
+            // If in check, extend search depth by one.
             if (inCheck)
                 depth++;
 
@@ -244,6 +241,7 @@ namespace Engine_Core
 
             if (moveList.counter == 0) FlagCheckmate(moveList);
 
+            // Order moves (using your sorting heuristic).
             SortMoves(moveList);
 
             int legalMoves = 0;
@@ -255,8 +253,10 @@ namespace Engine_Core
             while (i < moveList.counter)
             {
                 int move = moveList.moves[i];
+                // Save board state.
                 MoveGenerator.CopyGameState(out ulong[] bbCopy, out ulong[] occCopy, out Colors sideCopy, out int castleCopy, out int enpassCopy);
 
+                // Skip illegal moves.
                 if (!MoveGenerator.IsLegal(move, false))
                 {
                     MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
@@ -284,6 +284,8 @@ namespace Engine_Core
                     score = -Negamax(-beta, -alpha, newDepth);
                 }
                 ply--;
+
+                // Restore board state.
                 MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
 
                 if (score >= beta)
@@ -293,19 +295,14 @@ namespace Engine_Core
                         killerMoves[1, ply] = killerMoves[0, ply];
                         killerMoves[0, ply] = move;
                     }
-                    //if(depth >= TTableDepth)
-                    //{
-                    //    // Store TT as beta cutoff.
-                    //    TranspositionTable[positionHashKey] = new PositionScoreInDepth
-                    //    {
-                    //        depth = depth,
-                    //        score = beta,
-                    //        flag = FLAG_BETA,
-                    //        bestMove = move,
-                    //        PositionHashKey = positionHashKey
-                    //    };
-                    //}
-                    
+                    // Store TT entry as a beta cutoff using the current key.
+                    TranspositionTable[currentKey] = new PositionScoreInDepth
+                    {
+                        depth = depth,
+                        score = beta,
+                        bestMove = move,
+                        PositionHashKey = currentKey
+                    };
                     return beta;
                 }
                 if (score > alpha)
@@ -332,35 +329,22 @@ namespace Engine_Core
 
             if (legalMoves == 0)
             {
-                if (inCheck)
-                    return -49000 + ply; // checkmate
-                else
-                    return 0;            // stalemate
+                // No legal moves: checkmate or stalemate.
+                return inCheck ? (-49000 + ply) : 0;
             }
 
-            //if(depth >= TTableDepth)
-            //{
-            //    int flag;
-            //    if (alpha <= oldAlpha)
-            //        flag = FLAG_ALPHA;
-            //    else if (alpha >= beta)
-            //        flag = FLAG_BETA;
-            //    else
-            //        flag = FLAG_EXACT;
-
-            //    TranspositionTable[positionHashKey] = new PositionScoreInDepth
-            //    {
-            //        depth = depth,
-            //        score = alpha,
-            //        flag = flag,
-            //        bestMove = bestMove,
-            //        PositionHashKey = positionHashKey
-            //    };
-            //}
-            
+            // Store the TT entry using the current key.
+            TranspositionTable[currentKey] = new PositionScoreInDepth
+            {
+                depth = depth,
+                score = alpha,
+                bestMove = bestMove,
+                PositionHashKey = currentKey
+            };
 
             return alpha;
         }
+
 
         // Using Insertion sort to order moves.
         public static void SortMoves(MoveObjects movelist)
