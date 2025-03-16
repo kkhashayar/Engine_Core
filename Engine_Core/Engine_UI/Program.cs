@@ -33,7 +33,7 @@ void PlayThePosition()
         int move = 0;
 
         //move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 30); 
+        move = Search.GetBestMoveWithIterativeDeepening(6, 5); 
         
         Console.Beep(1000, 500);
         
@@ -96,7 +96,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1");
+    IO.FenReader("");
 
     /////******************  ZOBRIST HASHING TEST  
 
@@ -134,7 +134,7 @@ void Run()
 
     ////PerftTeste.RunPerft(6, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -145,7 +145,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    //WinBoardLoop();
+    WinBoardLoop();
 
 }
 
@@ -253,7 +253,7 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 6;           // Default search depth
+            int depth = 8;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 

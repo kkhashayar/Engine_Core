@@ -111,7 +111,7 @@ namespace Engine_Core
         public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
         {
             
-            GeneratepositionHashKey();
+            //GeneratepositionHashKey();
 
             int score = 0;
             nodes = 0;
@@ -195,17 +195,21 @@ namespace Engine_Core
             // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
             if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
             {
-                Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
+                if(depth >= 6)
+                {
+                    Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
+                }
+                
                 if (ttEntry.depth == depth)
                 {
                     return ttEntry.score;
                 }
             }
-            else
-            {
+            //else
+            //{
 
-                Console.WriteLine($"TT miss: Hash={currentKey}");
-            }
+            //    Console.WriteLine($"TT miss: Hash={currentKey}");
+            //}
 
             // Terminal condition: if at leaf node, do quiescence search.
             if (depth == 0)
