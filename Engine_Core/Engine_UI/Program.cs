@@ -32,8 +32,8 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        move = Search.GetBestMove(6);
-        //move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
+        //move = Search.GetBestMove(6);
+        move = Search.GetBestMoveWithIterativeDeepening(6, 30); 
         
         Console.Beep(1000, 500);
         
@@ -69,15 +69,34 @@ void PlayThePosition()
         Console.Write(move);
     }
     
-}      
-  
+}
+
+//**************** TEST POSITIONS ****************// 
+
+// 8/8/8/8/8/8/8/8 b - -                                                empty board
+// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq                   Standard position
+
+// 6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1                 mate in 3 Rh3+  simple
+// rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0            mate in 3 Qh7+  simple
+// r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0           mate in 4 Bxf6  mid complex
+// br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0      mate in 4 Bxf7+ mid comple
+// rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11       mate in 7 Qxh7+ semi complex 
+
+// 8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1                     mate in 10 Qxh3+ Very complex
+// r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0        Super complex
+
+// r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 Tricky position (Positional)
+// rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1  Killer position (Positional)
+// r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 Deep move       (Positional)
+
+
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
+    IO.FenReader("");
 
     /////******************  ZOBRIST HASHING TEST  
 
@@ -115,7 +134,7 @@ void Run()
 
     ////PerftTeste.RunPerft(6, true);
 
-    ////PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -490,7 +509,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        int bestMove = Search.GetBestMove(depth);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(depth, 10);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state
