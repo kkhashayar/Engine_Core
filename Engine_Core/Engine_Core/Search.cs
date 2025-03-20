@@ -12,6 +12,10 @@ namespace Engine_Core
         private const int FLAG_BETA = 1;
         private const int FLAG_EXACT = 2;
 
+
+        public static bool TtSwitch = false;   
+
+
         // Transposition Table
         public static Dictionary<ulong, PositionScoreInDepth> TranspositionTable = new Dictionary<ulong, PositionScoreInDepth>();
 
@@ -191,29 +195,28 @@ namespace Engine_Core
         {
             // Store current ply's PV length.
             pvLength[ply] = ply;
-
+            ulong currentKey = 0;
             // Recompute the current position hash key for this board state.
-            ulong currentKey = GeneratepositionHashKey();
-
-            // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
-            if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
+            if (TtSwitch is true) 
             {
-                if(depth > 5 && ttEntry.depth > 5)
+                currentKey = GeneratepositionHashKey();
+                // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
+                if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
                 {
-                    Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
-                }
-                
-                if (ttEntry.depth == depth)
-                {
-                    return ttEntry.score;
+                    if (depth > 5 && ttEntry.depth > 5)
+                    {
+                        Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
+                    }
+
+                    if (ttEntry.depth == depth)
+                    {
+                        return ttEntry.score;
+                    }
                 }
             }
-            //else
-            //{
+            
 
-            //    Console.WriteLine($"TT miss: Hash={currentKey}");
-            //}
-
+          
             // Terminal condition: if at leaf node, do quiescence search.
             if (depth == 0)
                 return Quiescence(alpha, beta);
@@ -340,14 +343,18 @@ namespace Engine_Core
                 return inCheck ? (-49000 + ply) : 0;
             }
 
-            // Store the TT entry using the current key.
-            TranspositionTable[currentKey] = new PositionScoreInDepth
+            if(TtSwitch is true)
             {
-                depth = depth,
-                score = alpha,
-                //bestMove = bestMove,
-                PositionHashKey = currentKey
-            };
+                // Store the TT entry using the current key.
+                TranspositionTable[currentKey] = new PositionScoreInDepth
+                {
+                    depth = depth,
+                    score = alpha,
+                    //bestMove = bestMove,
+                    PositionHashKey = currentKey
+                };
+            }
+            
 
             return alpha;
         }
