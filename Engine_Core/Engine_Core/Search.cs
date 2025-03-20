@@ -203,7 +203,7 @@ namespace Engine_Core
                 // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
                 if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
                 {
-                    if (depth > 5 && ttEntry.depth > 5)
+                    if (depth > 5 && ttEntry.depth > 2)
                     {
                         Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
                     }

@@ -13,6 +13,8 @@ void InitAll()
 
 
     Search.InitializeRandomKeys();
+
+    Search.TtSwitch = true; 
 }
 
 List<string> GameHistory = new List<string>();  
@@ -23,8 +25,8 @@ void PlayThePosition()
 {
     while (running)
     {
-        
-        Thread.Sleep(2000);
+        //Console.Clear();    
+        Thread.Sleep(500);
         Console.Clear();
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
@@ -33,7 +35,7 @@ void PlayThePosition()
         int move = 0;
 
         //move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 10); 
+        move = Search.GetBestMoveWithIterativeDeepening(8, 30); 
         
         Console.Beep(1000, 500);
         
@@ -47,7 +49,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        Console.ReadKey();  
+        //Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
@@ -96,7 +98,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader("r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0");
 
     /////******************  ZOBRIST HASHING TEST  
 
