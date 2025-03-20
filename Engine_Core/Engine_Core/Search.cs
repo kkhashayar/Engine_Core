@@ -7,7 +7,7 @@ namespace Engine_Core
 {
     public static class Search
     {
-        // TT flag constants
+        // TT flag constants // Stop using them for now. 
         private const int FLAG_ALPHA = 0;
         private const int FLAG_BETA = 1;
         private const int FLAG_EXACT = 2;
@@ -166,7 +166,10 @@ namespace Engine_Core
 
             // Final search at maximum depth.
             score = Negamax(-50000, 50000, maxDepth);
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Green;  
             Console.WriteLine($"info score cp {score} depth {maxDepth} nodes {nodes} pv {PrintPVLine()}");
+            Console.WriteLine();
             bestMove = pvTable[0, 0];
             Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
 
@@ -195,7 +198,7 @@ namespace Engine_Core
             // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
             if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
             {
-                if(depth >= 6)
+                if(depth > 5 && ttEntry.depth > 5)
                 {
                     Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
                 }
@@ -304,7 +307,7 @@ namespace Engine_Core
                     {
                         depth = depth,
                         score = beta,
-                        bestMove = move,
+                        //bestMove = move,
                         PositionHashKey = currentKey
                     };
                     return beta;
@@ -342,7 +345,7 @@ namespace Engine_Core
             {
                 depth = depth,
                 score = alpha,
-                bestMove = bestMove,
+                //bestMove = bestMove,
                 PositionHashKey = currentKey
             };
 
@@ -520,8 +523,8 @@ namespace Engine_Core
         public int depth;
         public int score;
         public ulong PositionHashKey;
-        public int flag;
-        public int bestMove;
+        //public int flag;
+        //public int bestMove;
         public override bool Equals(object obj)
         {
             return obj is PositionScoreInDepth other &&
