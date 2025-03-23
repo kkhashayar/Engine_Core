@@ -13,7 +13,7 @@ namespace Engine_Core
         private const int FLAG_EXACT = 2;
 
 
-        public static bool TtSwitch = false;   
+        public static bool TtSwitch = false;
 
 
         // Transposition Table
@@ -114,7 +114,7 @@ namespace Engine_Core
         // Negamax search with iterative deepening.
         public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
         {
-            
+
             //GeneratepositionHashKey();
 
             int score = 0;
@@ -171,7 +171,7 @@ namespace Engine_Core
             // Final search at maximum depth.
             score = Negamax(-50000, 50000, maxDepth);
             Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Green;  
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"info score cp {score} depth {maxDepth} nodes {nodes} pv {PrintPVLine()}");
             Console.WriteLine();
             bestMove = pvTable[0, 0];
@@ -191,39 +191,40 @@ namespace Engine_Core
             }
         }
 
+
+
+        // **************************************************************** NEGAMAX 
         private static int Negamax(int alpha, int beta, int depth)
         {
             // Store current ply's PV length.
             pvLength[ply] = ply;
             ulong currentKey = 0;
+            
             // Recompute the current position hash key for this board state.
-            if (TtSwitch is true) 
+            if (TtSwitch is true)
             {
                 currentKey = GeneratepositionHashKey();
                 // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
                 if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
                 {
+                    // This is just for test, standard approach doesn't filter depths
                     if (depth > 5 && ttEntry.depth > 2)
-                    {
-                        Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
-                    }
+                        {
+                            Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
+                        }
 
                     if (ttEntry.depth == depth)
                     {
+                        //Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
                         return ttEntry.score;
                     }
                 }
             }
-            
 
-          
-            // Terminal condition: if at leaf node, do quiescence search.
-            if (depth == 0)
-                return Quiescence(alpha, beta);
+            if (depth == 0) return Quiescence(alpha, beta);
 
             // Safety check for maximum ply.
-            if (ply > maxPly - 1)
-                return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+            if (ply > maxPly - 1) return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
             nodes++;
 
@@ -242,9 +243,8 @@ namespace Engine_Core
                     inCheck = true;
             }
 
-            // If in check, extend search depth by one.
-            if (inCheck)
-                depth++;
+            // If in check, extend search depth by one, to find checkmate sequence.
+            if (inCheck) depth++;
 
             MoveObjects moveList = new MoveObjects();
             MoveGenerator.GenerateMoves(moveList);
@@ -259,6 +259,8 @@ namespace Engine_Core
             int bestMove = 0;
             int moveSearched = 0;
             int i = 0;
+
+            int pvMove = pvTable[ply, ply];
 
             while (i < moveList.counter)
             {
@@ -315,16 +317,21 @@ namespace Engine_Core
                     };
                     return beta;
                 }
+
+
                 if (score > alpha)
                 {
                     alpha = score;
                     bestMove = move;
+                    
+                    // update history if quiet
                     if (!MoveGenerator.GetMoveCapture(move))
                     {
                         int piece = MoveGenerator.GetMovePiece(move);
                         int targetSq = MoveGenerator.GetMoveTarget(move);
                         historyMoves[piece, targetSq] += depth;
                     }
+
                     pvTable[ply, ply] = move;
                     int nextPly = ply + 1;
                     while (nextPly < pvLength[ply + 1])
@@ -343,7 +350,7 @@ namespace Engine_Core
                 return inCheck ? (-49000 + ply) : 0;
             }
 
-            if(TtSwitch is true)
+            if (TtSwitch is true)
             {
                 // Store the TT entry using the current key.
                 TranspositionTable[currentKey] = new PositionScoreInDepth
@@ -354,7 +361,7 @@ namespace Engine_Core
                     PositionHashKey = currentKey
                 };
             }
-            
+
 
             return alpha;
         }
@@ -409,6 +416,9 @@ namespace Engine_Core
                 }
             }
         }
+
+
+
 
         // Find the victim piece on target square.
         private static int FindVictimPiece(int move)
