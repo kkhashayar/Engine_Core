@@ -1,556 +1,721 @@
 ﻿using Engine;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
-using System.Collections.Generic;
 using static Engine_Core.Enumes;
 
-namespace Engine_Core
+namespace Engine_Core;
+
+public static class Search
 {
-    public static class Search
+   
+    public static ulong PositionHashKey { get; set; }
+    // Variables needed for late move reduction 
+    private static int FullDepthMoves = 4;
+    private static int ReductionLimit = 3;
+
+
+    public static List<int> ExecutablePv = new List<int>();
+    public static long nodes;
+
+    public static int maxPly = 64;
+
+    public static int[,] killerMoves = new int[2, maxPly];
+    public static int[,] historyMoves = new int[12, 64];
+
+    // Triangular principal variation table
+    public static int[] pvLength = new int[maxPly];
+    public static int[,] pvTable = new int[maxPly, maxPly];
+
+    // Half-move (ply) counter
+    public static int ply;
+
+    // A typical big negative/positive bound for mate scores
+    private const int NEG_INF = -50000;
+    private const int POS_INF = 50000;
+
+
+    // **********************************************   ZOBRIST  HASHING 
+
+    // Random piece keys [piece, squar]  give a random unique number to piece on given square
+    public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
+
+    // Random En-passant key and square 
+    public static ulong[] enpassantKey = new ulong[64];
+
+    // Random Side to play key 
+
+    public static ulong sideKey;
+
+    // Random castling keys 
+    public static ulong[] castlingKeys = new ulong[16];
+
+    // Almost unique position identifier hash key  / position key 
+    public static ulong positionHashKey;
+
+    // Set it to public for testing 
+    public static void InitializeRandomKeys()
     {
-        // TT flag constants // Stop using them for now. 
-        private const int FLAG_ALPHA = 0;
-        private const int FLAG_BETA = 1;
-        private const int FLAG_EXACT = 2;
-
-
-        public static bool TtSwitch = false;
-
-
-        // Transposition Table
-        public static Dictionary<ulong, PositionScoreInDepth> TranspositionTable = new Dictionary<ulong, PositionScoreInDepth>();
-
-        public static ulong PositionHashKey { get; set; }
-        // Variables needed for late move reduction 
-        private static int FullDepthMoves = 4;
-        private static int ReductionLimit = 3;
-
-        public static List<int> ExecutablePv = new List<int>();
-        public static long nodes;
-
-        public static int maxPly = 64;
-
-        public static int[,] killerMoves = new int[2, maxPly];
-        public static int[,] historyMoves = new int[12, 64];
-
-        // Triangular principal variation table
-        public static int[] pvLength = new int[maxPly];
-        public static int[,] pvTable = new int[maxPly, maxPly];
-
-        // Half-move (ply) counter
-        public static int ply;
-
-        // Boundaries for evaluation scores
-        private const int NEG_INF = -50000;
-        private const int POS_INF = 50000;
-
-        // **********************************************   ZOBRIST  HASHING 
-
-        // Random piece keys [piece, square]
-        public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
-        // Random en-passant keys 
-        public static ulong[] enpassantKey = new ulong[64];
-        // Random side key 
-        public static ulong sideKey;
-        // Random castling keys 
-        public static ulong[] castlingKeys = new ulong[16];
-        // Position key (almost unique identifier)
-        public static ulong positionHashKey;
-
-        // Set it to public for testing 
-        public static void InitializeRandomKeys()
+        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
         {
-            for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
-            {
-                for (int square = 0; square < 64; square++)
-                {
-                    pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers();
-                }
-            }
-
-            // En-passant key 
             for (int square = 0; square < 64; square++)
             {
-                enpassantKey[square] = Globals.GetFixedRandom64Numbers();
-            }
-
-            // Side key 
-            sideKey = Globals.GetFixedRandom64Numbers();
-
-            // Castling keys 
-            for (int index = 0; index < 16; index++)
-            {
-                castlingKeys[index] = Globals.GetFixedRandom64Numbers();
+                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers();
             }
         }
 
-        // Generate hash key for the current board position.
-        public static ulong GeneratepositionHashKey()
+        // En-passant key 
+        for (int square = 0; (int)square < 64; square++)
         {
-            positionHashKey = 0UL;
-            // Loop over pieces on board
-            for (int piece = (int)Pieces.P; piece <= (int)Pieces.k; piece++)
-            {
-                ulong pieceBitboard = Boards.Bitboards[piece];
-                while (pieceBitboard != 0)
-                {
-                    int square = Globals.GetLs1bIndex(pieceBitboard);
-                    Globals.PopBit(ref pieceBitboard, square);
-                    positionHashKey ^= pieceKeysOnSquare[piece, square];
-                }
-            }
-            // Do not hash en-passant in this version (as you decided)
-            // Hash castling rights
-            positionHashKey ^= castlingKeys[Boards.CastlePerm];
-            // Hash side if black to move
-            if (Boards.Side == (int)Colors.black)
-            {
-                positionHashKey ^= sideKey;
-            }
-            return positionHashKey;
+            enpassantKey[square] = Globals.GetFixedRandom64Numbers();
         }
 
-        // **********************************************   NEGAMAX WITH TT 
+        // Side key 
+        sideKey = Globals.GetFixedRandom64Numbers();
 
-        // Negamax search with iterative deepening.
-        public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
+        // Castling keys 
+        for (int index = 0; (int)index < 16; index++)
         {
-
-            //GeneratepositionHashKey();
-
-            int score = 0;
-            nodes = 0;
-            ply = 0;
-            int bestScore = NEG_INF;
-            int bestMove = 0;
-            var startTime = DateTime.UtcNow;
-
-            ClearKillerAndHistoryMoves();
-            ClearPV();
-
-            for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
-            {
-                nodes = 0;
-                var depthStartTime = DateTime.UtcNow;
-
-                score = Negamax(-50000, 50000, currentDepth);
-
-                Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
-
-                ExecutablePv.Clear();
-                for (int i = 0; i < pvLength[0]; i++)
-                {
-                    ExecutablePv.Add(pvTable[0, i]);
-                }
-
-                if (Math.Abs(score) >= 48000)
-                {
-                    bestMove = pvTable[0, 0];
-                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
-                    return bestMove;
-                }
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestMove = pvTable[0, 0];
-                }
-
-                if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
-                {
-                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                    continue;
-                }
-
-                if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
-                {
-                    Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
-                    break;
-                }
-            }
-
-            // Final search at maximum depth.
-            score = Negamax(-50000, 50000, maxDepth);
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"info score cp {score} depth {maxDepth} nodes {nodes} pv {PrintPVLine()}");
-            Console.WriteLine();
-            bestMove = pvTable[0, 0];
-            Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
-
-            return bestMove;
+            castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
+    }
 
-        private static void FlagCheckmate(MoveObjects moveList)
+    // Generate hash key. 
+    public static ulong GeneratepositionHashKey()
+    {
+        positionHashKey = 0;
+
+        // Temp board 
+        ulong pieceBitboard;
+        int square = 0;
+        // loop over pieces 
+        for (int piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
         {
-            if (moveList.counter == 0)
+            pieceBitboard = Boards.Bitboards[piece];
+
+            while (pieceBitboard != 0)
             {
-                if (Boards.Side == (int)Colors.white)
-                    Boards.whiteCheckmate = true;
-                else
-                    Boards.blackCheckmate = true;
+                // init square occupied by piece 
+                square = Globals.GetLs1bIndex(pieceBitboard);
+                Globals.PopBit(ref pieceBitboard, square);
+
+                // Testing piece positions
+                //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
+
+                // adding piece hash to position hash!
+                positionHashKey ^= pieceKeysOnSquare[piece, square];
             }
         }
 
-
-
-        // **************************************************************** NEGAMAX 
-        private static int Negamax(int alpha, int beta, int depth)
+        // En-passant 
+        if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
         {
-            // Store current ply's PV length.
-            pvLength[ply] = ply;
-            ulong currentKey = 0;
-            
-            // Recompute the current position hash key for this board state.
-            if (TtSwitch is true)
+            positionHashKey ^= enpassantKey[square];
+        }
+        // Castling
+        positionHashKey ^= castlingKeys[Boards.CastlePerm];
+
+        // Hashing the side only if black is to move
+        if (Boards.Side == (int)Colors.black)
+        {
+            positionHashKey ^= sideKey;
+        }
+        return positionHashKey;
+    }
+
+    // Negamax call with iterative deepening 
+    public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
+    {
+        //int score = 0;
+        //nodes = 0;
+        //ply = 0;
+        //int bestScore = 0;
+        //int bestMove = 0;
+        //var startTime = DateTime.UtcNow;
+
+        int bestMove = 0;
+        int bestScore = NEG_INF;
+
+        ClearKillerAndHistoryMoves();
+        ClearPV();
+
+        var startTime = DateTime.UtcNow;   
+
+        for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
+        {
+            int localBestScore = NEG_INF;
+            int localBestMove = 0; 
+
+            // Generating root Moves 
+            MoveObjects rootMoveList = new MoveObjects();
+            MoveGenerator.GenerateMoves(rootMoveList);
+            SortMoves(rootMoveList);
+
+            // For each moveat root 
+            for (int i = 0; i < rootMoveList.counter; i++)
             {
-                currentKey = GeneratepositionHashKey();
-                // TT Lookup: Only use the entry if its stored depth exactly matches the current depth.
-                if (TranspositionTable.TryGetValue(currentKey, out PositionScoreInDepth ttEntry))
-                {
-                    // This is just for test, standard approach doesn't filter depths
-                    if (depth > 5 && ttEntry.depth > 2)
-                        {
-                            Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
-                        }
+                int move = rootMoveList.moves[i];
 
-                    if (ttEntry.depth == depth)
-                    {
-                        //Console.WriteLine($"TT hit: Hash={currentKey}, Depth={ttEntry.depth}");
-                        return ttEntry.score;
-                    }
-                }
-            }
-
-            if (depth == 0) return Quiescence(alpha, beta);
-
-            // Safety check for maximum ply.
-            if (ply > maxPly - 1) return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
-
-            nodes++;
-
-            // Determine if the side to move is in check.
-            bool inCheck = false;
-            if (Boards.Side == (int)Colors.white)
-            {
-                int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
-                if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
-                    inCheck = true;
-            }
-            else
-            {
-                int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
-                if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
-                    inCheck = true;
-            }
-
-            // If in check, extend search depth by one, to find checkmate sequence.
-            if (inCheck) depth++;
-
-            MoveObjects moveList = new MoveObjects();
-            MoveGenerator.GenerateMoves(moveList);
-
-            if (moveList.counter == 0) FlagCheckmate(moveList);
-
-            // Order moves (using your sorting heuristic).
-            SortMoves(moveList);
-
-            int legalMoves = 0;
-            int oldAlpha = alpha;
-            int bestMove = 0;
-            int moveSearched = 0;
-            int i = 0;
-
-            int pvMove = pvTable[ply, ply];
-
-            while (i < moveList.counter)
-            {
-                int move = moveList.moves[i];
-                // Save board state.
+                // Save and check if is legal 
                 MoveGenerator.CopyGameState(out ulong[] bbCopy, out ulong[] occCopy, out Colors sideCopy, out int castleCopy, out int enpassCopy);
+                bool legal = MoveGenerator.IsLegal(move, false);
 
-                // Skip illegal moves.
-                if (!MoveGenerator.IsLegal(move, false))
+                if (!legal)
                 {
                     MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                    i++;
                     continue;
                 }
 
-                legalMoves++;
-                moveSearched++;
+                // When move is legal:
                 ply++;
-
-                bool isCapture = MoveGenerator.GetMoveCapture(move);
-                int promoted = MoveGenerator.GetMovePromoted(move);
-                bool canReduce = moveSearched > FullDepthMoves && depth > ReductionLimit && !inCheck && !isCapture && promoted == 0;
-                int newDepth = depth - 1;
-                int score = 0;
-                if (canReduce)
-                {
-                    score = -Negamax(-beta, -alpha, depth - 1);
-                    if (score > alpha)
-                        score = -Negamax(-beta, -alpha, newDepth);
-                }
-                else
-                {
-                    score = -Negamax(-beta, -alpha, newDepth);
-                }
+                int score = -Negamax(-POS_INF, -bestScore, currentDepth -1);
                 ply--;
-
-                // Restore board state.
                 MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
 
-                if (score >= beta)
+                if(score > localBestScore)
                 {
-                    if (!MoveGenerator.GetMoveCapture(move))
-                    {
-                        killerMoves[1, ply] = killerMoves[0, ply];
-                        killerMoves[0, ply] = move;
-                    }
-                    // Store TT entry as a beta cutoff using the current key.
-                    TranspositionTable[currentKey] = new PositionScoreInDepth
-                    {
-                        depth = depth,
-                        score = beta,
-                        //bestMove = move,
-                        PositionHashKey = currentKey
-                    };
-                    return beta;
+                    localBestScore = score;
+                    localBestMove = move;
                 }
-
-
-                if (score > alpha)
-                {
-                    alpha = score;
-                    bestMove = move;
-                    
-                    // update history if quiet
-                    if (!MoveGenerator.GetMoveCapture(move))
-                    {
-                        int piece = MoveGenerator.GetMovePiece(move);
-                        int targetSq = MoveGenerator.GetMoveTarget(move);
-                        historyMoves[piece, targetSq] += depth;
-                    }
-
-                    pvTable[ply, ply] = move;
-                    int nextPly = ply + 1;
-                    while (nextPly < pvLength[ply + 1])
-                    {
-                        pvTable[ply, nextPly] = pvTable[ply + 1, nextPly];
-                        nextPly++;
-                    }
-                    pvLength[ply] = pvLength[ply + 1];
-                }
-                i++;
             }
 
-            if (legalMoves == 0)
+            // update Global best if improved 
+            if(localBestScore > bestScore)
             {
-                // No legal moves: checkmate or stalemate.
-                return inCheck ? (-49000 + ply) : 0;
+                bestScore = localBestScore; 
+                bestMove = localBestMove;
             }
 
-            if (TtSwitch is true)
+            // Time check 
+            var now = DateTime.UtcNow;      
+            if((now - startTime).TotalSeconds >= maxTimeSeconds)
             {
-                // Store the TT entry using the current key.
-                TranspositionTable[currentKey] = new PositionScoreInDepth
-                {
-                    depth = depth,
-                    score = alpha,
-                    //bestMove = bestMove,
-                    PositionHashKey = currentKey
-                };
+                break;
             }
 
+            // early exit!
+            if(bestScore >= 48000)
+            {
+                // found mate --> :D not sure I have to keep testing 
+                break;
+            }
+            Console.WriteLine($"info depth {currentDepth} score {bestScore}");
 
-            return alpha;
         }
 
+        Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
+        return bestMove;
+    }
 
-        // Using Insertion sort to order moves.
-        public static void SortMoves(MoveObjects movelist)
+    
+    private static void FlagCheckmate(MoveObjects moveList)
+    {
+        if (moveList.counter == 0)
         {
-            int count = movelist.counter;
-            int[] scores = new int[count];
-            for (int i = 0; i < count; i++)
+            if (Boards.Side == 0)
             {
-                scores[i] = ScoreMove(movelist.moves[i]);
-            }
-            for (int i = 1; i < count; i++)
-            {
-                int keyMove = movelist.moves[i];
-                int keyScore = scores[i];
-                int j = i - 1;
-                while (j >= 0 && scores[j] < keyScore)
-                {
-                    movelist.moves[j + 1] = movelist.moves[j];
-                    scores[j + 1] = scores[j];
-                    j--;
-                }
-                movelist.moves[j + 1] = keyMove;
-                scores[j + 1] = keyScore;
-            }
-        }
-
-        // Score move using MVV-LVA plus killer and history heuristics.
-        public static int ScoreMove(int move)
-        {
-            bool capture = MoveGenerator.GetMoveCapture(move);
-            if (capture)
-            {
-                int attacker = MoveGenerator.GetMovePiece(move);
-                int victim = FindVictimPiece(move);
-                return MvvLLvaTable[attacker, victim] + 10000;
+                Boards.whiteCheckmate = true;
             }
             else
             {
-                if (killerMoves[0, ply] == move)
-                    return 9000;
-                else if (killerMoves[1, ply] == move)
+                Boards.blackCheckmate = true;
+            }
+        }
+    }
+
+    private static int Negamax(int alpha, int beta, int depth)
+    {
+        // Keep track of this ply's PV length
+        pvLength[ply] = ply;
+
+        // Base condition 
+        if (depth == 0) return Quiescence(alpha, beta);
+
+        // we are too deep, there is an owerflow of arrays relying on max ply constant
+        // most likely we are not going to reach this point
+        // Safety check
+        if (ply > maxPly - 1)
+        {
+            return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+        }
+
+        nodes++;
+
+        // Handle checks
+        bool inCheck = false;
+        if (Boards.Side == (int)Colors.white)
+        {
+            int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
+            {
+                inCheck = true;
+            }
+        }
+        else
+        {
+            int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
+            {
+                inCheck = true;
+            }
+        }
+
+        // If in check, extend depth by 1, to see if leads to checkmate
+        if (inCheck)
+        {
+            depth++;
+        }
+
+        // Generate moves
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+
+        if(moveList.counter == 0) FlagCheckmate(moveList);  
+
+        // Sort moves by MVV-LVA, killer, history, etc.
+        SortMoves(moveList);
+
+        int legalMoves = 0;
+        int oldAlpha = alpha;
+        int bestMove = 0;
+
+
+        // LMR tracking variable. 
+        int moveSearched = 0;
+        // Loop through moves
+        int i = 0;
+        while (i < moveList.counter)
+        {
+            int move = moveList.moves[i];
+
+            // Save board state
+            MoveGenerator.CopyGameState(
+                out ulong[] bitboardsCopy,
+                out ulong[] occCopy,
+                out Colors sideCopy,
+                out int castleCopy,
+                out int enpassCopy
+            );
+
+            // Skip illegal
+            bool legal = MoveGenerator.IsLegal(move, false);
+            if (!legal)
+            {
+                MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+                i++;  // Not sure about this!
+                continue;
+            }
+
+            legalMoves++;
+            // Track how many moves we have searched    
+            moveSearched++;
+            ply++;
+
+            // =============================
+            // LMR logic starts here
+            // =============================
+            // We only reduce if:
+            // 1) we’ve already searched a few moves
+            // 2) there's enough depth to reduce
+            // 3) we’re not in check
+            // 4) it's not a capture
+            // 5) there's no promotion
+
+            bool isCapture = MoveGenerator.GetMoveCapture(move);
+            int promoted = MoveGenerator.GetMovePromoted(move); // 0 if no promotion move
+
+
+            bool canReduce = moveSearched > FullDepthMoves && depth > ReductionLimit && !inCheck && !isCapture && promoted == 0;
+            int newDepth = depth - 1; // Reduced depth
+
+            int score = 0;
+            if (canReduce)
+            {
+                // First reduced search
+                score = -Negamax(-beta, -alpha, depth - 1);
+                if (score > alpha)
+                    score = -Negamax(-beta, -alpha, newDepth);
+            }
+            else
+            {
+                score = -Negamax(-beta, -alpha, newDepth);
+            }
+            // =============================
+            // LMR logic ends here
+            // =============================
+
+            ply--;
+
+            //score = -Negamax(-beta, -alpha, depth - 1);
+
+            //ply--;
+
+            MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+
+            // Alpha-beta pruning
+            if (score >= beta)
+            {
+
+                bool capture = MoveGenerator.GetMoveCapture(move);
+                // If quiet move => update killer
+                if (!capture)
+                {
+                    killerMoves[1, ply] = killerMoves[0, ply];
+                    killerMoves[0, ply] = move;
+                }
+                return beta;
+            }
+            if (score > alpha)
+            {
+                alpha = score;
+                bestMove = move;
+
+                bool capture2 = MoveGenerator.GetMoveCapture(move);
+                // If quiet => update history  // without: 22402927 nodes in depth 8 
+                //                             // with:    22167494
+                if (!capture2)
+                {
+                    int piece = MoveGenerator.GetMovePiece(move);
+                    int targetSq = MoveGenerator.GetMoveTarget(move);
+                    historyMoves[piece, targetSq] += depth;
+                }
+
+                // Update PV
+                pvTable[ply, ply] = move;
+                int nextPly = ply + 1;
+                while (nextPly < pvLength[ply + 1])
+                {
+                    pvTable[ply, nextPly] = pvTable[ply + 1, nextPly];
+                    nextPly++;
+                }
+                pvLength[ply] = pvLength[ply + 1];
+            }
+
+            i++;
+        }
+
+        // No legal moves => checkmate / stalemate
+        if (legalMoves == 0)
+        {
+            if (inCheck)
+            {
+                // checkmate
+                return -49000 + ply;
+            }
+            else
+            {
+                // stalemate
+                return 0;
+            }
+        }
+
+        return alpha;
+    }
+
+
+
+
+
+    // Sort moves by MVV-LVA, killer, history (bubble sort)
+    //public static void SortMoves(MoveObjects moveList)
+    //{
+    //    int count = moveList.counter;
+
+    //    // Simple array for scores
+    //    int[] scores = new int[count];
+    //    int index = 0;
+    //    while (index < count)
+    //    {
+    //        int move = moveList.moves[index];
+    //        scores[index] = ScoreMove(move);
+    //        index++;
+    //    }
+
+    //    // Bubble-sort by descending
+    //    int current = 0;
+    //    while (current < count)
+    //    {
+    //        int next = current + 1;
+    //        while (next < count)
+    //        {
+    //            if (scores[current] < scores[next])
+    //            {
+    //                // Swap scores
+    //                int tempScore = scores[current];
+    //                scores[current] = scores[next];
+    //                scores[next] = tempScore;
+
+    //                // Swap moves
+    //                int tempMove = moveList.moves[current];
+    //                moveList.moves[current] = moveList.moves[next];
+    //                moveList.moves[next] = tempMove;
+    //            }
+    //            next++;
+    //        }
+    //        current++;
+    //    }
+    //}
+
+    // Using Insertion sort.  will see if it works faster , but for sure will use less memory
+    public static void SortMoves(MoveObjects movelIst)
+    {
+        int count = movelIst.counter;
+        int[] scores = new int[count];
+
+
+        for (int i = 0; i < count; i++)
+        {
+            scores[i] = ScoreMove(movelIst.moves[i]);
+
+        }
+
+        // Insertion sort using descending order 
+        for (int i = 1; i < count; i++)
+        {
+            int keyMove = movelIst.moves[i];
+            int keyScore = scores[i];
+            int j = i - 1;
+
+            while (j >= 0 && scores[j] < keyScore)
+            {
+                movelIst.moves[j + 1] = movelIst.moves[j];
+                scores[j + 1] = scores[j];
+                j--;
+            }
+            movelIst.moves[j + 1] = keyMove;
+            scores[j + 1] = keyScore;
+
+        }
+    }
+
+
+    // Score move – MVV-LVA plus killers/history
+    public static int ScoreMove(int move)
+    {
+        bool capture = MoveGenerator.GetMoveCapture(move);
+        if (capture)
+        {
+            // mvv-lva
+            int attacker = MoveGenerator.GetMovePiece(move);
+            int victim = FindVictimPiece(move);
+            // + 10000 so captures outrank any quiet move
+            return MvvLLvaTable[attacker, victim] + 10000;
+        }
+        else
+        {
+            // killer?
+            if (killerMoves[0, ply] == move)
+            {
+                return 9000;
+            }
+            else
+            {
+                if (killerMoves[1, ply] == move)
+                {
                     return 8000;
+                }
                 else
                 {
+                    // history
                     int piece = MoveGenerator.GetMovePiece(move);
                     int target = MoveGenerator.GetMoveTarget(move);
                     return historyMoves[piece, target];
                 }
             }
         }
-
-
-
-
-        // Find the victim piece on target square.
-        private static int FindVictimPiece(int move)
-        {
-            int targetSquare = MoveGenerator.GetMoveTarget(move);
-            int startPiece, endPiece;
-            if (Boards.Side == (int)Colors.white)
-            {
-                startPiece = (int)Pieces.p;
-                endPiece = (int)Pieces.k;
-            }
-            else
-            {
-                startPiece = (int)Pieces.P;
-                endPiece = (int)Pieces.K;
-            }
-            for (int i = startPiece; i <= endPiece; i++)
-            {
-                if (Globals.GetBit(Boards.Bitboards[i], targetSquare))
-                    return i;
-            }
-            return (int)Pieces.P; // fallback
-        }
-
-        // Quiescence search.
-        private static int Quiescence(int alpha, int beta)
-        {
-            nodes++;
-            int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
-            if (eval >= beta)
-                return beta;
-            if (eval > alpha)
-                alpha = eval;
-            MoveObjects moveList = new MoveObjects();
-            MoveGenerator.GenerateMoves(moveList);
-            SortMoves(moveList);
-            int i = 0;
-            while (i < moveList.counter)
-            {
-                int move = moveList.moves[i];
-                if (!MoveGenerator.GetMoveCapture(move))
-                {
-                    i++;
-                    continue;
-                }
-                MoveGenerator.CopyGameState(out ulong[] bbCopy, out ulong[] occCopy, out Colors sideCopy, out int castleCopy, out int enpassCopy);
-                if (!MoveGenerator.IsLegal(move, true))
-                {
-                    MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                    i++;
-                    continue;
-                }
-                ply++;
-                int score = -Quiescence(-beta, -alpha);
-                ply--;
-                MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                if (score >= beta)
-                    return beta;
-                if (score > alpha)
-                    alpha = score;
-                i++;
-            }
-            return alpha;
-        }
-
-        private static void ClearKillerAndHistoryMoves()
-        {
-            for (int i = 0; i < 2; i++)
-                for (int j = 0; j < 64; j++)
-                    killerMoves[i, j] = 0;
-            for (int p = 0; p < 12; p++)
-                for (int s = 0; s < 64; s++)
-                    historyMoves[p, s] = 0;
-        }
-
-        private static void ClearPV()
-        {
-            for (int i = 0; i < 64; i++)
-            {
-                pvLength[i] = 0;
-                for (int j = 0; j < 64; j++)
-                    pvTable[i, j] = 0;
-            }
-        }
-
-        private static string PrintPVLine()
-        {
-            int length = pvLength[0];
-            string line = "";
-            for (int i = 0; i < length; i++)
-            {
-                int move = pvTable[0, i];
-                line += Globals.MoveToString(move) + " ";
-            }
-            return line;
-        }
-
-        // MVV-LVA table.
-        public static readonly int[,] MvvLLvaTable = new int[12, 12]
-        {
-            { 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
-            { 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
-            { 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
-            { 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602 },
-            { 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601 },
-            { 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 },
-            { 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
-            { 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
-            { 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
-            { 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602 },
-            { 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601 },
-            { 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 }
-        };
+        return 0;
     }
 
-    // Structure to hold TT entries.
-    public struct PositionScoreInDepth
+    // Find the victim piece on the target square
+    private static int FindVictimPiece(int move)
     {
-        public int depth;
-        public int score;
-        public ulong PositionHashKey;
-        //public int flag;
-        //public int bestMove;
-        public override bool Equals(object obj)
+        int targetSquare = MoveGenerator.GetMoveTarget(move);
+
+        // For white side -> search black piece range, etc.
+        // Mirrors the C code’s logic
+        int startPiece;
+        int endPiece;
+
+        if (Boards.Side == (int)Colors.white)
         {
-            return obj is PositionScoreInDepth other &&
-                   depth == other.depth &&
-                   PositionHashKey == other.PositionHashKey;
+            startPiece = (int)Pieces.p;
+            endPiece = (int)Pieces.k;
         }
-        public override int GetHashCode() => HashCode.Combine(depth, PositionHashKey);
+        else
+        {
+            startPiece = (int)Pieces.P;
+            endPiece = (int)Pieces.K;
+        }
+
+        int i = startPiece;
+        while (i <= endPiece)
+        {
+            bool hasPiece = Globals.GetBit(Boards.Bitboards[i], targetSquare);
+            if (hasPiece)
+            {
+                return i;
+            }
+            i++;
+        }
+
+        // fallback
+        return (int)Pieces.P;
     }
+
+    /////////////////////////////////////////////////// PRIVATE METHODS ////////////////////////////////////////////
+
+    // Not sure if I implement it correctly 
+    private static int Quiescence(int alpha, int beta)
+    {
+        nodes++;
+
+        int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+
+        if (eval >= beta)
+        {
+            return beta;
+        }
+        if (eval > alpha)
+        {
+            alpha = eval;
+        }
+
+        // Generate only captures
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+        SortMoves(moveList);
+
+        int i = 0;
+        while (i < moveList.counter)
+        {
+            int move = moveList.moves[i];
+
+            // Only consider captures
+            bool capture = MoveGenerator.GetMoveCapture(move);
+            if (!capture)
+            {
+                i++;
+                continue;
+            }
+
+            // Save
+            MoveGenerator.CopyGameState(
+                out ulong[] bbCopy,
+                out ulong[] occCopy,
+                out Colors sideCopy,
+                out int castleCopy,
+                out int enpassCopy
+            );
+
+            // Must be legal capture
+            bool legal = MoveGenerator.IsLegal(move, true);
+            if (!legal)
+            {
+                MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+                i++;
+                continue;
+            }
+
+            ply++;
+            int score = -Quiescence(-beta, -alpha);
+            ply--;
+
+            MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+
+            if (score >= beta)
+            {
+                return beta;
+            }
+            if (score > alpha)
+            {
+                alpha = score;
+            }
+
+            i++;
+        }
+
+        return alpha;
+    }
+    private static void ClearKillerAndHistoryMoves()
+    {
+        int i = 0;
+        while (i < 2)
+        {
+            int j = 0;
+            while (j < 64)
+            {
+                killerMoves[i, j] = 0;
+                j++;
+            }
+            i++;
+        }
+
+        int p = 0;
+        while (p < 12)
+        {
+            int s = 0;
+            while (s < 64)
+            {
+                historyMoves[p, s] = 0;
+                s++;
+            }
+            p++;
+        }
+    }
+
+
+    private static void ClearPV()
+    {
+        int i = 0;
+        while (i < 64)
+        {
+            pvLength[i] = 0;
+            int j = 0;
+            while (j < 64)
+            {
+                pvTable[i, j] = 0;
+                j++;
+            }
+            i++;
+        }
+    }
+
+
+    private static string PrintPVLine()
+    {
+        // Build a string of moves from pvTable[0]
+        int length = pvLength[0];
+        string line = "";
+        int i = 0;
+        while (i < length)
+        {
+            int move = pvTable[0, i];
+            line += Globals.MoveToString(move);
+            line += " ";
+            i++;
+        }
+        return line;
+    }
+
+
+    public static readonly int[,] MvvLLvaTable = new int[12, 12]
+    {
+        { 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
+        { 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
+        { 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
+        { 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602 },
+        { 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601 },
+        { 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 },
+        { 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605 },
+        { 104, 204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604 },
+        { 103, 203, 303, 403, 503, 603, 103, 203, 303, 403, 503, 603 },
+        { 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602 },
+        { 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601 },
+        { 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 }
+    };
 }
+
+
 
 
 /*

@@ -14,7 +14,7 @@ void InitAll()
 
     Search.InitializeRandomKeys();
 
-    Search.TtSwitch = true; 
+    //Search.TtSwitch = true; 
 }
 
 List<string> GameHistory = new List<string>();  
@@ -34,10 +34,10 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        //move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 10); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        // move = Search.GetBestMove(6);
+        move = Search.GetBestMoveWithIterativeDeepening(10, 30); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
-        Console.Beep(1000, 500);
+        Console.Beep(1000, 200);
         
         if(MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
         
@@ -49,7 +49,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        Console.ReadKey();  
+        //Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
@@ -108,7 +108,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_4_Bf6_Mid_Complex_Position);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     /////******************  ZOBRIST HASHING TEST  
 
