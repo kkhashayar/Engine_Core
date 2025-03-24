@@ -145,14 +145,16 @@ public static class Search
         ClearKillerAndHistoryMoves();
         ClearPV();
 
+
+        var hashkey = GeneratepositionHashKey();
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
 
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
-            // have to check 
-            GeneratepositionHashKey();
+            
+           
 
             score = Negamax(-50000, 50000, currentDepth);
 
