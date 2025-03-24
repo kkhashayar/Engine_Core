@@ -35,7 +35,7 @@ void PlayThePosition()
         int move = 0;
 
         // move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(10, 30); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(8, 5); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -49,7 +49,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        //Console.ReadKey();  
+        Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
