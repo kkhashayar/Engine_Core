@@ -93,7 +93,6 @@ public static class Search
     // Generate hash key. 
     public static ulong GeneratepositionHashKey()
     {
-        positionHashKey = 0;
 
         // Temp board 
         ulong pieceBitboard;
@@ -113,32 +112,30 @@ public static class Search
                 //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
 
                 // adding piece hash to position hash!
-                positionHashKey ^= pieceKeysOnSquare[piece, square];
+                PositionHashKey ^= pieceKeysOnSquare[piece, square];
             }
         }
 
         // En-passant 
         if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
         {
-            positionHashKey ^= enpassantKey[square];
+            PositionHashKey ^= enpassantKey[square];
         }
         // Castling
-        positionHashKey ^= castlingKeys[Boards.CastlePerm];
+        PositionHashKey ^= castlingKeys[Boards.CastlePerm];
 
         // Hashing the side only if black is to move
         if (Boards.Side == (int)Colors.black)
         {
-            positionHashKey ^= sideKey;
+            PositionHashKey ^= sideKey;
         }
-        PositionHashKey = positionHashKey;  
+         
         return PositionHashKey;
     }
 
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
     {
-        
-
         int score = 0;
         nodes = 0;
         ply = 0;
@@ -155,10 +152,7 @@ public static class Search
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
-
-
-            // I think this is how it should be done 
-            GeneratepositionHashKey();
+            //GeneratepositionHashKey();
             score = Negamax(-50000, 50000, currentDepth);
 
             Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
@@ -183,27 +177,28 @@ public static class Search
                 bestMove = pvTable[0, 0];
             }
 
-
-            if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
-            {
-                Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                continue;
-            }
+            // Looks like in some of my tests, engine works better without this feature.
+            //if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+            //{
+            //    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
+            //    continue;
+            //}
 
             // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
             {
                 Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
-                break;
+                return bestMove;
+                
             }
 
+           
+
         }
-
-
         nodes = 0; // Reset nodes counter
         ClearKillerAndHistoryMoves();
         ClearPV();
-
+        //GeneratepositionHashKey();
         // Final Negamax search at maxDepth
         score = Negamax(-50000, 50000, maxDepth);
 
@@ -213,6 +208,8 @@ public static class Search
         // Determine and output the best move based on the final search
         bestMove = pvTable[0, 0]; // Update bestMove based on the final PV
         Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
+
+
 
         return bestMove;
     }
@@ -235,18 +232,18 @@ public static class Search
     private static int Negamax(int alpha, int beta, int depth)
     {
         // here we should check if there is a hit in Transpositiontable 
-        var transpositionKey = new Transposition
-        {
-            position = PositionHashKey,
-            depth = depth,
-            score = 0
-        };
+        //var transpositionKey = new Transposition
+        //{
+        //    position = PositionHashKey,
+        //    depth = depth,
+        //    score = 0
+        //};
 
-        if(transpositionTable.TryGetValue(transpositionKey, out int storedScore) && transpositionKey.depth >= depth)
-        {
-            Console.WriteLine($"Hit TtDepth:{transpositionKey.depth} on position:{PositionHashKey}");
-            return storedScore;
-        }
+        //if(transpositionTable.TryGetValue(transpositionKey, out int storedScore) && transpositionKey.depth >= depth)
+        //{
+        //    Console.WriteLine($"Hit TtDepth:{transpositionKey.depth} on position:{PositionHashKey}");
+        //    return storedScore;
+        //}
 
         // Keep track of this ply's PV length
         pvLength[ply] = ply;
@@ -331,7 +328,7 @@ public static class Search
 
 
             // we have to update it here too
-            GeneratepositionHashKey();
+            //GeneratepositionHashKey();
             legalMoves++;
             // Track how many moves we have searched    
             moveSearched++;
@@ -391,8 +388,8 @@ public static class Search
                 }
 
                 // Before returning we store the cutoff 
-                transpositionKey.score = beta;
-                transpositionTable[transpositionKey] = beta;
+                //transpositionKey.score = beta;
+                //transpositionTable[transpositionKey] = beta;
                 return beta;
             }
             if (score > alpha)
@@ -438,8 +435,8 @@ public static class Search
                 return 0;
             }
         }
-        transpositionKey.score = alpha;
-        transpositionTable[transpositionKey] = alpha;
+        //transpositionKey.score = alpha;
+        //transpositionTable[transpositionKey] = alpha;
         return alpha;
     }
 

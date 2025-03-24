@@ -34,8 +34,8 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        // move = Search.GetBestMove(6);
-        move = Search.GetBestMoveWithIterativeDeepening(8, 5); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        
+        move = Search.GetBestMoveWithIterativeDeepening(8, 30); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -90,7 +90,7 @@ string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1
 string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"; // (Positional)
 string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
 
-string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8
+string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 string bratkoKopec_02 = "r2q1rk1/pp2bppp/2n1bn2/2pp4/3P4/2P2NP1/PP1NPPBP/R1BQ1RK1 w - - 0 9";    // Best move: ...dxc5
 string bratkoKopec_03 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/2PB1NP1/PP2PPBP/R1BQ1RK1 b - - 0 9";   // Best move: ...cxd4
 string bratkoKopec_04 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 b - - 0 9";   // Best move: ...c4
@@ -108,7 +108,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(bratkoKopec_01);
 
     /////******************  ZOBRIST HASHING TEST  
 
