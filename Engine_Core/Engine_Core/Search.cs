@@ -18,8 +18,7 @@ public struct Transposition
 public static class Search
 {
     public static Dictionary<Transposition, int> transpositionTable = new Dictionary<Transposition, int>(); 
-   
-    public static ulong PositionHashKey { get; set; }
+  
     // Variables needed for late move reduction 
     private static int FullDepthMoves = 4;
     private static int ReductionLimit = 3;
@@ -112,25 +111,25 @@ public static class Search
                 //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
 
                 // adding piece hash to position hash!
-                PositionHashKey ^= pieceKeysOnSquare[piece, square];
+                positionHashKey ^= pieceKeysOnSquare[piece, square];
             }
         }
 
         // En-passant 
         if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
         {
-            PositionHashKey ^= enpassantKey[square];
+            positionHashKey ^= enpassantKey[square];
         }
         // Castling
-        PositionHashKey ^= castlingKeys[Boards.CastlePerm];
+        positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
         // Hashing the side only if black is to move
         if (Boards.Side == (int)Colors.black)
         {
-            PositionHashKey ^= sideKey;
+            positionHashKey ^= sideKey;
         }
          
-        return PositionHashKey;
+        return positionHashKey;
     }
 
     // Negamax call with iterative deepening 
@@ -152,7 +151,9 @@ public static class Search
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
-            //GeneratepositionHashKey();
+            // have to check 
+            GeneratepositionHashKey();
+
             score = Negamax(-50000, 50000, currentDepth);
 
             Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
@@ -232,18 +233,18 @@ public static class Search
     private static int Negamax(int alpha, int beta, int depth)
     {
         // here we should check if there is a hit in Transpositiontable 
-        //var transpositionKey = new Transposition
-        //{
-        //    position = PositionHashKey,
-        //    depth = depth,
-        //    score = 0
-        //};
+        var transpositionKey = new Transposition
+        {
+            position = positionHashKey,
+            depth = depth,
+            score = 0
+        };
 
-        //if(transpositionTable.TryGetValue(transpositionKey, out int storedScore) && transpositionKey.depth >= depth)
-        //{
-        //    Console.WriteLine($"Hit TtDepth:{transpositionKey.depth} on position:{PositionHashKey}");
-        //    return storedScore;
-        //}
+        if (transpositionTable.TryGetValue(transpositionKey, out int storedScore) && transpositionKey.depth >= depth)
+        {
+            Console.WriteLine($"Hit TtDepth:{transpositionKey.depth} on position:{positionHashKey}");
+            return storedScore;
+        }
 
         // Keep track of this ply's PV length
         pvLength[ply] = ply;
@@ -328,7 +329,7 @@ public static class Search
 
 
             // we have to update it here too
-            //GeneratepositionHashKey();
+            GeneratepositionHashKey();
             legalMoves++;
             // Track how many moves we have searched    
             moveSearched++;
@@ -388,8 +389,8 @@ public static class Search
                 }
 
                 // Before returning we store the cutoff 
-                //transpositionKey.score = beta;
-                //transpositionTable[transpositionKey] = beta;
+                transpositionKey.score = beta;
+                transpositionTable[transpositionKey] = beta;
                 return beta;
             }
             if (score > alpha)
@@ -435,8 +436,8 @@ public static class Search
                 return 0;
             }
         }
-        //transpositionKey.score = alpha;
-        //transpositionTable[transpositionKey] = alpha;
+        transpositionKey.score = alpha;
+        transpositionTable[transpositionKey] = alpha;
         return alpha;
     }
 
