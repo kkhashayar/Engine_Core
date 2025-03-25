@@ -35,7 +35,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(8, 30); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(10, 3); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -49,7 +49,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        Console.ReadKey();  
+        //Console.ReadKey();  
     }
 
     if (Boards.whiteCheckmate)
@@ -70,7 +70,8 @@ void PlayThePosition()
     {
         Console.Write(move);
     }
-    
+
+    //if (!Boards.whiteCheckmate && !Boards.blackCheckmate) PlayThePosition();
 }
 
 //**************** TEST POSITIONS ****************// 
@@ -108,7 +109,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(bratkoKopec_01);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     /////******************  ZOBRIST HASHING TEST  
 

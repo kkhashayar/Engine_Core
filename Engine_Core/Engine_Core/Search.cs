@@ -17,7 +17,7 @@ public struct Transposition
 
 public static class Search
 {
-    public static Dictionary<Transposition, int> transpositionTable = new Dictionary<Transposition, int>(); 
+    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
   
     // Variables needed for late move reduction 
     private static int FullDepthMoves = 4;
@@ -92,7 +92,7 @@ public static class Search
     // Generate hash key. 
     public static ulong GeneratepositionHashKey()
     {
-
+        positionHashKey = 0;
         // Temp board 
         ulong pieceBitboard;
         int square = 0;
@@ -146,15 +146,15 @@ public static class Search
         ClearPV();
 
 
-        var hashkey = GeneratepositionHashKey();
+        GeneratepositionHashKey();
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
-
+            //GeneratepositionHashKey();
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
-            
-           
+
+
 
             score = Negamax(-50000, 50000, currentDepth);
 
@@ -181,11 +181,11 @@ public static class Search
             }
 
             // Looks like in some of my tests, engine works better without this feature.
-            //if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
-            //{
-            //    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-            //    continue;
-            //}
+            if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+            {
+                Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
+                continue;
+            }
 
             // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
@@ -234,6 +234,8 @@ public static class Search
 
     private static int Negamax(int alpha, int beta, int depth)
     {
+          
+
         // here we should check if there is a hit in Transpositiontable 
         var transpositionKey = new Transposition
         {
@@ -241,11 +243,11 @@ public static class Search
             depth = depth,
             score = 0
         };
-
-        if (transpositionTable.TryGetValue(transpositionKey, out int storedScore) && transpositionKey.depth >= depth)
+        // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
+        if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth == depth)
         {
-            Console.WriteLine($"Hit TtDepth:{transpositionKey.depth} on position:{positionHashKey}");
-            return storedScore;
+            //Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+            return entry.score;
         }
 
         // Keep track of this ply's PV length
@@ -331,8 +333,13 @@ public static class Search
 
 
             // we have to update it here too
-            GeneratepositionHashKey();
+            //GeneratepositionHashKey();
+
+            ulong oldHash = positionHashKey;
+
             legalMoves++;
+
+            positionHashKey = GeneratepositionHashKey(); 
             // Track how many moves we have searched    
             moveSearched++;
             ply++;
@@ -378,6 +385,7 @@ public static class Search
 
             MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
 
+            positionHashKey = oldHash;  
             // Alpha-beta pruning
             if (score >= beta)
             {
@@ -391,8 +399,11 @@ public static class Search
                 }
 
                 // Before returning we store the cutoff 
-                transpositionKey.score = beta;
-                transpositionTable[transpositionKey] = beta;
+                Transposition betaEntry = new();
+
+                betaEntry.score = beta;
+                betaEntry.depth = depth;
+                transpositionTable[positionHashKey] = betaEntry;
                 return beta;
             }
             if (score > alpha)
@@ -438,8 +449,11 @@ public static class Search
                 return 0;
             }
         }
-        transpositionKey.score = alpha;
-        transpositionTable[transpositionKey] = alpha;
+        Transposition alphaEntry = new();
+
+        alphaEntry.score = alpha;
+        alphaEntry.depth = depth;
+        transpositionTable[positionHashKey] = alphaEntry;
         return alpha;
     }
 
