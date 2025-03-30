@@ -14,7 +14,10 @@ void InitAll()
 
     Search.InitializeRandomKeys();
 
-    //Search.TtSwitch = true; 
+    // Search configs
+    Search.TranspositionSwitch = true;
+    Search.EarlyExitSwitch = true;  
+    //Search.TimeLimitDeepeningSwitch = true; 
 }
 
 List<string> GameHistory = new List<string>();  
@@ -26,7 +29,7 @@ void PlayThePosition()
     while (running)
     {
         //Console.Clear();    
-        Thread.Sleep(500);
+        Thread.Sleep(1000);
         Console.Clear();
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
@@ -35,7 +38,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(10, 3); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(10); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -81,10 +84,11 @@ string standardPosition =   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
 
 string checkmate_In_3_Rxh3_Simple_Position     = "6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1";
 string checkmate_In_3_Qh7_Simple_Position      = "rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0";
-string checkmate_In_4_Bf6_Mid_Complex_Position = "r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0";
+// Search makes mistake with all switches on for this position --> fixed after using early exit only in PV without return 
+string checkmate_In_4_Bf6_Mid_Complex_Position = "r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0"; 
 string checkmate_In_4_Bf7_Mid_Complex_Position = "br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0";
 string checkmate_In_7_Qxh7_Complex_Position    = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11";
-
+// NOt happy with this one, slow
 string checkmate_In_4_Qxh3_Mid_High_Complex_Position = "8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1";
 string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0";
 
@@ -109,7 +113,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader("");
 
     /////******************  ZOBRIST HASHING TEST  
 
@@ -143,11 +147,11 @@ void Run()
 
 
 
-    Boards.DisplayBoard();
+    // Boards.DisplayBoard();
 
     ////PerftTeste.RunPerft(6, true);
 
-    PlayThePosition();
+    // PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -158,7 +162,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    //WinBoardLoop();
+    WinBoardLoop();
 
 }
 
@@ -522,7 +526,9 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(depth, 5);
+        Search.DynamicDepth = 10; 
+        // 3 sec total time for each depth , max depth will be set directly from search class. 
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state

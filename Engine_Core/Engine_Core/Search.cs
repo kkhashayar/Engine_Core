@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
+using System.Diagnostics.Contracts;
+using System.Numerics;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -17,6 +19,14 @@ public struct Transposition
 
 public static class Search
 {
+    public static int DynamicDepth { get; set; }
+    
+    
+    // Search config switches 
+    public static bool TranspositionSwitch = false;
+    public static bool TimeLimitDeepeningSwitch = false;
+    public static bool EarlyExitSwitch = false;
+
     public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
   
     // Variables needed for late move reduction 
@@ -132,9 +142,27 @@ public static class Search
         return positionHashKey;
     }
 
-    // Negamax call with iterative deepening 
-    public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
+    private static int CountPieces()
     {
+        int total = 0; 
+        for(int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
+    }
+
+    // Negamax call with iterative deepening 
+    public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
+    {
+        //int numberOfPiece = CountPieces();
+
+
+        //if (numberOfPiece == 32) DynamicDepth = 4;
+        //else if (numberOfPiece <= 28) DynamicDepth = 6;
+        //else DynamicDepth = 10;
+
+        int maxDepth = DynamicDepth; 
         int score = 0;
         nodes = 0;
         ply = 0;
@@ -146,15 +174,14 @@ public static class Search
         ClearPV();
 
 
-        GeneratepositionHashKey();
+        if(TranspositionSwitch) GeneratepositionHashKey();
+
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
-            //GeneratepositionHashKey();
+            
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
-
-
 
             score = Negamax(-50000, 50000, currentDepth);
 
@@ -166,13 +193,17 @@ public static class Search
                 ExecutablePv.Add(pvTable[0, i]);
             }
 
-            // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
-            if (Math.Abs(score) >= 48000) // Found a forced mate!
+            if (EarlyExitSwitch)
             {
-                bestMove = pvTable[0, 0]; // Store the best move
-                Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
-                return bestMove; // Immediately return the best move.
+                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
+                if (Math.Abs(score) >= 48000) // Found a forced mate!
+                {
+                    bestMove = pvTable[0, 0]; // Store the best move
+                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
+                    return bestMove; // Immediately return the best move.
+                }
             }
+            
 
             if (score > bestScore)
             {
@@ -180,13 +211,16 @@ public static class Search
                 bestMove = pvTable[0, 0];
             }
 
-            // Looks like in some of my tests, engine works better without this feature.
-            if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+            if (TimeLimitDeepeningSwitch)
             {
-                Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                continue;
+                // Looks like in some of my tests, engine works better without this feature.
+                if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+                {
+                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
+                    continue;
+                }
             }
-
+           
             // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
             {
@@ -194,14 +228,11 @@ public static class Search
                 return bestMove;
                 
             }
-
-           
-
         }
         nodes = 0; // Reset nodes counter
         ClearKillerAndHistoryMoves();
         ClearPV();
-        //GeneratepositionHashKey();
+        
         // Final Negamax search at maxDepth
         score = Negamax(-50000, 50000, maxDepth);
 
@@ -234,21 +265,27 @@ public static class Search
 
     private static int Negamax(int alpha, int beta, int depth)
     {
-          
-
-        // here we should check if there is a hit in Transpositiontable 
-        var transpositionKey = new Transposition
+        if (TranspositionSwitch)
         {
-            position = positionHashKey,
-            depth = depth,
-            score = 0
-        };
-        // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
-        if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth == depth)
-        {
-            //Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-            return entry.score;
+            // here we should check if there is a hit in Transpositiontable 
+            var transpositionKey = new Transposition
+            {
+                position = positionHashKey,
+                depth = depth,
+                score = 0
+            };
+            // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
+            if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth > depth)
+            {
+                if(entry.depth >= 5)
+                {
+                    Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                }
+                
+                //return entry.score;
+            }
         }
+        
 
         // Keep track of this ply's PV length
         pvLength[ply] = ply;
@@ -336,10 +373,10 @@ public static class Search
             //GeneratepositionHashKey();
 
             ulong oldHash = positionHashKey;
+            
+            if(TranspositionSwitch)  positionHashKey = GeneratepositionHashKey();
 
             legalMoves++;
-
-            positionHashKey = GeneratepositionHashKey(); 
             // Track how many moves we have searched    
             moveSearched++;
             ply++;
@@ -389,7 +426,6 @@ public static class Search
             // Alpha-beta pruning
             if (score >= beta)
             {
-
                 bool capture = MoveGenerator.GetMoveCapture(move);
                 // If quiet move => update killer
                 if (!capture)
@@ -397,13 +433,16 @@ public static class Search
                     killerMoves[1, ply] = killerMoves[0, ply];
                     killerMoves[0, ply] = move;
                 }
+                if (TranspositionSwitch)
+                {
+                    // Before returning we store the cutoff 
+                    Transposition betaEntry = new();
 
-                // Before returning we store the cutoff 
-                Transposition betaEntry = new();
-
-                betaEntry.score = beta;
-                betaEntry.depth = depth;
-                transpositionTable[positionHashKey] = betaEntry;
+                    betaEntry.score = beta;
+                    betaEntry.depth = depth;
+                    transpositionTable[positionHashKey] = betaEntry;
+                }
+                
                 return beta;
             }
             if (score > alpha)
@@ -449,18 +488,18 @@ public static class Search
                 return 0;
             }
         }
-        Transposition alphaEntry = new();
 
-        alphaEntry.score = alpha;
-        alphaEntry.depth = depth;
-        transpositionTable[positionHashKey] = alphaEntry;
+        if (TranspositionSwitch)
+        {
+            Transposition alphaEntry = new();
+
+            alphaEntry.score = alpha;
+            alphaEntry.depth = depth;
+            transpositionTable[positionHashKey] = alphaEntry;
+        }
+        
         return alpha;
     }
-
-
-
-
-
     // Sort moves by MVV-LVA, killer, history (bubble sort)
     //public static void SortMoves(MoveObjects moveList)
     //{
