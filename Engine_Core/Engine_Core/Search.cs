@@ -1,20 +1,42 @@
 ﻿using Engine;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
+using System.Diagnostics.Contracts;
+using System.Numerics;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
 
+
+public struct Transposition
+{
+    public ulong position;
+    public int depth;
+    public int score;
+}
+
+
 public static class Search
 {
-    public static ulong PositionHashKey { get; set; }
+    public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
+    public static int MaxSearchTime { get; set; }
+    
+    // Search config switches 
+    public static bool TranspositionSwitch = false;
+    public static bool TimeLimitDeepeningSwitch = false;
+    public static bool EarlyExitSwitch = false;
+
+    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
+  
     // Variables needed for late move reduction 
     private static int FullDepthMoves = 4;
     private static int ReductionLimit = 3;
 
 
-    public static List<int> ExecutablePv = new List<int>(); 
+    public static List<int> ExecutablePv = new List<int>();
     public static long nodes;
-  
+
     public static int maxPly = 64;
 
     public static int[,] killerMoves = new int[2, maxPly];
@@ -33,7 +55,7 @@ public static class Search
 
 
     // **********************************************   ZOBRIST  HASHING 
-    
+
     // Random piece keys [piece, squar]  give a random unique number to piece on given square
     public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
 
@@ -48,16 +70,16 @@ public static class Search
     public static ulong[] castlingKeys = new ulong[16];
 
     // Almost unique position identifier hash key  / position key 
-    public static ulong positionHashKey; 
+    public static ulong positionHashKey;
 
     // Set it to public for testing 
     public static void InitializeRandomKeys()
     {
-        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece ++)
+        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
         {
-            for(int square = 0; square < 64; square++)
+            for (int square = 0; square < 64; square++)
             {
-                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers(); 
+                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers();
             }
         }
 
@@ -71,9 +93,9 @@ public static class Search
         sideKey = Globals.GetFixedRandom64Numbers();
 
         // Castling keys 
-        for (int index = 0; (int) index < 16; index++)
+        for (int index = 0; (int)index < 16; index++)
         {
-            castlingKeys[index] = Globals.GetFixedRandom64Numbers();        
+            castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
     }
 
@@ -81,12 +103,11 @@ public static class Search
     public static ulong GeneratepositionHashKey()
     {
         positionHashKey = 0;
-
         // Temp board 
-        ulong pieceBitboard; 
+        ulong pieceBitboard;
         int square = 0;
         // loop over pieces 
-        for ( int piece = (int)Pieces.P; (int)piece <= (int) Pieces.k; piece ++)
+        for (int piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
         {
             pieceBitboard = Boards.Bitboards[piece];
 
@@ -95,7 +116,7 @@ public static class Search
                 // init square occupied by piece 
                 square = Globals.GetLs1bIndex(pieceBitboard);
                 Globals.PopBit(ref pieceBitboard, square);
-                
+
                 // Testing piece positions
                 //Console.WriteLine($"Piece: {Globals.SquareToCoordinates[square]}");
 
@@ -105,7 +126,7 @@ public static class Search
         }
 
         // En-passant 
-        if(enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
+        if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
         {
             positionHashKey ^= enpassantKey[square];
         }
@@ -113,34 +134,54 @@ public static class Search
         positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
         // Hashing the side only if black is to move
-        if(Boards.Side == (int)Colors.black)
+        if (Boards.Side == (int)Colors.black)
         {
             positionHashKey ^= sideKey;
         }
-        return positionHashKey; 
+         
+        return positionHashKey;
     }
-    
-    
-    // **********************************************   ZOBRIST  HASHING 
+
+    private static int CountPieces()
+    {
+        int total = 0; 
+        for(int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
+    }
 
     // Negamax call with iterative deepening 
-    public static int GetBestMoveWithIterativeDeepening(int maxDepth, int maxTimeSeconds)
+    public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
+        //int numberOfPiece = CountPieces();
+
+
+        //if (numberOfPiece == 32) DynamicDepth = 4;
+        //else if (numberOfPiece <= 28) DynamicDepth = 6;
+        //else DynamicDepth = 10;
+
+        int maxDepth = DynamicDepth; 
         int score = 0;
         nodes = 0;
         ply = 0;
         int bestScore = 0;
-        int bestMove = 0; 
-        var startTime = DateTime.UtcNow;   
+        int bestMove = 0;
+        var startTime = DateTime.UtcNow;
 
         ClearKillerAndHistoryMoves();
         ClearPV();
 
+
+        if(TranspositionSwitch) GeneratepositionHashKey();
+
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
+            
             nodes = 0;
 
-            var depthStartTime = DateTime.UtcNow;   
+            var depthStartTime = DateTime.UtcNow;
 
             score = Negamax(-50000, 50000, currentDepth);
 
@@ -152,13 +193,17 @@ public static class Search
                 ExecutablePv.Add(pvTable[0, i]);
             }
 
-            // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
-            if (Math.Abs(score) >= 48000) // Found a forced mate!
+            if (EarlyExitSwitch)
             {
-                bestMove = pvTable[0, 0]; // Store the best move
-                Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
-                return bestMove; // Immediately return the best move.
+                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
+                if (Math.Abs(score) >= 48000) // Found a forced mate!
+                {
+                    bestMove = pvTable[0, 0]; // Store the best move
+                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
+                    return bestMove; // Immediately return the best move.
+                }
             }
+            
 
             if (score > bestScore)
             {
@@ -166,27 +211,28 @@ public static class Search
                 bestMove = pvTable[0, 0];
             }
 
-
-            if((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+            if (TimeLimitDeepeningSwitch)
             {
-                Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                continue;
+                // Looks like in some of my tests, engine works better without this feature.
+                if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
+                {
+                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
+                    continue;
+                }
             }
-
+           
             // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
             {
                 Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
-                break;
+                return bestMove;
+                
             }
-
         }
-
-
         nodes = 0; // Reset nodes counter
         ClearKillerAndHistoryMoves();
         ClearPV();
-
+        
         // Final Negamax search at maxDepth
         score = Negamax(-50000, 50000, maxDepth);
 
@@ -197,106 +243,6 @@ public static class Search
         bestMove = pvTable[0, 0]; // Update bestMove based on the final PV
         Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
 
-        return bestMove;
-    }
-
-    // Fixed depth search 
-    public static int GetBestMove(int depth)
-    {
-        int score = 0;
-        // Iterativee deepening 
-        // clear data structures
-        ClearKillerAndHistoryMoves(); 
-        ClearPV();
-
-        nodes = 0;
-        ply = 0;
-
-        // Generate all possible root moves
-        MoveObjects moveList = new MoveObjects();
-        MoveGenerator.GenerateMoves(moveList);
-        
-        FlagCheckmate(moveList);
-
-        SortMoves(moveList);
-
-        int alpha = NEG_INF;
-        int beta = POS_INF;
-        int bestScore = NEG_INF;
-        int bestMove = 0;
-
-        // We'll do the root loop ourselves
-        for (int i = 0; i < moveList.counter; i++)
-        {
-            int move = moveList.moves[i];
-
-            // Save board state
-            MoveGenerator.CopyGameState(
-                out ulong[] bbCopy, out ulong[] occCopy,
-                out Colors sideCopy, out int castleCopy, out int enpassCopy
-            );
-
-            // If this move is not legal, skip it
-            bool legal = MoveGenerator.IsLegal(move, false);
-            if (!legal)
-            {
-                MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                continue;
-            }
-
-            ply++;
-            score = -Negamax(-beta, -alpha, depth - 1);
-            ply--;
-
-            // Restore board
-            MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-
-            // Check if we found a new best move
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestMove = move;
-
-                // Update alpha at the root
-                if (score > alpha)
-                    alpha = score;
-
-                // Root PV update:
-                // We know `pvTable[ply]` starts at `ply=0` for root
-                // So we set the first move in the root's PV
-                pvTable[0, 0] = move;
-                int nextPly = 1;
-                // Copy the sub‐PV from child
-                while (nextPly < pvLength[1])
-                {
-                    pvTable[0, nextPly] = pvTable[1, nextPly];
-                    nextPly++;
-                }
-                pvLength[0] = pvLength[1];
-
-            }
-
-            // Print partial info for *this* move
-            // (like “info depth X currmove e2e4 score bestScore …”)
-            Console.WriteLine(
-                "info depth " + depth +
-                " currmove " + Globals.MoveToString(move) +
-                " currmovenumber " + i +
-                " nodes " + nodes +
-                " score" + bestScore +
-                " pv " + PrintPVLine()
-            );
-            if (bestScore >= 48000)
-            {
-                Console.WriteLine("info string Found forced mate. Stopping root loop.");
-                
-                break;
-            }
-
-        }
-
-        MoveGenerator.PrintMove(bestMove);
-        
 
 
         return bestMove;
@@ -317,10 +263,30 @@ public static class Search
         }
     }
 
-
-    
     private static int Negamax(int alpha, int beta, int depth)
     {
+        if (TranspositionSwitch)
+        {
+            // here we should check if there is a hit in Transpositiontable 
+            var transpositionKey = new Transposition
+            {
+                position = positionHashKey,
+                depth = depth,
+                score = 0
+            };
+            // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
+            if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth > depth)
+            {
+                if(entry.depth >= 5)
+                {
+                    Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                }
+                
+                //return entry.score;
+            }
+        }
+        
+
         // Keep track of this ply's PV length
         pvLength[ply] = ply;
 
@@ -332,7 +298,7 @@ public static class Search
         // Safety check
         if (ply > maxPly - 1)
         {
-            return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);   
+            return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
         }
 
         nodes++;
@@ -366,6 +332,8 @@ public static class Search
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
+        if(moveList.counter == 0) FlagCheckmate(moveList);  
+
         // Sort moves by MVV-LVA, killer, history, etc.
         SortMoves(moveList);
 
@@ -375,7 +343,7 @@ public static class Search
 
 
         // LMR tracking variable. 
-        int moveSearched = 0;   
+        int moveSearched = 0;
         // Loop through moves
         int i = 0;
         while (i < moveList.counter)
@@ -400,6 +368,14 @@ public static class Search
                 continue;
             }
 
+
+            // we have to update it here too
+            //GeneratepositionHashKey();
+
+            ulong oldHash = positionHashKey;
+            
+            if(TranspositionSwitch)  positionHashKey = GeneratepositionHashKey();
+
             legalMoves++;
             // Track how many moves we have searched    
             moveSearched++;
@@ -422,7 +398,7 @@ public static class Search
             bool canReduce = moveSearched > FullDepthMoves && depth > ReductionLimit && !inCheck && !isCapture && promoted == 0;
             int newDepth = depth - 1; // Reduced depth
 
-            int score = 0; 
+            int score = 0;
             if (canReduce)
             {
                 // First reduced search
@@ -432,24 +408,24 @@ public static class Search
             }
             else
             {
-                score = -Negamax(-beta, -alpha, newDepth); 
+                score = -Negamax(-beta, -alpha, newDepth);
             }
             // =============================
             // LMR logic ends here
             // =============================
 
-            ply--;  
+            ply--;
 
             //score = -Negamax(-beta, -alpha, depth - 1);
 
             //ply--;
-            
+
             MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
 
+            positionHashKey = oldHash;  
             // Alpha-beta pruning
             if (score >= beta)
             {
-                
                 bool capture = MoveGenerator.GetMoveCapture(move);
                 // If quiet move => update killer
                 if (!capture)
@@ -457,6 +433,16 @@ public static class Search
                     killerMoves[1, ply] = killerMoves[0, ply];
                     killerMoves[0, ply] = move;
                 }
+                if (TranspositionSwitch)
+                {
+                    // Before returning we store the cutoff 
+                    Transposition betaEntry = new();
+
+                    betaEntry.score = beta;
+                    betaEntry.depth = depth;
+                    transpositionTable[positionHashKey] = betaEntry;
+                }
+                
                 return beta;
             }
             if (score > alpha)
@@ -503,13 +489,17 @@ public static class Search
             }
         }
 
+        if (TranspositionSwitch)
+        {
+            Transposition alphaEntry = new();
+
+            alphaEntry.score = alpha;
+            alphaEntry.depth = depth;
+            transpositionTable[positionHashKey] = alphaEntry;
+        }
+        
         return alpha;
     }
-
-
-
-
-
     // Sort moves by MVV-LVA, killer, history (bubble sort)
     //public static void SortMoves(MoveObjects moveList)
     //{
@@ -572,12 +562,12 @@ public static class Search
 
             while (j >= 0 && scores[j] < keyScore)
             {
-                movelIst.moves[j+1] = movelIst.moves[j];    
+                movelIst.moves[j + 1] = movelIst.moves[j];
                 scores[j + 1] = scores[j];
                 j--;
             }
             movelIst.moves[j + 1] = keyMove;
-            scores[j + 1] = keyScore;       
+            scores[j + 1] = keyScore;
 
         }
     }
@@ -617,7 +607,7 @@ public static class Search
                 }
             }
         }
-        return 0; 
+        return 0;
     }
 
     // Find the victim piece on the target square

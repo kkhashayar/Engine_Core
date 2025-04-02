@@ -13,6 +13,13 @@ void InitAll()
 
 
     Search.InitializeRandomKeys();
+
+    // Search configs
+    Search.TranspositionSwitch = true;
+    Search.EarlyExitSwitch = true;
+    //Search.TimeLimitDeepeningSwitch = true; 
+    Search.DynamicDepth = 6;
+    Search.MaxSearchTime = 30;
 }
 
 List<string> GameHistory = new List<string>();  
@@ -23,8 +30,8 @@ void PlayThePosition()
 {
     while (running)
     {
-        
-        Thread.Sleep(2000);
+        //Console.Clear();    
+        Thread.Sleep(1000);
         Console.Clear();
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
@@ -32,10 +39,10 @@ void PlayThePosition()
         Boards.DisplayBoard();
         int move = 0;
 
-        move = Search.GetBestMove(6);
-        //move = Search.GetBestMoveWithIterativeDeepening(7, 5); 
         
-        Console.Beep(1000, 500);
+        move = Search.GetBestMoveWithIterativeDeepening(Search.MaxSearchTime); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        
+        Console.Beep(1000, 200);
         
         if(MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
         
@@ -68,20 +75,51 @@ void PlayThePosition()
     {
         Console.Write(move);
     }
-    
-}      
-  
+
+    //if (!Boards.whiteCheckmate && !Boards.blackCheckmate) PlayThePosition();
+}
+
+//**************** TEST POSITIONS ****************// 
+
+string emptyBoard =         "8/8/8/8/8/8/8/8 b - -";
+string standardPosition =   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
+
+string checkmate_In_3_Rxh3_Simple_Position     = "6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1";
+string checkmate_In_3_Qh7_Simple_Position      = "rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0";
+// Search makes mistake with all switches on for this position --> fixed after using early exit only in PV without return 
+string checkmate_In_4_Bf6_Mid_Complex_Position = "r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0"; 
+string checkmate_In_4_Bf7_Mid_Complex_Position = "br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0";
+string checkmate_In_7_Qxh7_Complex_Position    = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11";
+// NOt happy with this one, slow
+string checkmate_In_4_Qxh3_Mid_High_Complex_Position = "8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1";
+string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0";
+
+string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"; // (Positional)
+string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
+
+string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
+string bratkoKopec_02 = "r2q1rk1/pp2bppp/2n1bn2/2pp4/3P4/2P2NP1/PP1NPPBP/R1BQ1RK1 w - - 0 9";    // Best move: ...dxc5
+string bratkoKopec_03 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/2PB1NP1/PP2PPBP/R1BQ1RK1 b - - 0 9";   // Best move: ...cxd4
+string bratkoKopec_04 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 b - - 0 9";   // Best move: ...c4
+string bratkoKopec_05 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 w - - 0 10";  // Best move: ...e4
+string bratkoKopec_06 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 1 11";  // Best move: ...e4
+string bratkoKopec_07 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 2 11";  // Best move: ...f5
+string bratkoKopec_08 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 0 11";  // Best move: ...c4
+string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 3 11";  // Best move: ...cxd4
+string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
+
+
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1");
+    IO.FenReader("");
 
-    /////******************  ZOBRIST HASHING TEST  
+    ///////******************  ZOBRIST HASHING TEST  
 
-    // Testing generated randoms --> 
+    ////Testing generated randoms-- >
     //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
     //{
     //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
@@ -113,9 +151,9 @@ void Run()
 
     Boards.DisplayBoard();
 
-    ////PerftTeste.RunPerft(6, true);
+    //PerftTeste.RunPerft(4, true);
 
-    ////PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -490,7 +528,9 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        int bestMove = Search.GetBestMove(depth);
+        Search.DynamicDepth = 10; 
+        // 3 sec total time for each depth , max depth will be set directly from search class. 
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state
