@@ -16,8 +16,10 @@ void InitAll()
 
     // Search configs
     Search.TranspositionSwitch = true;
-    Search.EarlyExitSwitch = true;  
+    Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 
+    Search.DynamicDepth = 6;
+    Search.MaxSearchTime = 30;
 }
 
 List<string> GameHistory = new List<string>();  
@@ -38,7 +40,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(10); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(Search.MaxSearchTime); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -115,9 +117,9 @@ void Run()
 
     IO.FenReader("");
 
-    /////******************  ZOBRIST HASHING TEST  
+    ///////******************  ZOBRIST HASHING TEST  
 
-    // Testing generated randoms --> 
+    ////Testing generated randoms-- >
     //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
     //{
     //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
@@ -147,11 +149,11 @@ void Run()
 
 
 
-    // Boards.DisplayBoard();
+    Boards.DisplayBoard();
 
-    ////PerftTeste.RunPerft(6, true);
+    //PerftTeste.RunPerft(4, true);
 
-    // PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -162,7 +164,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 

@@ -19,8 +19,8 @@ public struct Transposition
 
 public static class Search
 {
-    public static int DynamicDepth { get; set; }
-    
+    public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
+    public static int MaxSearchTime { get; set; }
     
     // Search config switches 
     public static bool TranspositionSwitch = false;
