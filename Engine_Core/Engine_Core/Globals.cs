@@ -68,7 +68,22 @@ public static class Globals
         bitboard &= ~(1UL << square);
     }
 
-    // Count the number of set bits in the bitboard (Brian Kernighan's way)
+
+    // Count the number of set bits (Classic way)
+    public static int CountSetBitClassic(ulong bitboard)
+    {
+        int count = 0;
+        while (bitboard != 0)
+        {
+            if(bitboard%2 == 1)
+            {
+                count++;
+            }
+            bitboard >>= 1; 
+        }
+        return count;   
+    }
+    // Count the number of set bits in the bitboard (Brian Kernighan's way) --> Currently in use
     public static int CountBits(ulong bitboard)
     {
         int count = 0;
