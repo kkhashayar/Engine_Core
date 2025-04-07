@@ -238,7 +238,7 @@ public static class Search
         return bestMove;
     }
 
-    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase
+    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
     private static int GetGamePhase(int maxTimeSeconds)
     {
         var defaultTime = maxTimeSeconds;
