@@ -12,6 +12,7 @@ public struct Transposition
 
 public static class Search
 {
+    public static bool GamePhaseOppening = false;
     public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
     public static int MaxSearchTime { get; set; }
@@ -150,7 +151,7 @@ public static class Search
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
         maxTimeSeconds = GetGamePhase(maxTimeSeconds);
-
+        
         int maxDepth = DynamicDepth;
         int score = 0;
         nodes = 0;
@@ -237,10 +238,19 @@ public static class Search
         return bestMove;
     }
 
+    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase
     private static int GetGamePhase(int maxTimeSeconds)
     {
         var defaultTime = maxTimeSeconds;
         NumberOfAllPieces = CountPieces();
+
+        
+        //if(MoveGenerator.wq == 0 && MoveGenerator.bq == 0)
+        //{
+        //    // endgame phase, King can be more active  
+        //}
+
+        
 
         if (NumberOfAllPieces == 32) maxTimeSeconds = 5;
 
@@ -248,9 +258,11 @@ public static class Search
         {
             maxTimeSeconds = defaultTime;
         }
-        
-        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
 
+        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
+        Console.WriteLine();
+        Console.WriteLine($"Maximum calculation time: {maxTimeSeconds} Seconds");
+        Console.WriteLine();
         return maxTimeSeconds;
     }
 
