@@ -14,7 +14,16 @@ public class MoveObjects
 
 public static class MoveGenerator
 {
-   
+    public static int wq { get; set; } = 0;
+    public static int wr { get; set; } = 0;
+    public static int wb { get; set; } = 0;
+    public static int wn { get; set; } = 0;
+    public static int bq { get; set; } = 0;
+    public static int br { get; set; } = 0;
+    public static int bb { get; set; } = 0;
+    public static int bn { get; set; } = 0;
+
+
     public static readonly int[] CastlingRights = new int[]
     {
          7, 15, 15, 15,  3, 15, 15, 11,
@@ -570,6 +579,7 @@ public static class MoveGenerator
 
             if (Boards.Side == (int)Enumes.Colors.white && piece == (int)Enumes.Pieces.N)
             {
+                wn++; 
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -593,6 +603,7 @@ public static class MoveGenerator
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.n)
             {
+                bn++;
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -617,6 +628,7 @@ public static class MoveGenerator
 
             if (Boards.Side == (int)Colors.white && piece == (int)Pieces.B)
             {
+                wb++;
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -640,6 +652,7 @@ public static class MoveGenerator
 
             else if (Boards.Side == (int)Colors.black && piece == (int)Pieces.b)
             {
+                bb++;   
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -664,6 +677,7 @@ public static class MoveGenerator
 
             if (Boards.Side == (int)Enumes.Colors.white && piece == (int)Enumes.Pieces.R)
             {
+                wr++;
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -687,6 +701,7 @@ public static class MoveGenerator
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.r)
             {
+                br++;   
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -711,6 +726,7 @@ public static class MoveGenerator
 
             if (Boards.Side == (int)Enumes.Colors.white && piece == (int)Enumes.Pieces.Q)
             {
+                wq++;
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);
@@ -734,6 +750,7 @@ public static class MoveGenerator
             }
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.q)
             {
+                bq++;   
                 while (bitboard != 0UL)
                 {
                     sourceSquare = GetLs1bIndex(bitboard);

@@ -26,6 +26,7 @@ public static class Globals
         }
         return -1; // No piece found
     }
+
     // Mapping from square index to coordinates
     public static readonly string[] SquareToCoordinates =
     {

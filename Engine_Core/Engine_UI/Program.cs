@@ -14,7 +14,7 @@ void InitAll()
 
     Search.InitializeRandomKeys();
 
-    // Search configs
+    // **************************************** Search configs **************************************** //
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 

@@ -1,14 +1,8 @@
 ﻿using Engine;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using System;
-using System.Diagnostics.Contracts;
 using System.Numerics;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
-
-
 public struct Transposition
 {
     public ulong position;
@@ -16,9 +10,9 @@ public struct Transposition
     public int score;
 }
 
-
 public static class Search
 {
+    public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
     public static int MaxSearchTime { get; set; }
     
@@ -155,14 +149,9 @@ public static class Search
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
-        //int numberOfPiece = CountPieces();
+        maxTimeSeconds = GetGamePhase(maxTimeSeconds);
 
-
-        //if (numberOfPiece == 32) DynamicDepth = 4;
-        //else if (numberOfPiece <= 28) DynamicDepth = 6;
-        //else DynamicDepth = 10;
-
-        int maxDepth = DynamicDepth; 
+        int maxDepth = DynamicDepth;
         int score = 0;
         nodes = 0;
         ply = 0;
@@ -174,11 +163,11 @@ public static class Search
         ClearPV();
 
 
-        if(TranspositionSwitch) GeneratepositionHashKey();
+        if (TranspositionSwitch) GeneratepositionHashKey();
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
-            
+
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
@@ -203,7 +192,7 @@ public static class Search
                     return bestMove; // Immediately return the best move.
                 }
             }
-            
+
 
             if (score > bestScore)
             {
@@ -220,19 +209,19 @@ public static class Search
                     continue;
                 }
             }
-           
+
             // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
             {
                 Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 return bestMove;
-                
+
             }
         }
         nodes = 0; // Reset nodes counter
         ClearKillerAndHistoryMoves();
         ClearPV();
-        
+
         // Final Negamax search at maxDepth
         score = Negamax(-50000, 50000, maxDepth);
 
@@ -246,6 +235,23 @@ public static class Search
 
 
         return bestMove;
+    }
+
+    private static int GetGamePhase(int maxTimeSeconds)
+    {
+        var defaultTime = maxTimeSeconds;
+        NumberOfAllPieces = CountPieces();
+
+        if (NumberOfAllPieces == 32) maxTimeSeconds = 5;
+
+        else if (NumberOfAllPieces <= 30 && NumberOfAllPieces >16)
+        {
+            maxTimeSeconds = defaultTime;
+        }
+        
+        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
+
+        return maxTimeSeconds;
     }
 
     private static void FlagCheckmate(MoveObjects moveList)
@@ -298,6 +304,7 @@ public static class Search
         // Safety check
         if (ply > maxPly - 1)
         {
+            //NumberOfAllPieces = Globals.CountBits();
             return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
         }
 
@@ -331,7 +338,7 @@ public static class Search
         // Generate moves
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-
+        
         if(moveList.counter == 0) FlagCheckmate(moveList);  
 
         // Sort moves by MVV-LVA, killer, history, etc.
