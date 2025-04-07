@@ -2,6 +2,8 @@
 
 public static class Boards
 {
+    
+
     public static int SizeOfBitboards = 96;
     public static int SizeOfOccupanciesBitBoards = 24;
 
@@ -21,7 +23,9 @@ public static class Boards
     public static int Side { get; set; }
 
     public static bool whiteCheckmate = false;
-    public static bool blackCheckmate = false;  
+    public static bool blackCheckmate = false;
+
+    
 
     public static void PrintBitboard(ulong bitboard)
     {

@@ -5,6 +5,78 @@ namespace Engine_Core;
 
 public static class IO
 {
+
+    private static ushort SwapEndian(ushort value) => (ushort)((value >> 8) | (value << 8));
+
+    private static uint SwapEndian(uint value) =>
+        (value >> 24) |
+        ((value >> 8) & 0x0000FF00) |
+        ((value << 8) & 0x00FF0000) |
+        (value << 24);
+
+    private static ulong SwapEndian(ulong value) =>
+        ((value & 0x00000000000000FFUL) << 56) |
+        ((value & 0x000000000000FF00UL) << 40) |
+        ((value & 0x0000000000FF0000UL) << 24) |
+        ((value & 0x00000000FF000000UL) << 8) |
+        ((value & 0x000000FF00000000UL) >> 8) |
+        ((value & 0x0000FF0000000000UL) >> 24) |
+        ((value & 0x00FF000000000000UL) >> 40) |
+        ((value & 0xFF00000000000000UL) >> 56);
+
+    public struct PolyglotEntry
+    {
+        public ulong key; // Zobrist hash
+        public ushort move; //Encoded move
+        public ushort Weight; // Weight (probability)
+      
+
+        public static PolyglotEntry FromBytes(byte[]bytes, int offset)
+        {
+            return new PolyglotEntry
+            {
+                key = SwapEndian(BitConverter.ToUInt64(bytes, offset)),
+                move = SwapEndian(BitConverter.ToUInt16(bytes, offset + 8)),
+                Weight = SwapEndian(BitConverter.ToUInt16(bytes, offset + 10)),
+                
+            };
+        }
+    }
+
+
+
+    public static List<PolyglotEntry> ReadPolyglotBook(string path, ulong positionHash)
+    {
+        var entries = new List<PolyglotEntry>();
+
+
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        using (var reader = new BinaryReader(stream))
+        {
+            while (stream.Position + 16 < stream.Length)
+            {
+                ulong hash = SwapEndian(reader.ReadUInt64());
+                ushort move = SwapEndian(reader.ReadUInt16());
+                ushort weight = SwapEndian(reader.ReadUInt16());
+
+                if (hash == positionHash)
+                {
+                    entries.Add(new PolyglotEntry
+                    {
+                        key = hash,
+                        move = move,    
+                        Weight = weight 
+
+                    });
+                }
+            }
+
+            return entries;
+        }
+    }
+
+
+
     public static string FenWriter()
     {
         string fen = "";
