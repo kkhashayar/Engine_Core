@@ -1,5 +1,6 @@
 ﻿using Engine;
 using System.Numerics;
+using System.Text;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -12,7 +13,9 @@ public struct Transposition
 
 public static class Search
 {
-    public static bool GamePhaseOppening = false;
+    public static Dictionary<ulong, List<IO.PolyglotEntry>> Book = new(); 
+
+    
     public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
     public static int MaxSearchTime { get; set; }
@@ -150,8 +153,9 @@ public static class Search
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
-        maxTimeSeconds = GetGamePhase(maxTimeSeconds);
         
+
+
         int maxDepth = DynamicDepth;
         int score = 0;
         nodes = 0;
@@ -163,8 +167,36 @@ public static class Search
         ClearKillerAndHistoryMoves();
         ClearPV();
 
-
+        // To make a use of game phase for opening, we should switch on zobrist hashing
         if (TranspositionSwitch) GeneratepositionHashKey();
+
+        
+
+        int defaultMaxTime = maxTimeSeconds;
+        GamePhase gamePhase = GamePhase.None;
+        gamePhase = GetGamePhase();
+
+        if (gamePhase == GamePhase.Opening)
+        {
+            maxTimeSeconds = 2;
+            
+            if(Book.TryGetValue(positionHashKey, out var entries) && entries.Count > 0)
+            {
+                var bookMove = entries[0].move;
+                Console.WriteLine($"info string Using book move: {Globals.MoveToString(bookMove)}");
+                return bookMove;
+            }
+        }
+        else if (gamePhase == GamePhase.MiddleGame)
+        {
+            maxTimeSeconds = defaultMaxTime;
+        }
+
+        else if (gamePhase == GamePhase.EndGame)
+        {
+            maxTimeSeconds = 10;
+        }
+
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
@@ -239,31 +271,37 @@ public static class Search
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    private static int GetGamePhase(int maxTimeSeconds)
+    private static GamePhase GetGamePhase()
     {
-        var defaultTime = maxTimeSeconds;
-        NumberOfAllPieces = CountPieces();
 
-        
-        //if(MoveGenerator.wq == 0 && MoveGenerator.bq == 0)
-        //{
-        //    // endgame phase, King can be more active  
-        //}
+        int numberOfPiece = CountPieces();
 
-        
-
-        if (NumberOfAllPieces == 32) maxTimeSeconds = 5;
-
-        else if (NumberOfAllPieces <= 30 && NumberOfAllPieces >16)
+        if (numberOfPiece == 32) 
         {
-            maxTimeSeconds = defaultTime;
+            Console.WriteLine();
+            Console.WriteLine($"GamePhase: Opening");
+            Console.WriteLine();
+            return GamePhase.Opening;
+        }
+        else
+        {
+            if((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >=1 && MoveGenerator.bq >= 1)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"GamePhase: Middle game");
+                Console.WriteLine();
+                return GamePhase.MiddleGame;
+            }
+             
         }
 
         // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
         Console.WriteLine();
-        Console.WriteLine($"Maximum calculation time: {maxTimeSeconds} Seconds");
+        Console.WriteLine($"GamePhase: Middle game");
         Console.WriteLine();
-        return maxTimeSeconds;
+        
+        return GamePhase.EndGame;
+        
     }
 
     private static void FlagCheckmate(MoveObjects moveList)

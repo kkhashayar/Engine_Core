@@ -7,19 +7,43 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 void InitAll()
 {
+    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
+    Search.Book = IO.LoadFullPolyglotBook(polyglotPath);
+
+    Console.WriteLine("Starting application..");
+    Thread.Sleep(250);
+
+    Console.WriteLine("Loading book...");
+    Thread.Sleep(250);
+    if (Search.Book.Count >= 0)
+    {
+        Console.WriteLine("Polyglot book loaded successfully");
+        
+        Thread.Sleep(250); 
+    }
+
+    Console.WriteLine("Initializing Attacks...");
+    Thread.Sleep(1000);
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
 
-
+    Console.WriteLine("Initializing Random keys....");
+    Thread.Sleep(250);
     Search.InitializeRandomKeys();
 
     // **************************************** Search configs **************************************** //
+    Console.WriteLine("Adjusting configurations....");
+
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 
     Search.DynamicDepth = 6;
     Search.MaxSearchTime = 30;
+    Thread.Sleep(100);
+
+    Console.WriteLine("Application ready to use...");
+    Thread.Sleep(100);
 }
 
 List<string> GameHistory = new List<string>();  
