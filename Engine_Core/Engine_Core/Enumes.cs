@@ -70,6 +70,16 @@ public static class Enumes
         Captures,
     }
 
+
+    public enum GamePhase
+    {
+        None = 0,
+        Opening = 1,
+        MiddleGame = 2,
+        EndGame = 3,    
+    }
+
+
     /*
         0001 -> 1 -> WKCA
         0010 -> 2 -> WQCA

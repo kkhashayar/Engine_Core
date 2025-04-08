@@ -43,6 +43,36 @@ public static class IO
         }
     }
 
+    public static Dictionary<ulong, List<PolyglotEntry>> LoadFullPolyglotBook(string path)
+    {
+        var entries = new Dictionary<ulong, List<PolyglotEntry>>();
+
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        using (var reader = new BinaryReader(stream))
+        {
+            while (stream.Position + 16 <= stream.Length)
+            {
+                ulong key = SwapEndian(reader.ReadUInt64());
+                ushort move = SwapEndian(reader.ReadUInt16());
+                ushort weight = SwapEndian(reader.ReadUInt16());
+                reader.ReadUInt32(); // skip learn field (4 bytes)
+
+                var entry = new PolyglotEntry
+                {
+                    key = key,
+                    move = move,
+                    Weight = weight
+                };
+
+                if (!entries.ContainsKey(key))
+                    entries[key] = new List<PolyglotEntry>();
+
+                entries[key].Add(entry);
+            }
+        }
+
+        return entries;
+    }
 
 
     public static List<PolyglotEntry> ReadPolyglotBook(string path, ulong positionHash)
