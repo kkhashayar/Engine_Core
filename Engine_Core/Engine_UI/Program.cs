@@ -28,9 +28,10 @@ void InitAll()
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
 
-    Console.WriteLine("Initializing Random keys....");
+    Console.WriteLine("Initializing Random keys....using hard coded polyglot keys");
     Thread.Sleep(250);
-    Search.InitializeRandomKeys();
+    //Search.InitializeRandomKeys();
+    Search.InitializePolyglotRandomKeys();  
 
     // **************************************** Search configs **************************************** //
     Console.WriteLine("Adjusting configurations....");

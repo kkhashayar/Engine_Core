@@ -499,21 +499,21 @@ public static class Globals
         return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
     }
 
-    //public static ulong GetFixedRandom64Numbers()
-    //{
-    //    ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-    //    ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-    //    return (high << 32) | low;
-    //}
-
-
-
     public static ulong GetFixedRandom64Numbers()
     {
-        byte[] bytes = new byte[8];
-        RandomNumberGenerator.Fill(bytes);  
-        return BitConverter.ToUInt64(bytes, 0);     
+        ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+        ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+        return (high << 32) | low;
     }
+
+
+
+    //public static ulong GetFixedRandom64Numbers()
+    //{
+    //    byte[] bytes = new byte[8];
+    //    RandomNumberGenerator.Fill(bytes);  
+    //    return BitConverter.ToUInt64(bytes, 0);     
+    //}
 
     // **************************************************   RANDOMIZERS
 

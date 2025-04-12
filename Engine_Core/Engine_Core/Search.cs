@@ -70,7 +70,20 @@ public static class Search
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
 
-    // Set it to public for testing 
+
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+     * This method try to generate keys (polyglot keys for pieces, castling, enpassant and side) 
+     * The random keys are working in a box(only valid in current life scope) they are not standard as far as i can say 
+     * 
+     * Set it to public for testing (Should be private )
+     * 
+     * 
+     * NOTE: This method is not in use anymore.replaced with InitializePolyglotRandomKeys()
+     */
+
     public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
@@ -95,6 +108,32 @@ public static class Search
         {
             castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static void InitializePolyglotRandomKeys()
+    {
+        // Piece on square key
+        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
+        {
+            for(int square = 0; square < 64; square++)
+            {
+                 pieceKeysOnSquare[(int)piece, square] = Polyglot.PolyglotRandomKeys[(int)piece * 64 + square];
+            }
+        }
+
+        // Castling rights key 
+        for(int i = 0; i < 4; i++)
+        {
+            castlingKeys[i] = Polyglot.PolyglotRandomKeys[768+i];   
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            enpassantKey[i] = Polyglot.PolyglotRandomKeys[772 + i];
+        }
+
+        sideKey = Polyglot.PolyglotRandomKeys[780];
     }
 
     // Generate hash key. 
@@ -124,10 +163,31 @@ public static class Search
         }
 
         // En-passant 
-        if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
+        if (Boards.EnpassantSquare != (int)Squares.NoSquare)
         {
-            positionHashKey ^= enpassantKey[square];
+            int epFile = Boards.EnpassantSquare % 8;
+
+            if (Boards.Side == (int)Colors.white)
+            {
+                ulong whitePawns = Boards.Bitboards[(int)Pieces.P];
+                // Check if there's a white pawn on rank 5 that could capture ep
+                if (((whitePawns >> 8) | (whitePawns << 8)) >> epFile % 8 != 0)
+                {
+                    positionHashKey ^= enpassantKey[epFile];
+                }
+            }
+            else
+            {
+                ulong blackPawns = Boards.Bitboards[(int)Pieces.p];
+                // Check if there's a black pawn on rank 4 that could capture ep
+                if (((blackPawns >> 8) | (blackPawns << 8)) >> epFile % 8 != 0)
+                {
+                    positionHashKey ^= enpassantKey[epFile];
+                }
+            }
         }
+
+
         // Castling
         positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
@@ -136,9 +196,11 @@ public static class Search
         {
             positionHashKey ^= sideKey;
         }
-         
+
         return positionHashKey;
     }
+
+
 
     private static int CountPieces()
     {
@@ -153,9 +215,7 @@ public static class Search
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
-        
-
-
+      
         int maxDepth = DynamicDepth;
         int score = 0;
         nodes = 0;
@@ -857,7 +917,9 @@ public static class Search
 }
 
 
-
+/*
+ * G086453491
+ */
 
 /*
 *      Inspired by Code monkey King channel
