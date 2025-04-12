@@ -176,7 +176,7 @@ void Run()
 
     //PerftTeste.RunPerft(4, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -187,7 +187,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    //WinBoardLoop();
+    WinBoardLoop();
 
 }
 
@@ -278,7 +278,6 @@ static void DebugSearchMethods()
 
 static void WinBoardLoop()
 {
-    
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
         log.WriteLine($"[{DateTime.Now}] Engine started.");
