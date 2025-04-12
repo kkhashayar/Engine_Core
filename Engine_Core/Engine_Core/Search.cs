@@ -1,6 +1,5 @@
 ﻿using Engine;
 using System.Numerics;
-using System.Text;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -14,8 +13,6 @@ public struct Transposition
 public static class Search
 {
     public static Dictionary<ulong, List<IO.PolyglotEntry>> Book = new(); 
-
-    
     public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
     public static int MaxSearchTime { get; set; }
@@ -51,7 +48,6 @@ public static class Search
     private const int NEG_INF = -50000;
     private const int POS_INF = 50000;
 
-
     // **********************************************   ZOBRIST  HASHING 
 
     // Random piece keys [piece, squar]  give a random unique number to piece on given square
@@ -69,10 +65,6 @@ public static class Search
 
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
-
-
-
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
      * This method try to generate keys (polyglot keys for pieces, castling, enpassant and side) 
@@ -81,9 +73,8 @@ public static class Search
      * Set it to public for testing (Should be private )
      * 
      * 
-     * NOTE: This method is not in use anymore.replaced with InitializePolyglotRandomKeys()
+     * NOTE: This method is not in use anymore. Replaced with InitializePolyglotRandomKeys()
      */
-
     public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)

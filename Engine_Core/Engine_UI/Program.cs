@@ -7,12 +7,10 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 void InitAll()
 {
-    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
-    Search.Book = IO.LoadFullPolyglotBook(polyglotPath);
-
     Console.WriteLine("Starting application..");
     Thread.Sleep(250);
-
+    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
+    Search.Book = IO.LoadFullPolyglotBook(polyglotPath); //TODO: Standardize zobrist hash.
     Console.WriteLine("Loading book...");
     Thread.Sleep(250);
     if (Search.Book.Count >= 0)
@@ -21,9 +19,9 @@ void InitAll()
         
         Thread.Sleep(250); 
     }
-
     Console.WriteLine("Initializing Attacks...");
     Thread.Sleep(1000);
+
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
