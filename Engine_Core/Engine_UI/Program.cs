@@ -550,7 +550,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        Search.DynamicDepth = 10; 
+        Search.DynamicDepth = 8; 
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
         if (bestMove != 0)
@@ -574,6 +574,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
+    Boards.DisplayBoard();
 }
 
 static void TriggerTrainingFlow()

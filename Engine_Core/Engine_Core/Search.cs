@@ -222,7 +222,7 @@ public static class Search
         if (TranspositionSwitch) GeneratepositionHashKey();
 
         
-
+        int defaultDynamicDepth = DynamicDepth;
         int defaultMaxTime = maxTimeSeconds;
         GamePhase gamePhase = GamePhase.None;
         gamePhase = GetGamePhase();
@@ -230,7 +230,7 @@ public static class Search
         if (gamePhase == GamePhase.Opening)
         {
             maxTimeSeconds = 2;
-            
+            DynamicDepth = 6;
             if(Book.TryGetValue(positionHashKey, out var entries) && entries.Count > 0)
             {
                 var bookMove = entries[0].move;
@@ -240,11 +240,13 @@ public static class Search
         }
         else if (gamePhase == GamePhase.MiddleGame)
         {
+            DynamicDepth = defaultDynamicDepth;
             maxTimeSeconds = defaultMaxTime;
         }
 
         else if (gamePhase == GamePhase.EndGame)
         {
+            DynamicDepth = defaultDynamicDepth + 2;
             maxTimeSeconds = 10;
         }
 
