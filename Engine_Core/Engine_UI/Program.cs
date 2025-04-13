@@ -300,6 +300,7 @@ static void WinBoardLoop()
 
             while (true)
             {
+                Console.Write("Command: ");
                 string input = Console.ReadLine();
                 
                 if (string.IsNullOrEmpty(input)) continue;
@@ -483,12 +484,13 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 {
     try
     {
+        
         int move = WinBoardParseMove(moveString);
         if (move != 0)
         {
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
-
+            Boards.DisplayBoard();
             if (!forceMode && engineGo)
             {
                 MakeEngineMove(depth, log); // Respond with engine's move
@@ -550,7 +552,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        Search.DynamicDepth = 8; 
+        Search.DynamicDepth = 6; 
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
         if (bestMove != 0)

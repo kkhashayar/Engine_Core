@@ -230,7 +230,7 @@ public static class Search
         if (gamePhase == GamePhase.Opening)
         {
             maxTimeSeconds = 2;
-            DynamicDepth = 6;
+            
             if(Book.TryGetValue(positionHashKey, out var entries) && entries.Count > 0)
             {
                 var bookMove = entries[0].move;
@@ -240,13 +240,13 @@ public static class Search
         }
         else if (gamePhase == GamePhase.MiddleGame)
         {
-            DynamicDepth = defaultDynamicDepth;
+            DynamicDepth = defaultDynamicDepth + 2;
             maxTimeSeconds = defaultMaxTime;
         }
 
         else if (gamePhase == GamePhase.EndGame)
         {
-            DynamicDepth = defaultDynamicDepth + 2;
+            DynamicDepth = defaultDynamicDepth + 4;
             maxTimeSeconds = 10;
         }
 
@@ -324,7 +324,7 @@ public static class Search
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    private static GamePhase GetGamePhase()
+    public static GamePhase GetGamePhase()
     {
 
         int numberOfPiece = CountPieces();
@@ -374,6 +374,7 @@ public static class Search
 
     private static int Negamax(int alpha, int beta, int depth)
     {
+    
         if (TranspositionSwitch)
         {
             // here we should check if there is a hit in Transpositiontable 
@@ -761,6 +762,7 @@ public static class Search
     // Not sure if I implement it correctly 
     private static int Quiescence(int alpha, int beta)
     {
+     
         nodes++;
 
         int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);

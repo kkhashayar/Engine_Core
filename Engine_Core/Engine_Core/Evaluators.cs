@@ -84,13 +84,14 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
+
         int score = 0;
 
         // ===== Existing material + position evaluation =====
         for (int bbPiece = (int)Pieces.P; bbPiece <= (int)Pieces.k; bbPiece++)
         {
             ulong bitboard = bitboards[bbPiece];
-
+           
             while (bitboard != 0)
             {
                 int square = Globals.GetLs1bIndex(bitboard);
