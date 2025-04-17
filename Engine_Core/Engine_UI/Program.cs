@@ -7,12 +7,10 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 void InitAll()
 {
-    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
-    Search.Book = IO.LoadFullPolyglotBook(polyglotPath);
-
     Console.WriteLine("Starting application..");
     Thread.Sleep(250);
-
+    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
+    Search.Book = IO.LoadFullPolyglotBook(polyglotPath); //TODO: Standardize zobrist hash.
     Console.WriteLine("Loading book...");
     Thread.Sleep(250);
     if (Search.Book.Count >= 0)
@@ -21,24 +19,27 @@ void InitAll()
         
         Thread.Sleep(250); 
     }
-
     Console.WriteLine("Initializing Attacks...");
     Thread.Sleep(1000);
+
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
 
-    Console.WriteLine("Initializing Random keys....");
+    Console.WriteLine("Initializing Random keys....using hard coded polyglot keys");
     Thread.Sleep(250);
-    Search.InitializeRandomKeys();
 
+
+    //Search.InitializeRandomKeys();
+    Search.InitializePolyglotRandomKeys();  
+    //Search.InitializeRandomKeys();
     // **************************************** Search configs **************************************** //
     Console.WriteLine("Adjusting configurations....");
 
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 
-    Search.DynamicDepth = 6;
+    Search.DynamicDepth = 4;
     Search.MaxSearchTime = 30;
     Thread.Sleep(100);
 
@@ -139,7 +140,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader("8/3k4/8/8/8/3K1R2/8/8 w - - 0 1");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -170,14 +171,11 @@ void Run()
 
     ////*******************  ZOBRIST HASHING TEST
 
-
-
-
     Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(4, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -188,7 +186,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    //WinBoardLoop();
+    WinBoardLoop();
 
 }
 
@@ -279,7 +277,6 @@ static void DebugSearchMethods()
 
 static void WinBoardLoop()
 {
-    
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
         log.WriteLine($"[{DateTime.Now}] Engine started.");
@@ -296,12 +293,13 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 6;           // Default search depth
+            int depth = 4;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
             while (true)
             {
+                Console.Write("Command: ");
                 string input = Console.ReadLine();
                 
                 if (string.IsNullOrEmpty(input)) continue;
@@ -485,12 +483,13 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 {
     try
     {
+        
         int move = WinBoardParseMove(moveString);
         if (move != 0)
         {
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
-
+            Boards.DisplayBoard();
             if (!forceMode && engineGo)
             {
                 MakeEngineMove(depth, log); // Respond with engine's move
@@ -552,7 +551,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        Search.DynamicDepth = 10; 
+        Search.DynamicDepth = 6; 
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
         if (bestMove != 0)
@@ -576,6 +575,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
+    Boards.DisplayBoard();
 }
 
 static void TriggerTrainingFlow()

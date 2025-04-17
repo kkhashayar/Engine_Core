@@ -1,6 +1,5 @@
 ﻿using Engine;
 using System.Numerics;
-using System.Text;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -14,8 +13,6 @@ public struct Transposition
 public static class Search
 {
     public static Dictionary<ulong, List<IO.PolyglotEntry>> Book = new(); 
-
-    
     public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
     public static int MaxSearchTime { get; set; }
@@ -51,7 +48,6 @@ public static class Search
     private const int NEG_INF = -50000;
     private const int POS_INF = 50000;
 
-
     // **********************************************   ZOBRIST  HASHING 
 
     // Random piece keys [piece, squar]  give a random unique number to piece on given square
@@ -69,8 +65,16 @@ public static class Search
 
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
-
-    // Set it to public for testing 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+     * This method try to generate keys (polyglot keys for pieces, castling, enpassant and side) 
+     * The random keys are working in a box(only valid in current life scope) they are not standard as far as i can say 
+     * 
+     * Set it to public for testing (Should be private )
+     * 
+     * 
+     * NOTE: This method is not in use anymore. Replaced with InitializePolyglotRandomKeys()
+     */
     public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
@@ -95,6 +99,34 @@ public static class Search
         {
             castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // using polyglot hard coded random keys
+    public static void InitializePolyglotRandomKeys()
+    {
+        // Piece on square key
+        for (int piece = (int)Pieces.P; piece <= (int)Pieces.k; piece++)
+        {
+            for(int square = 0; square < 64; square++)
+            {
+                 pieceKeysOnSquare[piece, square] = Polyglot.PolyglotRandomKeys[piece * 64 + square];
+            }
+        }
+
+        // Castling rights key 
+        if ((Boards.CastlePerm & 1) != 0) positionHashKey ^= castlingKeys[0]; // WKCA
+        if ((Boards.CastlePerm & 2) != 0) positionHashKey ^= castlingKeys[1]; // WQCA
+        if ((Boards.CastlePerm & 4) != 0) positionHashKey ^= castlingKeys[2]; // BKCA
+        if ((Boards.CastlePerm & 8) != 0) positionHashKey ^= castlingKeys[3]; // BQCA
+
+
+        for (int i = 0; i < 8; i++)
+        {
+            enpassantKey[i] = Polyglot.PolyglotRandomKeys[772 + i];
+        }
+
+        sideKey = Polyglot.PolyglotRandomKeys[780];
     }
 
     // Generate hash key. 
@@ -124,10 +156,31 @@ public static class Search
         }
 
         // En-passant 
-        if (enpassantKey[square] != (ulong)Enumes.Squares.NoSquare)
+        if (Boards.EnpassantSquare != (int)Squares.NoSquare)
         {
-            positionHashKey ^= enpassantKey[square];
+            int epFile = Boards.EnpassantSquare % 8;
+
+            if (Boards.Side == (int)Colors.white)
+            {
+                ulong whitePawns = Boards.Bitboards[(int)Pieces.P];
+                // Check if there's a white pawn on rank 5 that could capture ep
+                if (((whitePawns >> 8) | (whitePawns << 8)) >> epFile % 8 != 0)
+                {
+                    positionHashKey ^= enpassantKey[epFile];
+                }
+            }
+            else
+            {
+                ulong blackPawns = Boards.Bitboards[(int)Pieces.p];
+                // Check if there's a black pawn on rank 4 that could capture ep
+                if (((blackPawns >> 8) | (blackPawns << 8)) >> epFile % 8 != 0)
+                {
+                    positionHashKey ^= enpassantKey[epFile];
+                }
+            }
         }
+
+
         // Castling
         positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
@@ -136,9 +189,11 @@ public static class Search
         {
             positionHashKey ^= sideKey;
         }
-         
+
         return positionHashKey;
     }
+
+
 
     private static int CountPieces()
     {
@@ -153,9 +208,7 @@ public static class Search
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
     {
-        
-
-
+      
         int maxDepth = DynamicDepth;
         int score = 0;
         nodes = 0;
@@ -171,7 +224,7 @@ public static class Search
         if (TranspositionSwitch) GeneratepositionHashKey();
 
         
-
+        int defaultDynamicDepth = DynamicDepth;
         int defaultMaxTime = maxTimeSeconds;
         GamePhase gamePhase = GamePhase.None;
         gamePhase = GetGamePhase();
@@ -189,12 +242,14 @@ public static class Search
         }
         else if (gamePhase == GamePhase.MiddleGame)
         {
-            maxTimeSeconds = defaultMaxTime;
+            DynamicDepth = 8;
+            maxTimeSeconds = 3;
         }
 
         else if (gamePhase == GamePhase.EndGame)
         {
-            maxTimeSeconds = 10;
+            DynamicDepth = 10;
+            maxTimeSeconds = 4;
         }
 
 
@@ -271,7 +326,7 @@ public static class Search
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    private static GamePhase GetGamePhase()
+    public static GamePhase GetGamePhase()
     {
 
         int numberOfPiece = CountPieces();
@@ -321,6 +376,7 @@ public static class Search
 
     private static int Negamax(int alpha, int beta, int depth)
     {
+    
         if (TranspositionSwitch)
         {
             // here we should check if there is a hit in Transpositiontable 
@@ -333,7 +389,7 @@ public static class Search
             // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
             if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth > depth)
             {
-                if(entry.depth >= 5)
+                if(entry.depth >= 10)
                 {
                     Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
                 }
@@ -708,6 +764,7 @@ public static class Search
     // Not sure if I implement it correctly 
     private static int Quiescence(int alpha, int beta)
     {
+     
         nodes++;
 
         int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
@@ -857,7 +914,9 @@ public static class Search
 }
 
 
-
+/*
+ * G086453491
+ */
 
 /*
 *      Inspired by Code monkey King channel

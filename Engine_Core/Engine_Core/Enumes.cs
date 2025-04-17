@@ -80,6 +80,8 @@ public static class Enumes
     }
 
 
+    
+
     /*
         0001 -> 1 -> WKCA
         0010 -> 2 -> WQCA
