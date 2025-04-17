@@ -102,22 +102,24 @@ public static class Search
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // using polyglot hard coded random keys
     public static void InitializePolyglotRandomKeys()
     {
         // Piece on square key
-        for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
+        for (int piece = (int)Pieces.P; piece <= (int)Pieces.k; piece++)
         {
             for(int square = 0; square < 64; square++)
             {
-                 pieceKeysOnSquare[(int)piece, square] = Polyglot.PolyglotRandomKeys[(int)piece * 64 + square];
+                 pieceKeysOnSquare[piece, square] = Polyglot.PolyglotRandomKeys[piece * 64 + square];
             }
         }
 
         // Castling rights key 
-        for(int i = 0; i < 4; i++)
-        {
-            castlingKeys[i] = Polyglot.PolyglotRandomKeys[768+i];   
-        }
+        if ((Boards.CastlePerm & 1) != 0) positionHashKey ^= castlingKeys[0]; // WKCA
+        if ((Boards.CastlePerm & 2) != 0) positionHashKey ^= castlingKeys[1]; // WQCA
+        if ((Boards.CastlePerm & 4) != 0) positionHashKey ^= castlingKeys[2]; // BKCA
+        if ((Boards.CastlePerm & 8) != 0) positionHashKey ^= castlingKeys[3]; // BQCA
+
 
         for (int i = 0; i < 8; i++)
         {
@@ -240,14 +242,14 @@ public static class Search
         }
         else if (gamePhase == GamePhase.MiddleGame)
         {
-            DynamicDepth = defaultDynamicDepth + 2;
-            maxTimeSeconds = defaultMaxTime;
+            DynamicDepth = 8;
+            maxTimeSeconds = 3;
         }
 
         else if (gamePhase == GamePhase.EndGame)
         {
-            DynamicDepth = defaultDynamicDepth + 4;
-            maxTimeSeconds = 10;
+            DynamicDepth = 10;
+            maxTimeSeconds = 4;
         }
 
 
@@ -387,7 +389,7 @@ public static class Search
             // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
             if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth > depth)
             {
-                if(entry.depth >= 5)
+                if(entry.depth >= 10)
                 {
                     Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
                 }

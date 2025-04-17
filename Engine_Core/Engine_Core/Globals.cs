@@ -6,7 +6,7 @@ namespace Engine_Core;
 
 public static class Globals
 {
-     private static readonly Random random = new Random();
+    private static readonly Random random = new Random();
 
     /*
      * In fact there is no need to have a fixed random numbers seeded with specific seed. 
@@ -76,13 +76,13 @@ public static class Globals
         int count = 0;
         while (bitboard != 0)
         {
-            if(bitboard%2 == 1)
+            if (bitboard % 2 == 1)
             {
                 count++;
             }
-            bitboard >>= 1; 
+            bitboard >>= 1;
         }
-        return count;   
+        return count;
     }
     // Count the number of set bits in the bitboard (Brian Kernighan's way) --> Currently in use
     public static int CountBits(ulong bitboard)
@@ -351,12 +351,12 @@ public static class Globals
         // Check if it is standard format or not 
         bool IsUciFormat = Globals.CoordinateToSquare.ContainsKey(sanitizedMove.Substring(0, 2));
 
-        if (sanitizedMove.Length == 4  && IsUciFormat)
+        if (sanitizedMove.Length == 4 && IsUciFormat)
         {
             sourceSquare = Globals.CoordinateToSquare[sanitizedMove.Substring(0, 2)];
             piece = GetPieceFromBitboards(sourceSquare);
         }
-        else if(!IsUciFormat)
+        else if (!IsUciFormat)
         {
             // **It's not a standard move, so assume the first character is a piece**
             char pieceChar = sanitizedMove[0];
@@ -499,12 +499,25 @@ public static class Globals
         return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48);
     }
 
+
+
     public static ulong GetFixedRandom64Numbers()
     {
-        ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-        ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-        return (high << 32) | low;
+        byte[] buffer = new byte[sizeof(ulong)];
+        Random random = new Random();
+
+
+        random.NextBytes(buffer);
+        return BitConverter.ToUInt64(buffer, 0);
+
     }
+
+    //public static ulong GetFixedRandom64Numbers()
+    //{
+    //    ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+    //    ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
+    //    return (high << 32) | low;
+    //}
 
 
 

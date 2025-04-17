@@ -28,16 +28,18 @@ void InitAll()
 
     Console.WriteLine("Initializing Random keys....using hard coded polyglot keys");
     Thread.Sleep(250);
+
+
     //Search.InitializeRandomKeys();
     Search.InitializePolyglotRandomKeys();  
-
+    //Search.InitializeRandomKeys();
     // **************************************** Search configs **************************************** //
     Console.WriteLine("Adjusting configurations....");
 
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 
-    Search.DynamicDepth = 6;
+    Search.DynamicDepth = 4;
     Search.MaxSearchTime = 30;
     Thread.Sleep(100);
 
@@ -138,7 +140,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader("8/3k4/8/8/8/3K1R2/8/8 w - - 0 1");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -168,9 +170,6 @@ void Run()
 
 
     ////*******************  ZOBRIST HASHING TEST
-
-
-
 
     Boards.DisplayBoard();
 
@@ -294,7 +293,7 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 6;           // Default search depth
+            int depth = 4;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
