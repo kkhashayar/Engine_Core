@@ -140,7 +140,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/3k4/8/8/8/3K1R2/8/8 w - - 0 1");
+    IO.FenReader(checkmate_In_4_Bf7_Mid_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -175,7 +175,7 @@ void Run()
 
     //PerftTeste.RunPerft(4, true);
 
-    //PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -186,7 +186,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 
