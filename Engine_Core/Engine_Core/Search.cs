@@ -9,23 +9,21 @@ public struct Transposition
     public int depth;
     public int score;
 }
-
 public static class Search
 {
-    public static Dictionary<ulong, List<IO.PolyglotEntry>> Book = new(); 
     public static int NumberOfAllPieces { get; set; }
     public static int DynamicDepth { get; set; }
     public static int DynamicTime { get; set; }
     // Search config switches 
-    public static bool TranspositionSwitch = false;
+    public static bool TranspositionSwitch = true;
     public static bool TimeLimitDeepeningSwitch = false;
     public static bool EarlyExitSwitch = false;
 
     public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
   
     // Variables needed for late move reduction 
-    private static int FullDepthMoves = 4;
-    private static int ReductionLimit = 3;
+    private static int FullDepthMoves = 2;
+    private static int ReductionLimit = 1;
 
 
     public static List<int> ExecutablePv = new List<int>();
@@ -42,10 +40,6 @@ public static class Search
 
     // Half-move (ply) counter
     public static int ply;
-
-    // A typical big negative/positive bound for mate scores
-    private const int NEG_INF = -50000;
-    private const int POS_INF = 50000;
 
     // **********************************************   ZOBRIST  HASHING 
 
@@ -178,8 +172,6 @@ public static class Search
                 }
             }
         }
-
-
         // Castling
         positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
@@ -191,9 +183,6 @@ public static class Search
 
         return positionHashKey;
     }
-
-
-
     private static int CountPieces()
     {
         int total = 0; 
@@ -207,8 +196,7 @@ public static class Search
     // Negamax call with iterative deepening 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-      
-        
+        DynamicDepth = maxDepth;
         int score = 0;
         nodes = 0;
         ply = 0;
@@ -221,40 +209,14 @@ public static class Search
 
         // To make a use of game phase for opening, we should switch on zobrist hashing
         if (TranspositionSwitch) GeneratepositionHashKey();
-
-        
         
         int defaultMaxTime = maxTimeSeconds;
         GamePhase gamePhase = GamePhase.None;
         gamePhase = GetGamePhase();
 
-        if (gamePhase == GamePhase.Opening)
-        {
-            maxTimeSeconds = 2;
-            
-            if(Book.TryGetValue(positionHashKey, out var entries) && entries.Count > 0)
-            {
-                var bookMove = entries[0].move;
-                Console.WriteLine($"info string Using book move: {Globals.MoveToString(bookMove)}");
-                return bookMove;
-            }
-        }
-        else if (gamePhase == GamePhase.MiddleGame)
-        {
-          
-            maxTimeSeconds = 3;
-        }
-
-        else if (gamePhase == GamePhase.EndGame)
-        {
-            
-            maxTimeSeconds = 4;
-        }
-
-
+       
         for (int currentDepth = 1; currentDepth <= 10; currentDepth++)
         {
-
             nodes = 0;
 
             var depthStartTime = DateTime.UtcNow;
@@ -327,7 +289,7 @@ public static class Search
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
     public static GamePhase GetGamePhase()
     {
-
+        var tempDepth = DynamicDepth;   
         int numberOfPiece = CountPieces();
 
         if (numberOfPiece == 32) 
@@ -335,6 +297,7 @@ public static class Search
             Console.WriteLine();
             Console.WriteLine($"GamePhase: Opening");
             Console.WriteLine();
+           
             return GamePhase.Opening;
         }
         else
@@ -375,7 +338,6 @@ public static class Search
 
     private static int Negamax(int alpha, int beta, int depth)
     {
-    
         if (TranspositionSwitch)
         {
             // here we should check if there is a hit in Transpositiontable 
@@ -385,10 +347,11 @@ public static class Search
                 depth = depth,
                 score = 0
             };
+
             // When I change it to >= for some reason stops the game after finding the checkmate pattern! :|
             if (transpositionTable.TryGetValue(positionHashKey, out Transposition entry) && entry.depth > depth)
             {
-                if(entry.depth >= 10)
+                if(entry.depth >= 6)
                 {
                     Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
                 }

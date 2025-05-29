@@ -7,54 +7,23 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 void InitAll()
 {
-    Console.WriteLine("Starting application..");
-    Thread.Sleep(250);
-    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
-    Search.Book = IO.LoadFullPolyglotBook(polyglotPath); //TODO: Standardize zobrist hash.
-    Console.WriteLine("Loading book...");
-    Thread.Sleep(250);
-    if (Search.Book.Count >= 0)
-    {
-        Console.WriteLine("Polyglot book loaded successfully");
-        
-        Thread.Sleep(250); 
-    }
-    Console.WriteLine("Initializing Attacks...");
-    Thread.Sleep(1000);
-
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
-
-    Console.WriteLine("Initializing Random keys....using hard coded polyglot keys");
-    Thread.Sleep(250);
-
-
-    //Search.InitializeRandomKeys();
-    Search.InitializePolyglotRandomKeys();  
-    //Search.InitializeRandomKeys();
+    Search.InitializeRandomKeys();
+    
     // **************************************** Search configs **************************************** //
-    Console.WriteLine("Adjusting configurations....");
-
+   
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
-    //Search.TimeLimitDeepeningSwitch = true; 
-
-
-   
-
-
-    Thread.Sleep(100);
-
-    Console.WriteLine("Application ready to use...");
-    Thread.Sleep(100);
+  
 }
 
 List<string> GameHistory = new List<string>();
 
 // Temporary solution 
-int maxdepth = 10;
-int maxTime = 20;
+int maxdepth = 12;
+int maxTime = 60;
 bool running = true;
 void PlayThePosition()
 {
@@ -84,7 +53,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        //Console.ReadKey();  
+        
     }
 
     if (Boards.whiteCheckmate)
@@ -145,7 +114,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_4_Bf7_Mid_Complex_Position);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
