@@ -39,17 +39,22 @@ void InitAll()
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
     //Search.TimeLimitDeepeningSwitch = true; 
-    Search.DynamicDepth = 4;
-    Search.MaxSearchTime = 30;
+
+
+   
+
+
     Thread.Sleep(100);
 
     Console.WriteLine("Application ready to use...");
     Thread.Sleep(100);
 }
 
-List<string> GameHistory = new List<string>();  
+List<string> GameHistory = new List<string>();
 
 // Temporary solution 
+int maxdepth = 10;
+int maxTime = 20;
 bool running = true;
 void PlayThePosition()
 {
@@ -65,7 +70,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(Search.MaxSearchTime); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxdepth, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -551,9 +556,11 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        Search.DynamicDepth = 6; 
+        Search.DynamicTime = 20;
+        Search.DynamicDepth = 6;
+        
         // 3 sec total time for each depth , max depth will be set directly from search class. 
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(Search.DynamicTime, Search.DynamicDepth);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state

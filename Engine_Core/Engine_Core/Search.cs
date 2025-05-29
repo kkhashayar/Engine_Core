@@ -14,9 +14,8 @@ public static class Search
 {
     public static Dictionary<ulong, List<IO.PolyglotEntry>> Book = new(); 
     public static int NumberOfAllPieces { get; set; }
-    public static int DynamicDepth { get; set; }// TODO: Implement Phase detection
-    public static int MaxSearchTime { get; set; }
-    
+    public static int DynamicDepth { get; set; }
+    public static int DynamicTime { get; set; }
     // Search config switches 
     public static bool TranspositionSwitch = false;
     public static bool TimeLimitDeepeningSwitch = false;
@@ -206,10 +205,10 @@ public static class Search
     }
 
     // Negamax call with iterative deepening 
-    public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds)
+    public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
       
-        int maxDepth = DynamicDepth;
+        
         int score = 0;
         nodes = 0;
         ply = 0;
@@ -224,7 +223,7 @@ public static class Search
         if (TranspositionSwitch) GeneratepositionHashKey();
 
         
-        int defaultDynamicDepth = DynamicDepth;
+        
         int defaultMaxTime = maxTimeSeconds;
         GamePhase gamePhase = GamePhase.None;
         gamePhase = GetGamePhase();
@@ -242,18 +241,18 @@ public static class Search
         }
         else if (gamePhase == GamePhase.MiddleGame)
         {
-            DynamicDepth = 8;
+          
             maxTimeSeconds = 3;
         }
 
         else if (gamePhase == GamePhase.EndGame)
         {
-            DynamicDepth = 10;
+            
             maxTimeSeconds = 4;
         }
 
 
-        for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
+        for (int currentDepth = 1; currentDepth <= 10; currentDepth++)
         {
 
             nodes = 0;
