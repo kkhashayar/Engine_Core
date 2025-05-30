@@ -15,9 +15,9 @@ public static class Search
     public static int DynamicDepth { get; set; }
     public static int DynamicTime { get; set; }
     // Search config switches 
-    public static bool TranspositionSwitch = true;
+    public static bool TranspositionSwitch = false;
     public static bool TimeLimitDeepeningSwitch = false;
-    public static bool EarlyExitSwitch = false;
+    public static bool EarlyExitSwitch = true;
 
     public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
   
