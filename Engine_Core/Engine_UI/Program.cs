@@ -7,49 +7,23 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 void InitAll()
 {
-    Console.WriteLine("Starting application..");
-    Thread.Sleep(250);
-    string? polyglotPath = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
-    Search.Book = IO.LoadFullPolyglotBook(polyglotPath); //TODO: Standardize zobrist hash.
-    Console.WriteLine("Loading book...");
-    Thread.Sleep(250);
-    if (Search.Book.Count >= 0)
-    {
-        Console.WriteLine("Polyglot book loaded successfully");
-        
-        Thread.Sleep(250); 
-    }
-    Console.WriteLine("Initializing Attacks...");
-    Thread.Sleep(1000);
-
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
-
-    Console.WriteLine("Initializing Random keys....using hard coded polyglot keys");
-    Thread.Sleep(250);
-
-
-    //Search.InitializeRandomKeys();
-    Search.InitializePolyglotRandomKeys();  
-    //Search.InitializeRandomKeys();
+    Search.InitializeRandomKeys();
+    
     // **************************************** Search configs **************************************** //
-    Console.WriteLine("Adjusting configurations....");
-
+   
     Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = true;
-    //Search.TimeLimitDeepeningSwitch = true; 
-    Search.DynamicDepth = 4;
-    Search.MaxSearchTime = 30;
-    Thread.Sleep(100);
-
-    Console.WriteLine("Application ready to use...");
-    Thread.Sleep(100);
+  
 }
 
-List<string> GameHistory = new List<string>();  
+List<string> GameHistory = new List<string>();
 
 // Temporary solution 
+int maxdepth = 6;
+int maxTime = 30;
 bool running = true;
 void PlayThePosition()
 {
@@ -65,7 +39,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(Search.MaxSearchTime); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxdepth, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -79,7 +53,7 @@ void PlayThePosition()
         
         Boards.DisplayBoard();
          
-        //Console.ReadKey();  
+        
     }
 
     if (Boards.whiteCheckmate)
@@ -140,7 +114,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/3k4/8/8/8/3K1R2/8/8 w - - 0 1");
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -175,7 +149,7 @@ void Run()
 
     //PerftTeste.RunPerft(4, true);
 
-    //PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -186,7 +160,7 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 
@@ -551,9 +525,11 @@ static void MakeEngineMove(int depth, StreamWriter log)
 {
     try
     {
-        Search.DynamicDepth = 6; 
+        Search.DynamicTime = 20;
+        Search.DynamicDepth = 6;
+        
         // 3 sec total time for each depth , max depth will be set directly from search class. 
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(3);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(Search.DynamicTime, Search.DynamicDepth);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state

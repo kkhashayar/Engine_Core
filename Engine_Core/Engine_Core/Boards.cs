@@ -150,7 +150,7 @@ public static class Boards
             Console.Write("-");
         }
         Console.WriteLine("\n");
-        Console.WriteLine($"Depth: {Search.DynamicDepth}");
+        Console.WriteLine($"Current max Depth: {Search.DynamicDepth}");
         Console.WriteLine("\n");
         Console.WriteLine($"Position Key: {Search.positionHashKey}");
     }
