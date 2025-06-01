@@ -79,7 +79,12 @@ public static class Enumes
         EndGame = 3,    
     }
 
-
+    public enum NodeType
+    {
+        Exact, 
+        Alpha,
+        Beta
+    }
     
 
     /*
