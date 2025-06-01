@@ -116,7 +116,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(standardPosition);
+    IO.FenReader("");
 
     ///////******************  ZOBRIST HASHING TEST  
 
