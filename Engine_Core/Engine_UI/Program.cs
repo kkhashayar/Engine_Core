@@ -558,7 +558,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
-    Boards.DisplayBoard();
+    //Boards.DisplayBoard();
 }
 
 static void TriggerTrainingFlow()
