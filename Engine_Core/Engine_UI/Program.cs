@@ -12,21 +12,23 @@ void InitAll()
     Attacks.InitRooksAttacks();
     Search.InitializeRandomKeys();
     
-    // **************************************** Search configs **************************************** //
-   
+    // **************************************** Search Settings for both (Play position and Winboard)
     Search.TranspositionSwitch = true;
+    Search.TimeLimitDeepeningSwitch = true;
     Search.EarlyExitSwitch = true;
   
 }
 
 List<string> GameHistory = new List<string>();
 
-// Temporary solution 
-int maxdepth = 6;
-int maxTime = 30;
+
 bool running = true;
 void PlayThePosition()
 {
+
+    // Temporary solution 
+    int maxdepth = 12;
+    int maxTime = 30;
     while (running)
     {
         //Console.Clear();    
@@ -149,7 +151,7 @@ void Run()
 
     //PerftTeste.RunPerft(4, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -160,7 +162,9 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    //WinBoardLoop();
+    
+    
+    WinBoardLoop();
 
 }
 
@@ -265,9 +269,12 @@ static void WinBoardLoop()
             Console.WriteLine(initialMessage);
             log.WriteLine($"Sent: {initialMessage}");
 
+            //********************* CECP configs 
+
+
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 4;           // Default search depth
+            int depth = 8;           // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
