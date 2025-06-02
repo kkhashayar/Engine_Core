@@ -25,7 +25,6 @@ List<string> GameHistory = new List<string>();
 bool running = true;
 void PlayThePosition()
 {
-
     // Temporary solution 
     int maxdepth = 8;
     int maxTime = 30;
