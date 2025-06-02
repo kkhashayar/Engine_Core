@@ -3,8 +3,6 @@ using Engine_Core;
 using Microsoft.ML;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-
 void InitAll()
 {
     Attacks.InitLeapersAttacks();
@@ -440,7 +438,7 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
         {
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
-            Boards.DisplayBoard();
+            //Boards.DisplayBoard();
             if (!forceMode && engineGo)
             {
                 MakeEngineMove(depth, log); // Respond with engine's move
