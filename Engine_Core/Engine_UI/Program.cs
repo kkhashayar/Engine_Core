@@ -499,7 +499,7 @@ static int WinBoardParseMove(string moveString)
 }
 
 
-//****************************************************** To use in CMD mode uncomment DisplayBoard() method.
+
 // Generates and sends the engine's best move
 static void MakeEngineMove(int depth, StreamWriter log)
 {
@@ -533,6 +533,8 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
+    //********* To use in CMD mode uncomment DisplayBoard() method.
+    //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
     Boards.DisplayBoard();
 }
 
