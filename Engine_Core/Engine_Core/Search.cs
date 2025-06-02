@@ -19,8 +19,8 @@ public static class Search
 {
     // Search settings and switches
     public static int NumberOfAllPieces { get; set; }
-    public static int DynamicDepth { get; set; }
-    public static int DynamicTime { get; set; }
+    //public static int DynamicDepth { get; set; }
+    //public static int DynamicTime { get; set; }
     // Better to call them from program.cs
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
@@ -303,7 +303,7 @@ public static class Search
         {
             if (transpositionTable.TryGetValue(positionHashKey, out var entry))
             {
-                if (entry.depth >= depth)
+                if (entry.depth == depth)
                 {
                     if(depth >= 8)
                     {

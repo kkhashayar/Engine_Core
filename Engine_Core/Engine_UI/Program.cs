@@ -14,7 +14,7 @@ void InitAll()
     
     // **************************************** Search Settings for both (Play position and Winboard)
     Search.TranspositionSwitch = true;
-    Search.TimeLimitDeepeningSwitch = true;
+    Search.TimeLimitDeepeningSwitch = false;
     Search.EarlyExitSwitch = true;
   
 }
@@ -147,11 +147,11 @@ void Run()
 
     ////*******************  ZOBRIST HASHING TEST
 
-    Boards.DisplayBoard();
+    //Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(4, true);
+    //PerftTeste.RunPerft(6, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -245,7 +245,7 @@ static void WinBoardLoop()
 
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 8;           // Default search depth
+            int depth = 20;          // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
@@ -498,16 +498,21 @@ static int WinBoardParseMove(string moveString)
     }
     return 0;
 }
+
+
+//****************************************************** To use in CMD mode uncomment DisplayBoard() method.
 // Generates and sends the engine's best move
 static void MakeEngineMove(int depth, StreamWriter log)
 {
+    
     try
     {
-        Search.DynamicTime = 20;
-        Search.DynamicDepth = 6;
+
+        var maxDepth = 20;
+        var maxSearchTime = 45;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(Search.DynamicTime, Search.DynamicDepth);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state
@@ -529,7 +534,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
-    //Boards.DisplayBoard();
+    Boards.DisplayBoard();
 }
 
 static void TriggerTrainingFlow()
