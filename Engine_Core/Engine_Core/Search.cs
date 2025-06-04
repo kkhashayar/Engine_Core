@@ -397,7 +397,7 @@ public static class Search
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Crash on move: {Globals.MoveToString(move)} (raw: {move})");
+                Console.WriteLine($"Crash on move: {Globals.MoveToString(move)} (raw: {move})");
                 Console.WriteLine($"Exception: {ex.Message}");
                 throw;
             }
@@ -729,7 +729,7 @@ public static class Search
             {
                 Boards.whiteCheckmate = true;
             }
-            if(Boards.Side == 1)
+            else if(Boards.Side == 1)
             {
                 Boards.blackCheckmate = true;
             }
