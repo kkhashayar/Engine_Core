@@ -261,12 +261,16 @@ public static class Search
         if (Boards.Side == (int)Colors.white)
         {
             int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            if (whiteKingSq < 0 || whiteKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
             if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
                 inCheck = true;
         }
         else
         {
             int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            if (blackKingSq < 0 || blackKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
             if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
                 inCheck = true;
         }
@@ -287,8 +291,9 @@ public static class Search
         while (i < moveList.counter)
         {
             int move = moveList.moves[i];
-
-            MoveGenerator.CopyGameState(
+            try
+            {
+                MoveGenerator.CopyGameState(
                 out ulong[] bitboardsCopy,
                 out ulong[] occCopy,
                 out Colors sideCopy,
@@ -296,99 +301,107 @@ public static class Search
                 out int enpassCopy
             );
 
-            if (!MoveGenerator.IsLegal(move, false))
-            {
-                MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                i++;
-                continue;
-            }
-
-            ulong oldHash = positionHashKey;
-
-            if (TranspositionSwitch)
-            {
-                positionHashKey = GeneratepositionHashKey();
-            }
-
-            legalMoves++;
-            moveSearched++;
-            ply++;
-
-            bool isCapture = MoveGenerator.GetMoveCapture(move);
-            int promoted = MoveGenerator.GetMovePromoted(move);
-
-            bool canReduce = false;
-            if (moveSearched > FullDepthMoves &&
-                depth > ReductionLimit &&
-                !inCheck &&
-                !isCapture &&
-                promoted == 0)
-            {
-                canReduce = true;
-            }
-
-            int newDepth;
-            if (canReduce)
-            {
-                newDepth = depth - 2;
-            }
-            else
-            {
-                newDepth = depth - 1;
-            }
-
-            int score = -Negamax(-beta, -alpha, newDepth);
-
-            ply--;
-
-            MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-
-            positionHashKey = oldHash;
-
-            if (score >= beta)
-            {
-                if (!isCapture)
+                if (!MoveGenerator.IsLegal(move, false))
                 {
-                    killerMoves[1, ply] = killerMoves[0, ply];
-                    killerMoves[0, ply] = move;
+                    MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+                    i++;
+                    continue;
                 }
+
+                ulong oldHash = positionHashKey;
 
                 if (TranspositionSwitch)
                 {
-                    if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
+                    positionHashKey = GeneratepositionHashKey();
+                }
+
+                legalMoves++;
+                moveSearched++;
+                ply++;
+
+                bool isCapture = MoveGenerator.GetMoveCapture(move);
+                int promoted = MoveGenerator.GetMovePromoted(move);
+
+                bool canReduce = false;
+                if (moveSearched > FullDepthMoves &&
+                    depth > ReductionLimit &&
+                    !inCheck &&
+                    !isCapture &&
+                    promoted == 0)
+                {
+                    canReduce = true;
+                }
+
+                int newDepth;
+                if (canReduce)
+                {
+                    newDepth = depth - 2;
+                }
+                else
+                {
+                    newDepth = depth - 1;
+                }
+
+                int score = -Negamax(-beta, -alpha, newDepth);
+
+                ply--;
+
+                MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+
+                positionHashKey = oldHash;
+
+                if (score >= beta)
+                {
+                    if (!isCapture)
                     {
-                        transpositionTable[positionHashKey] = new Transposition
-                        {
-                            position = positionHashKey,
-                            score = beta,
-                            depth = depth,
-                        };
+                        killerMoves[1, ply] = killerMoves[0, ply];
+                        killerMoves[0, ply] = move;
                     }
+
+                    if (TranspositionSwitch)
+                    {
+                        if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
+                        {
+                            transpositionTable[positionHashKey] = new Transposition
+                            {
+                                position = positionHashKey,
+                                score = beta,
+                                depth = depth,
+                            };
+                        }
+                    }
+
+                    return beta;
                 }
 
-                return beta;
-            }
+                if (score > alpha)
+                {
+                    alpha = score;
+                    bestMove = move;
 
-            if (score > alpha)
+                    if (!isCapture)
+                    {
+                        int piece = MoveGenerator.GetMovePiece(move);
+                        int targetSq = MoveGenerator.GetMoveTarget(move);
+                        historyMoves[piece, targetSq] += depth;
+                    }
+
+                    pvTable[ply, ply] = move;
+                    for (int next = ply + 1; next < pvLength[ply + 1]; next++)
+                    {
+                        pvTable[ply, next] = pvTable[ply + 1, next];
+                    }
+
+                    pvLength[ply] = pvLength[ply + 1];
+                }
+            }
+            catch (Exception ex)
             {
-                alpha = score;
-                bestMove = move;
-
-                if (!isCapture)
-                {
-                    int piece = MoveGenerator.GetMovePiece(move);
-                    int targetSq = MoveGenerator.GetMoveTarget(move);
-                    historyMoves[piece, targetSq] += depth;
-                }
-
-                pvTable[ply, ply] = move;
-                for (int next = ply + 1; next < pvLength[ply + 1]; next++)
-                {
-                    pvTable[ply, next] = pvTable[ply + 1, next];
-                }
-
-                pvLength[ply] = pvLength[ply + 1];
+                Console.WriteLine($"❌ Crash on move: {Globals.MoveToString(move)} (raw: {move})");
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
             }
+            
 
             i++; // make sure we continue looping
         }

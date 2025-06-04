@@ -121,7 +121,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(checkmate_In_5_Rxe8_Mid_High_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
