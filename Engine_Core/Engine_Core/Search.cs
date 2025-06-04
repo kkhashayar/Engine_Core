@@ -4,7 +4,6 @@ using static Engine_Core.Enumes;
 
 namespace Engine_Core;
 
-
 public struct Transposition
 {
     public ulong position;
@@ -13,22 +12,20 @@ public struct Transposition
     public NodeType flag;
 }
 
-
-
 public static class Search
 {
-    // Search settings and switches
-    public static int NumberOfAllPieces { get; set; }
-    //public static int DynamicDepth { get; set; }
-    //public static int DynamicTime { get; set; }
-    // Better to call them from program.cs
+    //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
     public static bool EarlyExitSwitch { get; set; }
 
+    // --- Variables to determine game phase ---
+    public static int NumberOfAllPieces { get; set; }
+    
+
     public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
   
-    // Variables needed for late move reduction and PV
+    // --- Variables needed for late move reduction and PV ---
     private static int FullDepthMoves = 2;
     private static int ReductionLimit = 1;
 
@@ -148,6 +145,7 @@ public static class Search
         // Hashing the side only if black is to move
         if (Boards.Side == (int)Colors.black)
         {
+
             positionHashKey ^= sideKey;
         }
 
@@ -165,51 +163,44 @@ public static class Search
         return total;
     }
 
-    // **********************************************************************************************  Negamax Entry
+    // **********************************************************************************************
+    // --- Iterative Deepening Search Negamax entry --- 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        int score = 0;
-        // nodes = 0;
-        ply = 0;
-        int bestScore = 0;
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+
+        SortMoves(moveList);
+
+
+        int bestScore = -5000;
         int bestMove = 0;
+        ply = 0;
         var startTime = DateTime.UtcNow;
 
         ClearKillerAndHistoryMoves();
         ClearPV();
 
-        // To make a use of game phase for opening, we should switch on zobrist hashing
         if (TranspositionSwitch) GeneratepositionHashKey();
-        // We have to reset game phase detection in each loop (have littlebit overhead :(  )
-        //GamePhase gamePhase = GamePhase.None;
-        //gamePhase = GetGamePhase();
 
-       
-        for (int currentDepth = 1; currentDepth <= 10; currentDepth++)
+        for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
-            nodes = 0;
-
             var depthStartTime = DateTime.UtcNow;
+            nodes = 0;
+            
+            int score = Negamax(-50000, 50000, currentDepth);
 
-            score = Negamax(-50000, 50000, currentDepth);
-
-            Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
+            Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
 
             ExecutablePv.Clear();
             for (int i = 0; i < pvLength[0]; i++)
-            {
                 ExecutablePv.Add(pvTable[0, i]);
-            }
 
-            if (EarlyExitSwitch)
+
+            // --- Maybe this will cause the problem of using burned move instead of the best move ---
+            if (pvLength[0] > 0)
             {
-                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
-                if (Math.Abs(score) >= 48000) // Found a forced mate!
-                {
-                    bestMove = pvTable[0, 0]; // Store the best move
-                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
-                    return bestMove; // Immediately return the best move.
-                }
+                bestMove = pvTable[0, 0];
             }
 
 
@@ -218,84 +209,19 @@ public static class Search
                 bestScore = score;
                 bestMove = pvTable[0, 0];
             }
+            // --- 
 
-
-            if (TimeLimitDeepeningSwitch)
-            {
-                // Looks like in some of my tests, engine works better without this feature.
-                if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
-                {
-                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                    continue;
-                }
-            }
-
-            // If total max time is exceeded, stop completely
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
             {
                 Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
+                Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
                 return bestMove;
-
             }
+
         }
-        nodes = 0; // Reset nodes counter
-        ClearKillerAndHistoryMoves();
-        ClearPV();
 
-        // Final Negamax search at maxDepth
-        score = Negamax(-50000, 50000, maxDepth);
-
-        // Output final search information
-        Console.WriteLine($"info score cp {score} depth {maxDepth} nodes {nodes} pv {PrintPVLine()}");
-
-        // Determine and output the best move based on the final search
-        bestMove = pvTable[0, 0]; // Update bestMove based on the final PV
-
-        // Not optimal :( just temporary solution
-        if (bestMove == 0)
-        {
-            MoveObjects moveList = new MoveObjects();
-            MoveGenerator.GenerateMoves(moveList);
-            return moveList.moves[0];
-        }
-        Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
         return bestMove;
     }
-
-    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    public static GamePhase GetGamePhase()
-    {
-        int numberOfPiece = CountPieces();
-
-        if (numberOfPiece == 32) 
-        {
-            Console.WriteLine();
-            Console.WriteLine($"GamePhase: Opening");
-            Console.WriteLine();
-           
-            return GamePhase.Opening;
-        }
-        else
-        {
-            if((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >=1 && MoveGenerator.bq >= 1)
-            {
-                Console.WriteLine();
-                Console.WriteLine($"GamePhase: Middle game");
-                Console.WriteLine();
-                return GamePhase.MiddleGame;
-            }
-             
-        }
-
-        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
-        Console.WriteLine();
-        Console.WriteLine($"GamePhase: Middle game");
-        Console.WriteLine();
-        
-        return GamePhase.EndGame;
-        
-    }
-
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
@@ -305,11 +231,11 @@ public static class Search
             {
                 if (entry.depth == depth)
                 {
-                    if(depth >= 8)
+                    if (depth >= 8)
                     {
                         Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
                     }
-                    
+
                     return entry.score;
                 }
             }
@@ -324,6 +250,11 @@ public static class Search
             return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         nodes++;
+
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+
+        FlagCheckmate(moveList);
 
         bool inCheck = false;
 
@@ -344,12 +275,6 @@ public static class Search
         {
             depth++;
         }
-
-        MoveObjects moveList = new MoveObjects();
-        MoveGenerator.GenerateMoves(moveList);
-
-        if (moveList.counter == 0)
-            FlagCheckmate(moveList);
 
         SortMoves(moveList);
 
@@ -491,6 +416,42 @@ public static class Search
 
         return alpha;
     }
+
+    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
+    public static GamePhase GetGamePhase()
+    {
+        int numberOfPiece = CountPieces();
+
+        if (numberOfPiece == 32) 
+        {
+            Console.WriteLine();
+            Console.WriteLine($"GamePhase: Opening");
+            Console.WriteLine();
+           
+            return GamePhase.Opening;
+        }
+        else
+        {
+            if((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >=1 && MoveGenerator.bq >= 1)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"GamePhase: Middle game");
+                Console.WriteLine();
+                return GamePhase.MiddleGame;
+            }
+             
+        }
+
+        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
+        Console.WriteLine();
+        Console.WriteLine($"GamePhase: Middle game");
+        Console.WriteLine();
+        
+        return GamePhase.EndGame;
+        
+    }
+
+    
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)
@@ -755,7 +716,7 @@ public static class Search
             {
                 Boards.whiteCheckmate = true;
             }
-            else
+            if(Boards.Side == 1)
             {
                 Boards.blackCheckmate = true;
             }
@@ -797,12 +758,6 @@ public static class Search
         return (int)Pieces.P;
     }
 }
-
-
-/*
- * G086453491
- */
-
 /*
 *      Inspired by Code monkey King channel
 * 
@@ -816,7 +771,8 @@ public static class Search
 */
 
 /*
-    In order to implement threefold repetition we need to have unique position identifier. 
-    And using the key "Hash key" to identify position we can additionally implement transposition table 
-    Which will improve acurace and speed of search and overal the engine. 
+    To implement threefold repetition, we need a unique position identifier. 
+    By using a hash key to identify each position, we can also implement a transposition table, 
+    which will improve the engine’s accuracy and overall search speed.
+
  */

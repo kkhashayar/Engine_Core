@@ -247,7 +247,11 @@ public static class Attacks
     // TODO: getting index out of range exception in checkmate positions.
     public static int IsSquareAttacked(int square, Colors side)
     {
+        // -- simple Guard against invalid square index --
+        if (square < 0 || square >= 64) return 0;
+        
         // attacked by white pawns
+
         if (side == Colors.white && (PawnAttacks[(int)Colors.black, square] & Boards.Bitboards[(int)Pieces.P]) != 0) return 1;
 
         // attacked by black pawns
