@@ -11,8 +11,8 @@ void InitAll()
     Search.InitializeRandomKeys();
     
     // **************************************** Search Settings for both (Play position and Winboard)
-    Search.TranspositionSwitch = true;
-    Search.EarlyExitSwitch = true;
+    Search.TranspositionSwitch = false;
+    Search.EarlyExitSwitch = false;
   
 }
 
@@ -24,7 +24,8 @@ void PlayThePosition()
 {
     // Temporary solution 
     int maxdepth = 10;
-    int maxTime = 5;
+    int maxTime = 15
+        ;
     while (running)
     {
         //Console.Clear();    
@@ -37,7 +38,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(maxdepth, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -121,7 +122,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(checkmate_In_5_Rxe8_Mid_High_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 

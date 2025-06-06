@@ -21,10 +21,10 @@ public static class Search
 
     // --- Variables to determine game phase ---
     public static int NumberOfAllPieces { get; set; }
-    
 
-    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
-  
+
+    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>();
+
     // --- Variables needed for late move reduction and PV ---
     private static int FullDepthMoves = 2;
     private static int ReductionLimit = 1;
@@ -62,7 +62,7 @@ public static class Search
 
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
-    
+
     public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
@@ -88,7 +88,7 @@ public static class Search
             castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
     }
-   
+
     // Generate hash key. 
     public static ulong GeneratepositionHashKey()
     {
@@ -155,8 +155,8 @@ public static class Search
     //One of the factors in determining the game phase.
     private static int CountPieces()
     {
-        int total = 0; 
-        for(int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
         {
             total += BitOperations.PopCount(Boards.Bitboards[piece]);
         }
@@ -187,7 +187,7 @@ public static class Search
         {
             var depthStartTime = DateTime.UtcNow;
             nodes = 0;
-            
+
             int score = Negamax(-50000, 50000, currentDepth);
 
             Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
@@ -198,22 +198,23 @@ public static class Search
 
 
             // --- Maybe this will cause the problem of using burned move instead of the best move ---
-            if (pvLength[0] > 0)
+
+            bestMove = pvTable[0, 0];
+            if(score >= 48000 || bestScore <= -48000)
             {
+                bestScore = score;
                 bestMove = pvTable[0, 0];
             }
-
-
-            if (score > bestScore)
+            else if (score > bestScore)
             {
                 bestScore = score;
                 bestMove = pvTable[0, 0];
             }
             // --- 
 
-            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
+            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
             {
-                Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
+                Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
                 return bestMove;
             }
@@ -225,21 +226,30 @@ public static class Search
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
+
         if (TranspositionSwitch)
         {
-            if (transpositionTable.TryGetValue(positionHashKey, out var entry))
+            if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth >= depth)
             {
-                if (entry.depth == depth)
+                if (depth >= 8)
                 {
-                    if (depth >= 8)
-                    {
-                        Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-                    }
-
+                    Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                }
+                if (entry.flag == NodeType.Exact)
+                {
                     return entry.score;
+                }
+                else if (entry.flag == NodeType.Alpha && entry.score <= alpha)
+                {
+                    return alpha;
+                }
+                else if (entry.flag == NodeType.Beta && entry.score >= beta)
+                {
+                    return beta;
                 }
             }
         }
+
 
         pvLength[ply] = ply;
 
@@ -401,7 +411,7 @@ public static class Search
                 Console.WriteLine($"Exception: {ex.Message}");
                 throw;
             }
-            
+
 
             i++; // make sure we continue looping
         }
@@ -416,18 +426,28 @@ public static class Search
 
         if (TranspositionSwitch)
         {
+            NodeType flag;
+            if (alpha <= oldAlpha)
+                flag = NodeType.Alpha;
+            else if (alpha >= beta)
+                flag = NodeType.Beta;
+            else
+                flag = NodeType.Exact;
+
             if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
             {
                 transpositionTable[positionHashKey] = new Transposition
                 {
                     position = positionHashKey,
                     score = alpha,
-                    depth = depth
+                    depth = depth,
+                    flag = flag
                 };
             }
         }
 
         return alpha;
+
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
@@ -435,36 +455,36 @@ public static class Search
     {
         int numberOfPiece = CountPieces();
 
-        if (numberOfPiece == 32) 
+        if (numberOfPiece == 32)
         {
             Console.WriteLine();
             Console.WriteLine($"GamePhase: Opening");
             Console.WriteLine();
-           
+
             return GamePhase.Opening;
         }
         else
         {
-            if((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >=1 && MoveGenerator.bq >= 1)
+            if ((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
             {
                 Console.WriteLine();
                 Console.WriteLine($"GamePhase: Middle game");
                 Console.WriteLine();
                 return GamePhase.MiddleGame;
             }
-             
+
         }
 
         // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
         Console.WriteLine();
         Console.WriteLine($"GamePhase: Middle game");
         Console.WriteLine();
-        
+
         return GamePhase.EndGame;
-        
+
     }
 
-    
+
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)
@@ -510,7 +530,7 @@ public static class Search
             );
 
             // Must be legal capture
-            if(!MoveGenerator.IsLegal(move, true))
+            if (!MoveGenerator.IsLegal(move, true))
             {
                 MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
                 i++;
@@ -729,7 +749,7 @@ public static class Search
             {
                 Boards.whiteCheckmate = true;
             }
-            else if(Boards.Side == 1)
+            else if (Boards.Side == 1)
             {
                 Boards.blackCheckmate = true;
             }
