@@ -4,7 +4,6 @@ using static Engine_Core.Enumes;
 
 namespace Engine_Core;
 
-
 public struct Transposition
 {
     public ulong position;
@@ -13,22 +12,20 @@ public struct Transposition
     public NodeType flag;
 }
 
-
-
 public static class Search
 {
-    // Search settings and switches
-    public static int NumberOfAllPieces { get; set; }
-    public static int DynamicDepth { get; set; }
-    public static int DynamicTime { get; set; }
-    // Better to call them from program.cs
+    //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
     public static bool EarlyExitSwitch { get; set; }
 
-    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>(); 
-  
-    // Variables needed for late move reduction and PV
+    // --- Variables to determine game phase ---
+    public static int NumberOfAllPieces { get; set; }
+
+
+    public static Dictionary<ulong, Transposition> transpositionTable = new Dictionary<ulong, Transposition>();
+
+    // --- Variables needed for late move reduction and PV ---
     private static int FullDepthMoves = 2;
     private static int ReductionLimit = 1;
 
@@ -65,7 +62,7 @@ public static class Search
 
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
-    
+
     public static void InitializeRandomKeys()
     {
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
@@ -91,7 +88,7 @@ public static class Search
             castlingKeys[index] = Globals.GetFixedRandom64Numbers();
         }
     }
-   
+
     // Generate hash key. 
     public static ulong GeneratepositionHashKey()
     {
@@ -148,6 +145,7 @@ public static class Search
         // Hashing the side only if black is to move
         if (Boards.Side == (int)Colors.black)
         {
+
             positionHashKey ^= sideKey;
         }
 
@@ -157,163 +155,101 @@ public static class Search
     //One of the factors in determining the game phase.
     private static int CountPieces()
     {
-        int total = 0; 
-        for(int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
         {
             total += BitOperations.PopCount(Boards.Bitboards[piece]);
         }
         return total;
     }
 
-    // **********************************************************************************************  Negamax Entry
+    // **********************************************************************************************
+    // --- Iterative Deepening Search Negamax entry --- 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        int score = 0;
-        // nodes = 0;
-        ply = 0;
-        int bestScore = 0;
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+
+        SortMoves(moveList);
+
+
+        int bestScore = -5000;
         int bestMove = 0;
+        ply = 0;
         var startTime = DateTime.UtcNow;
 
         ClearKillerAndHistoryMoves();
         ClearPV();
 
-        // To make a use of game phase for opening, we should switch on zobrist hashing
         if (TranspositionSwitch) GeneratepositionHashKey();
-        // We have to reset game phase detection in each loop (have littlebit overhead :(  )
-        //GamePhase gamePhase = GamePhase.None;
-        //gamePhase = GetGamePhase();
 
-       
-        for (int currentDepth = 1; currentDepth <= 10; currentDepth++)
+        for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
+            var depthStartTime = DateTime.UtcNow;
             nodes = 0;
 
-            var depthStartTime = DateTime.UtcNow;
+            int score = Negamax(-50000, 50000, currentDepth);
 
-            score = Negamax(-50000, 50000, currentDepth);
-
-            Console.WriteLine("info depth " + currentDepth + " score " + score + " nodes " + nodes + " pv " + PrintPVLine());
+            Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
 
             ExecutablePv.Clear();
             for (int i = 0; i < pvLength[0]; i++)
-            {
                 ExecutablePv.Add(pvTable[0, i]);
-            }
-
-            if (EarlyExitSwitch)
-            {
-                // It's a forced mate, But I am not sure the effect of this in more strategic positions. 
-                if (Math.Abs(score) >= 48000) // Found a forced mate!
-                {
-                    bestMove = pvTable[0, 0]; // Store the best move
-                    Console.WriteLine($"info string Found forced mate at depth {currentDepth}. Stopping search.");
-                    return bestMove; // Immediately return the best move.
-                }
-            }
 
 
-            if (score > bestScore)
+            // --- Maybe this will cause the problem of using burned move instead of the best move ---
+
+            bestMove = pvTable[0, 0];
+            if(score >= 48000 || bestScore <= -48000)
             {
                 bestScore = score;
                 bestMove = pvTable[0, 0];
             }
-
-
-            if (TimeLimitDeepeningSwitch)
+            else if (score > bestScore)
             {
-                // Looks like in some of my tests, engine works better without this feature.
-                if ((DateTime.UtcNow - depthStartTime).TotalSeconds >= maxTimeSeconds)
-                {
-                    Console.WriteLine($"info string Depth {currentDepth} took too long ({maxTimeSeconds}s), going deeper.");
-                    continue;
-                }
+                bestScore = score;
+                bestMove = pvTable[0, 0];
             }
+            // --- 
 
-            // If total max time is exceeded, stop completely
-            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds * maxDepth)
+            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
             {
-                Console.WriteLine($"info string Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
+                Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
+                Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
                 return bestMove;
-
             }
+
         }
-        nodes = 0; // Reset nodes counter
-        ClearKillerAndHistoryMoves();
-        ClearPV();
 
-        // Final Negamax search at maxDepth
-        score = Negamax(-50000, 50000, maxDepth);
-
-        // Output final search information
-        Console.WriteLine($"info score cp {score} depth {maxDepth} nodes {nodes} pv {PrintPVLine()}");
-
-        // Determine and output the best move based on the final search
-        bestMove = pvTable[0, 0]; // Update bestMove based on the final PV
-
-        // Not optimal :( just temporary solution
-        if (bestMove == 0)
-        {
-            MoveObjects moveList = new MoveObjects();
-            MoveGenerator.GenerateMoves(moveList);
-            return moveList.moves[0];
-        }
-        Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
         return bestMove;
     }
-
-    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    public static GamePhase GetGamePhase()
-    {
-        int numberOfPiece = CountPieces();
-
-        if (numberOfPiece == 32) 
-        {
-            Console.WriteLine();
-            Console.WriteLine($"GamePhase: Opening");
-            Console.WriteLine();
-           
-            return GamePhase.Opening;
-        }
-        else
-        {
-            if((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >=1 && MoveGenerator.bq >= 1)
-            {
-                Console.WriteLine();
-                Console.WriteLine($"GamePhase: Middle game");
-                Console.WriteLine();
-                return GamePhase.MiddleGame;
-            }
-             
-        }
-
-        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
-        Console.WriteLine();
-        Console.WriteLine($"GamePhase: Middle game");
-        Console.WriteLine();
-        
-        return GamePhase.EndGame;
-        
-    }
-
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
+
         if (TranspositionSwitch)
         {
-            if (transpositionTable.TryGetValue(positionHashKey, out var entry))
+            if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth >= depth)
             {
-                if (entry.depth >= depth)
+                if (depth >= 8)
                 {
-                    if(depth >= 8)
-                    {
-                        Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-                    }
-                    
+                    Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                }
+                if (entry.flag == NodeType.Exact)
+                {
                     return entry.score;
+                }
+                else if (entry.flag == NodeType.Alpha && entry.score <= alpha)
+                {
+                    return alpha;
+                }
+                else if (entry.flag == NodeType.Beta && entry.score >= beta)
+                {
+                    return beta;
                 }
             }
         }
+
 
         pvLength[ply] = ply;
 
@@ -325,17 +261,26 @@ public static class Search
 
         nodes++;
 
+        MoveObjects moveList = new MoveObjects();
+        MoveGenerator.GenerateMoves(moveList);
+
+        FlagCheckmate(moveList);
+
         bool inCheck = false;
 
         if (Boards.Side == (int)Colors.white)
         {
             int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            if (whiteKingSq < 0 || whiteKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
             if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
                 inCheck = true;
         }
         else
         {
             int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            if (blackKingSq < 0 || blackKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
             if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
                 inCheck = true;
         }
@@ -344,12 +289,6 @@ public static class Search
         {
             depth++;
         }
-
-        MoveObjects moveList = new MoveObjects();
-        MoveGenerator.GenerateMoves(moveList);
-
-        if (moveList.counter == 0)
-            FlagCheckmate(moveList);
 
         SortMoves(moveList);
 
@@ -362,8 +301,9 @@ public static class Search
         while (i < moveList.counter)
         {
             int move = moveList.moves[i];
-
-            MoveGenerator.CopyGameState(
+            try
+            {
+                MoveGenerator.CopyGameState(
                 out ulong[] bitboardsCopy,
                 out ulong[] occCopy,
                 out Colors sideCopy,
@@ -371,99 +311,107 @@ public static class Search
                 out int enpassCopy
             );
 
-            if (!MoveGenerator.IsLegal(move, false))
-            {
-                MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-                i++;
-                continue;
-            }
-
-            ulong oldHash = positionHashKey;
-
-            if (TranspositionSwitch)
-            {
-                positionHashKey = GeneratepositionHashKey();
-            }
-
-            legalMoves++;
-            moveSearched++;
-            ply++;
-
-            bool isCapture = MoveGenerator.GetMoveCapture(move);
-            int promoted = MoveGenerator.GetMovePromoted(move);
-
-            bool canReduce = false;
-            if (moveSearched > FullDepthMoves &&
-                depth > ReductionLimit &&
-                !inCheck &&
-                !isCapture &&
-                promoted == 0)
-            {
-                canReduce = true;
-            }
-
-            int newDepth;
-            if (canReduce)
-            {
-                newDepth = depth - 2;
-            }
-            else
-            {
-                newDepth = depth - 1;
-            }
-
-            int score = -Negamax(-beta, -alpha, newDepth);
-
-            ply--;
-
-            MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
-
-            positionHashKey = oldHash;
-
-            if (score >= beta)
-            {
-                if (!isCapture)
+                if (!MoveGenerator.IsLegal(move, false))
                 {
-                    killerMoves[1, ply] = killerMoves[0, ply];
-                    killerMoves[0, ply] = move;
+                    MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+                    i++;
+                    continue;
                 }
+
+                ulong oldHash = positionHashKey;
 
                 if (TranspositionSwitch)
                 {
-                    if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
+                    positionHashKey = GeneratepositionHashKey();
+                }
+
+                legalMoves++;
+                moveSearched++;
+                ply++;
+
+                bool isCapture = MoveGenerator.GetMoveCapture(move);
+                int promoted = MoveGenerator.GetMovePromoted(move);
+
+                bool canReduce = false;
+                if (moveSearched > FullDepthMoves &&
+                    depth > ReductionLimit &&
+                    !inCheck &&
+                    !isCapture &&
+                    promoted == 0)
+                {
+                    canReduce = true;
+                }
+
+                int newDepth;
+                if (canReduce)
+                {
+                    newDepth = depth - 2;
+                }
+                else
+                {
+                    newDepth = depth - 1;
+                }
+
+                int score = -Negamax(-beta, -alpha, newDepth);
+
+                ply--;
+
+                MoveGenerator.RestoreGameState(bitboardsCopy, occCopy, sideCopy, castleCopy, enpassCopy);
+
+                positionHashKey = oldHash;
+
+                if (score >= beta)
+                {
+                    if (!isCapture)
                     {
-                        transpositionTable[positionHashKey] = new Transposition
-                        {
-                            position = positionHashKey,
-                            score = beta,
-                            depth = depth,
-                        };
+                        killerMoves[1, ply] = killerMoves[0, ply];
+                        killerMoves[0, ply] = move;
                     }
+
+                    if (TranspositionSwitch)
+                    {
+                        if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
+                        {
+                            transpositionTable[positionHashKey] = new Transposition
+                            {
+                                position = positionHashKey,
+                                score = beta,
+                                depth = depth,
+                            };
+                        }
+                    }
+
+                    return beta;
                 }
 
-                return beta;
-            }
+                if (score > alpha)
+                {
+                    alpha = score;
+                    bestMove = move;
 
-            if (score > alpha)
+                    if (!isCapture)
+                    {
+                        int piece = MoveGenerator.GetMovePiece(move);
+                        int targetSq = MoveGenerator.GetMoveTarget(move);
+                        historyMoves[piece, targetSq] += depth;
+                    }
+
+                    pvTable[ply, ply] = move;
+                    for (int next = ply + 1; next < pvLength[ply + 1]; next++)
+                    {
+                        pvTable[ply, next] = pvTable[ply + 1, next];
+                    }
+
+                    pvLength[ply] = pvLength[ply + 1];
+                }
+            }
+            catch (Exception ex)
             {
-                alpha = score;
-                bestMove = move;
-
-                if (!isCapture)
-                {
-                    int piece = MoveGenerator.GetMovePiece(move);
-                    int targetSq = MoveGenerator.GetMoveTarget(move);
-                    historyMoves[piece, targetSq] += depth;
-                }
-
-                pvTable[ply, ply] = move;
-                for (int next = ply + 1; next < pvLength[ply + 1]; next++)
-                {
-                    pvTable[ply, next] = pvTable[ply + 1, next];
-                }
-
-                pvLength[ply] = pvLength[ply + 1];
+                Console.WriteLine($"Crash on move: {Globals.MoveToString(move)} (raw: {move})");
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
             }
+
 
             i++; // make sure we continue looping
         }
@@ -478,19 +426,65 @@ public static class Search
 
         if (TranspositionSwitch)
         {
+            NodeType flag;
+            if (alpha <= oldAlpha)
+                flag = NodeType.Alpha;
+            else if (alpha >= beta)
+                flag = NodeType.Beta;
+            else
+                flag = NodeType.Exact;
+
             if (!transpositionTable.ContainsKey(positionHashKey) || transpositionTable[positionHashKey].depth < depth)
             {
                 transpositionTable[positionHashKey] = new Transposition
                 {
                     position = positionHashKey,
                     score = alpha,
-                    depth = depth
+                    depth = depth,
+                    flag = flag
                 };
             }
         }
 
         return alpha;
+
     }
+
+    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
+    public static GamePhase GetGamePhase()
+    {
+        int numberOfPiece = CountPieces();
+
+        if (numberOfPiece == 32)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"GamePhase: Opening");
+            Console.WriteLine();
+
+            return GamePhase.Opening;
+        }
+        else
+        {
+            if ((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"GamePhase: Middle game");
+                Console.WriteLine();
+                return GamePhase.MiddleGame;
+            }
+
+        }
+
+        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
+        Console.WriteLine();
+        Console.WriteLine($"GamePhase: Middle game");
+        Console.WriteLine();
+
+        return GamePhase.EndGame;
+
+    }
+
+
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)
@@ -536,7 +530,7 @@ public static class Search
             );
 
             // Must be legal capture
-            if(!MoveGenerator.IsLegal(move, true))
+            if (!MoveGenerator.IsLegal(move, true))
             {
                 MoveGenerator.RestoreGameState(bbCopy, occCopy, sideCopy, castleCopy, enpassCopy);
                 i++;
@@ -755,7 +749,7 @@ public static class Search
             {
                 Boards.whiteCheckmate = true;
             }
-            else
+            else if (Boards.Side == 1)
             {
                 Boards.blackCheckmate = true;
             }
@@ -797,12 +791,6 @@ public static class Search
         return (int)Pieces.P;
     }
 }
-
-
-/*
- * G086453491
- */
-
 /*
 *      Inspired by Code monkey King channel
 * 
@@ -816,7 +804,8 @@ public static class Search
 */
 
 /*
-    In order to implement threefold repetition we need to have unique position identifier. 
-    And using the key "Hash key" to identify position we can additionally implement transposition table 
-    Which will improve acurace and speed of search and overal the engine. 
+    To implement threefold repetition, we need a unique position identifier. 
+    By using a hash key to identify each position, we can also implement a transposition table, 
+    which will improve the engine’s accuracy and overall search speed.
+
  */

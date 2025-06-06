@@ -3,8 +3,6 @@ using Engine_Core;
 using Microsoft.ML;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-
 void InitAll()
 {
     Attacks.InitLeapersAttacks();
@@ -13,9 +11,8 @@ void InitAll()
     Search.InitializeRandomKeys();
     
     // **************************************** Search Settings for both (Play position and Winboard)
-    Search.TranspositionSwitch = true;
-    Search.TimeLimitDeepeningSwitch = true;
-    Search.EarlyExitSwitch = true;
+    Search.TranspositionSwitch = false;
+    Search.EarlyExitSwitch = false;
   
 }
 
@@ -25,15 +22,15 @@ List<string> GameHistory = new List<string>();
 bool running = true;
 void PlayThePosition()
 {
-
     // Temporary solution 
-    int maxdepth = 8;
-    int maxTime = 30;
+    int maxdepth = 10;
+    int maxTime = 15
+        ;
     while (running)
     {
         //Console.Clear();    
-        Thread.Sleep(1000);
-        Console.Clear();
+        Thread.Sleep(500);
+        //Console.Clear();
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
@@ -41,7 +38,7 @@ void PlayThePosition()
         int move = 0;
 
         
-        move = Search.GetBestMoveWithIterativeDeepening(maxdepth, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
         
         Console.Beep(1000, 200);
         
@@ -51,11 +48,18 @@ void PlayThePosition()
         
         GameHistory.Add(Globals.MoveToString(move)+" ");
         
-        if (Boards.whiteCheckmate || Boards.blackCheckmate) break;
-        
-        Boards.DisplayBoard();
-         
-        
+        if (Boards.whiteCheckmate || Boards.blackCheckmate)
+        {
+            running = false;
+            break;
+
+            Console.WriteLine();
+            foreach (var notation in GameHistory)
+            {
+                Console.Write(notation);
+            }
+        }
+
     }
 
     if (Boards.whiteCheckmate)
@@ -95,6 +99,8 @@ string checkmate_In_7_Qxh7_Complex_Position    = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3P
 string checkmate_In_4_Qxh3_Mid_High_Complex_Position = "8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1";
 string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0";
 
+string checkmate_In_5_Rxe8_Mid_High_Complex_Position = "2q1nk1r/4Rp2/1ppp1P2/6Pp/3p1B2/3P3P/PPP1Q3/6K1 w - - 0 1";
+
 string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"; // (Positional)
 string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
 
@@ -116,7 +122,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader(checkmate_In_5_Rxe8_Mid_High_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -147,9 +153,9 @@ void Run()
 
     ////*******************  ZOBRIST HASHING TEST
 
-    Boards.DisplayBoard();
+    //Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(4, true);
+    //PerftTeste.RunPerft(6, true);
 
     PlayThePosition();
 
@@ -164,7 +170,7 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
     
     
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 
@@ -241,11 +247,9 @@ static void WinBoardLoop()
             log.WriteLine($"Sent: {initialMessage}");
 
             //********************* CECP configs 
-
-
             bool forceMode = false;  // Engine won't auto-move in force mode
             bool engineGo = true;    // Engine auto-moves if true
-            int depth = 8;           // Default search depth
+            int depth = 20;          // Default search depth
             int remainingTime = 0;   // Time remaining for engine (centiseconds)
             int opponentTime = 0;    // Time remaining for opponent
 
@@ -323,7 +327,7 @@ static void WinBoardLoop()
                             break;
                         }
 
-                    // Still using too much time in depth 8
+                    
                     case "time":
                         {
                             if (tokens.Length > 1 && int.TryParse(tokens[1], out int time))
@@ -441,7 +445,14 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
         {
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
+
+
+
+            //********* To use in CMD mode uncomment DisplayBoard() method.
+            //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
             Boards.DisplayBoard();
+
+
             if (!forceMode && engineGo)
             {
                 MakeEngineMove(depth, log); // Respond with engine's move
@@ -498,16 +509,21 @@ static int WinBoardParseMove(string moveString)
     }
     return 0;
 }
+
+
+
 // Generates and sends the engine's best move
 static void MakeEngineMove(int depth, StreamWriter log)
 {
+    
     try
     {
-        Search.DynamicTime = 20;
-        Search.DynamicDepth = 6;
+
+        var maxDepth = 10;
+        var maxSearchTime = 45;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
-        int bestMove = Search.GetBestMoveWithIterativeDeepening(Search.DynamicTime, Search.DynamicDepth);
+        int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);
         if (bestMove != 0)
         {
             Boards.ApplyTheMove(bestMove); // Update board state
@@ -529,7 +545,9 @@ static void MakeEngineMove(int depth, StreamWriter log)
         Console.Error.WriteLine(errorMsg);
         log.WriteLine($"Error in MakeEngineMove: {ex}");
     }
-    //Boards.DisplayBoard();
+    //********* To use in CMD mode uncomment DisplayBoard() method.
+    //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
+    Boards.DisplayBoard();
 }
 
 static void TriggerTrainingFlow()
