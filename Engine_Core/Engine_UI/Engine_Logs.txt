@@ -1,0 +1,10 @@
+[06-Jun-25 6:50:16 PM] Engine started.
+Sent: # WinBoard engine ready
+Received: e2e4
+Move applied: e2e4
+Sent: move e7e5
+Received: g1f3
+Move applied: g1f3
+Sent: move f8d6
+Received: c2c4
+Move applied: c2c4

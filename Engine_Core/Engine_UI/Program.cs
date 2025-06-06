@@ -518,9 +518,9 @@ static void MakeEngineMove(int depth, StreamWriter log)
     
     try
     {
-
+        // --- Winboard search time and depth settings --
         var maxDepth = 10;
-        var maxSearchTime = 45;
+        var maxSearchTime = 30;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);

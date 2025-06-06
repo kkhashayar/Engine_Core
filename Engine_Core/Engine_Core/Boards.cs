@@ -52,6 +52,9 @@ public static class Boards
 
     public static void DisplayBoard()
     {
+        
+        Console.Beep(1500, 300);
+
         Console.WriteLine();
         // Loop the ranks
         for (int rank = 0; rank < 8; rank++)
