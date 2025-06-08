@@ -153,9 +153,9 @@ void Run()
 
     ////*******************  ZOBRIST HASHING TEST
 
-    //Boards.DisplayBoard();
+    Boards.DisplayBoard();
 
-    //PerftTeste.RunPerft(6, true);
+    PerftTeste.RunPerft(6, true);
 
     //PlayThePosition();
 
@@ -509,8 +509,6 @@ static int WinBoardParseMove(string moveString)
     }
     return 0;
 }
-
-
 
 // Generates and sends the engine's best move
 static void MakeEngineMove(int depth, StreamWriter log)
