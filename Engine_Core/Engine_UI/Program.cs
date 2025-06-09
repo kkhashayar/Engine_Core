@@ -122,7 +122,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader("k7/8/8/8/8/8/8/7K w - - 0 1");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -155,7 +155,7 @@ void Run()
 
     Boards.DisplayBoard();
 
-    PerftTeste.RunPerft(6, true);
+    //PerftTeste.RunPerft(6, true);
 
     //PlayThePosition();
 

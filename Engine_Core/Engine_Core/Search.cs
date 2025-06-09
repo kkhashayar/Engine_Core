@@ -65,29 +65,29 @@ public static class Search
 
     public static void InitializeRandomKeys()
     {
+        int index = 0;
+
         for (Pieces piece = (int)Pieces.P; (int)piece <= (int)Pieces.k; piece++)
         {
             for (int square = 0; square < 64; square++)
             {
-                pieceKeysOnSquare[(int)piece, square] = Globals.GetFixedRandom64Numbers();
+                pieceKeysOnSquare[(int)piece, square] = Globals.GetPolyglotKey(index++);
             }
         }
 
-        // En-passant key 
-        for (int square = 0; (int)square < 64; square++)
+        for (int square = 0; square < 64; square++)
         {
-            enpassantKey[square] = Globals.GetFixedRandom64Numbers();
+            enpassantKey[square] = Globals.GetPolyglotKey(index++);
         }
 
-        // Side key 
-        sideKey = Globals.GetFixedRandom64Numbers();
+        sideKey = Globals.GetPolyglotKey(index++);
 
-        // Castling keys 
-        for (int index = 0; (int)index < 16; index++)
+        for (int i = 0; i < 16; i++)
         {
-            castlingKeys[index] = Globals.GetFixedRandom64Numbers();
+            castlingKeys[i] = Globals.GetPolyglotKey(index++);
         }
     }
+
 
     // Generate hash key. 
     public static ulong GeneratepositionHashKey()
