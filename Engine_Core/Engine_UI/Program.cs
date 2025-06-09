@@ -11,7 +11,7 @@ void InitAll()
     Search.InitializeRandomKeys();
     
     // **************************************** Search Settings for both (Play position and Winboard)
-    Search.TranspositionSwitch = false;
+    Search.TranspositionSwitch = true;
     Search.EarlyExitSwitch = false;
   
 }
@@ -24,7 +24,7 @@ void PlayThePosition()
 {
     // Temporary solution 
     int maxdepth = 10;
-    int maxTime = 15
+    int maxTime = 70;
         ;
     while (running)
     {
@@ -50,38 +50,20 @@ void PlayThePosition()
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            running = false;
-            break;
-
             Console.WriteLine();
             foreach (var notation in GameHistory)
             {
                 Console.Write(notation);
             }
+            running = false;
+            break;
+
+            
         }
 
     }
 
-    if (Boards.whiteCheckmate)
-    {
-        Console.WriteLine("White checkmate");
-    }
 
-    else if (Boards.blackCheckmate)
-    {
-        Console.WriteLine("Black checkmate");
-    }
-    else
-    {
-        Console.WriteLine("Position solved");
-    }
-    Boards.DisplayBoard();
-    foreach (var move in GameHistory)
-    {
-        Console.Write(move);
-    }
-
-    //if (!Boards.whiteCheckmate && !Boards.blackCheckmate) PlayThePosition();
 }
 
 //**************** TEST POSITIONS ****************// 
@@ -122,7 +104,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("k7/8/8/8/8/8/8/7K w - - 0 1");
+    IO.FenReader("");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -446,8 +428,6 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
 
-
-
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
             Boards.DisplayBoard();
@@ -518,7 +498,7 @@ static void MakeEngineMove(int depth, StreamWriter log)
     {
         // --- Winboard search time and depth settings --
         var maxDepth = 10;
-        var maxSearchTime = 30;
+        var maxSearchTime = 60;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);

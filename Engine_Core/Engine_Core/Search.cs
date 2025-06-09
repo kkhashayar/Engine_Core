@@ -63,6 +63,7 @@ public static class Search
     // Almost unique position identifier hash key  / position key 
     public static ulong positionHashKey;
 
+    
     public static void InitializeRandomKeys()
     {
         int index = 0;
@@ -75,7 +76,7 @@ public static class Search
             }
         }
 
-        for (int square = 0; square < 64; square++)
+        for (int square = 0; square < 8; square++)
         {
             enpassantKey[square] = Globals.GetPolyglotKey(index++);
         }
@@ -87,6 +88,7 @@ public static class Search
             castlingKeys[i] = Globals.GetPolyglotKey(index++);
         }
     }
+
 
 
     // Generate hash key. 
@@ -119,26 +121,32 @@ public static class Search
         if (Boards.EnpassantSquare != (int)Squares.NoSquare)
         {
             int epFile = Boards.EnpassantSquare % 8;
+            int epRank = Boards.EnpassantSquare / 8;
 
-            if (Boards.Side == (int)Colors.white)
+            if (Boards.Side == (int)Colors.white && epRank == 5)
             {
-                ulong whitePawns = Boards.Bitboards[(int)Pieces.P];
-                // Check if there's a white pawn on rank 5 that could capture ep
-                if (((whitePawns >> 8) | (whitePawns << 8)) >> epFile % 8 != 0)
+                ulong pawns = Boards.Bitboards[(int)Pieces.P];
+                bool leftCapture = ((pawns >> 1) & ~0x0101010101010101UL & (1UL << (Boards.EnpassantSquare - 8))) != 0;
+                bool rightCapture = ((pawns << 1) & ~0x8080808080808080UL & (1UL << (Boards.EnpassantSquare - 8))) != 0;
+
+                if (leftCapture || rightCapture)
                 {
                     positionHashKey ^= enpassantKey[epFile];
                 }
             }
-            else
+            else if (Boards.Side == (int)Colors.black && epRank == 2)
             {
-                ulong blackPawns = Boards.Bitboards[(int)Pieces.p];
-                // Check if there's a black pawn on rank 4 that could capture ep
-                if (((blackPawns >> 8) | (blackPawns << 8)) >> epFile % 8 != 0)
+                ulong pawns = Boards.Bitboards[(int)Pieces.p];
+                bool leftCapture = ((pawns >> 1) & ~0x0101010101010101UL & (1UL << (Boards.EnpassantSquare + 8))) != 0;
+                bool rightCapture = ((pawns << 1) & ~0x8080808080808080UL & (1UL << (Boards.EnpassantSquare + 8))) != 0;
+
+                if (leftCapture || rightCapture)
                 {
                     positionHashKey ^= enpassantKey[epFile];
                 }
             }
         }
+
         // Castling
         positionHashKey ^= castlingKeys[Boards.CastlePerm];
 
@@ -171,8 +179,6 @@ public static class Search
         MoveGenerator.GenerateMoves(moveList);
 
         SortMoves(moveList);
-
-
         int bestScore = -5000;
         int bestMove = 0;
         ply = 0;
@@ -180,7 +186,7 @@ public static class Search
 
         ClearKillerAndHistoryMoves();
         ClearPV();
-
+        //--- Turn on or off from program.cs ---    
         if (TranspositionSwitch) GeneratepositionHashKey();
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
@@ -198,9 +204,8 @@ public static class Search
 
 
             // --- Maybe this will cause the problem of using burned move instead of the best move ---
-
             bestMove = pvTable[0, 0];
-            if(score >= 48000 || bestScore <= -48000)
+            if (score >= 48000 || bestScore <= -48000)
             {
                 bestScore = score;
                 bestMove = pvTable[0, 0];
@@ -216,6 +221,7 @@ public static class Search
             {
                 Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
+                bestMove = pvTable[0, 0];
                 return bestMove;
             }
 
@@ -226,45 +232,34 @@ public static class Search
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
-
         if (TranspositionSwitch)
-        {
-            if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth >= depth)
+        {   //--- I dont know why when entry.depth >= depth, engine will stop after finding the right move!
+            if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
-                if (depth >= 8)
-                {
-                    Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-                }
-                if (entry.flag == NodeType.Exact)
-                {
-                    return entry.score;
-                }
-                else if (entry.flag == NodeType.Alpha && entry.score <= alpha)
-                {
-                    return alpha;
-                }
-                else if (entry.flag == NodeType.Beta && entry.score >= beta)
-                {
-                    return beta;
-                }
+                if (depth >= 8)  Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                
+                if (entry.flag == NodeType.Exact) return entry.score;
+                
+                else if (entry.flag == NodeType.Alpha && entry.score <= alpha) return alpha;
+                
+                else if (entry.flag == NodeType.Beta && entry.score >= beta)   return beta;
+                
             }
         }
 
 
         pvLength[ply] = ply;
 
-        if (depth == 0)
-            return Quiescence(alpha, beta);
+        if (depth == 0) return Quiescence(alpha, beta);
 
-        else if (ply > maxPly - 1)
-            return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+        //else if (ply > maxPly - 1) return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         nodes++;
 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
-        FlagCheckmate(moveList);
+        //FlagCheckmate(moveList);
 
         bool inCheck = false;
 
@@ -427,6 +422,7 @@ public static class Search
         if (TranspositionSwitch)
         {
             NodeType flag;
+
             if (alpha <= oldAlpha)
                 flag = NodeType.Alpha;
             else if (alpha >= beta)
@@ -439,15 +435,13 @@ public static class Search
                 transpositionTable[positionHashKey] = new Transposition
                 {
                     position = positionHashKey,
-                    score = alpha,
+                    score = alpha,  // ok, alpha holds best found score now
                     depth = depth,
                     flag = flag
                 };
             }
         }
-
         return alpha;
-
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
