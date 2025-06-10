@@ -24,11 +24,14 @@
     Polyglot's Zobrist array has 781 entries and the structure and numbers are fixed. 
     
     Range           Purpose                                 Count
-    ---------------------------------------------------------------  
-    0-767           12 pieces on 64 squares                 768
-    768-771         Castling rights                         4 
-    772-845         En passant(8 files)                     8
-    780             side to move                            1
+    ---------------------------------------------------------------
+    0–767           12 pieces on 64 squares (6 × 2 × 64)     768
+    768–783         Castling rights (16 combinations)        16
+    784–791         En passant (8 possible files)             8
+    792             Side to move                              1
+    ---------------------------------------------------------------
+    otal:                                                    793
+
 
  */
 public static class Polyglot
