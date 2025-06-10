@@ -3,8 +3,18 @@
 
 /*
  * Used poython chess library to export 781 standard keys.
- * 
- * 
+ ******
+ *      import chess.polyglot
+
+        print("piece_keys = [")
+        for i in chess.polyglot.PIECE_KEYS:
+            print(i, ",")
+        print("]")
+
+        print("castling_keys =", chess.polyglot.CASTLING_KEYS)
+        print("enpassant_keys =", chess.polyglot.ENPASSANT_KEYS)
+        print("turn_key =", chess.polyglot.TURN_KEY)
+ ******
  * import chess.polyglot
 
         for i, value in enumerate(chess.polyglot.POLYGLOT_RANDOM_ARRAY):
@@ -14,16 +24,19 @@
     Polyglot's Zobrist array has 781 entries and the structure and numbers are fixed. 
     
     Range           Purpose                                 Count
-    ---------------------------------------------------------------  
-    0-767           12 pieces on 64 squares                 768
-    768-771         Castling rights                         4 
-    772-845         En passant(8 files)                     8
-    780             side to move                            1
+    ---------------------------------------------------------------
+    0–767           12 pieces on 64 squares (6 × 2 × 64)     768
+    768–783         Castling rights (16 combinations)        16
+    784–791         En passant (8 possible files)             8
+    792             Side to move                              1
+    ---------------------------------------------------------------
+    otal:                                                    793
+
 
  */
 public static class Polyglot
 {
-    public static readonly ulong[] PolyglotRandomKeys = new ulong[781]
+    public static readonly ulong[] PolyglotRandomKeys = new ulong[]
     {
         0x9D39247E33776D41,
         0x2AF7398005AAA5C7,
@@ -805,6 +818,22 @@ public static class Polyglot
         0xD0E4427A5514FB72,
         0x77C621CC9FB3A483,
         0x67A34DAC4356550B,
-        0xF8D626AAAF278509
+        0xF8D626AAAF278509,
+        0x24C7AE8ACD3AD30D,
+        0xA3CBDA8EB6CD6D17,
+        0x92D9EE42CBFA4F52,
+        0x438F893E666FFA6B,
+        0x3CCC5D24464F62B1,
+        0xCFA9275812D9E5DB,
+        0xBBF17284897C0F48,
+        0xA077F2F8F190127B,
+        0x5FDEEC8850464C2B,
+        0x9429D7F4C15885F4,
+        0x4DCAC2831E23E842,
+        0x4E109F15C27A18BF,
+        0x1EC62F17201666A9,
+        0xBBFACFA8B9CEDC99,
+        0xD52582CA4006E48D,
+        0xBE5CC29389B0A011
     };
 }

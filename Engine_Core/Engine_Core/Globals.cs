@@ -6,9 +6,11 @@ namespace Engine_Core;
 
 public static class Globals
 {
+   
     private static readonly Random random = new Random();
 
     /*
+     * I was wrong about this: 
      * In fact there is no need to have a fixed random numbers seeded with specific seed. 
      * The reason to have fixed random number will be when we are generating 
      * Magic numbers manually, In that case we have to use the same seed.
@@ -500,8 +502,9 @@ public static class Globals
     }
 
 
-
-    public static ulong GetFixedRandom64Numbers()
+    // In order to have correct random numbers (standard) we will use hard coded Polyglots Zobrist Hashing numbers.
+    [Obsolete("GetPolyglotKey is in use.")]
+    public static ulong GetFixedRandom64Numbers_OldVersion()
     {
         byte[] buffer = new byte[sizeof(ulong)];
         Random random = new Random();
@@ -512,21 +515,12 @@ public static class Globals
 
     }
 
-    //public static ulong GetFixedRandom64Numbers()
-    //{
-    //    ulong high = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-    //    ulong low = (ulong)fixedRandom.Next(int.MinValue, int.MaxValue);
-    //    return (high << 32) | low;
-    //}
+    public static ulong GetPolyglotKey(int index)
+    {
+        if (index >= Polyglot.PolyglotRandomKeys.Length) throw new InvalidCastException("Polyglot key index overflow.");
+        return Polyglot.PolyglotRandomKeys[index]; 
+    }
 
-
-
-    //public static ulong GetFixedRandom64Numbers()
-    //{
-    //    byte[] bytes = new byte[8];
-    //    RandomNumberGenerator.Fill(bytes);  
-    //    return BitConverter.ToUInt64(bytes, 0);     
-    //}
 
     // **************************************************   RANDOMIZERS
 

@@ -11,9 +11,7 @@ void InitAll()
     Search.InitializeRandomKeys();
     
     // **************************************** Search Settings for both (Play position and Winboard)
-    Search.TranspositionSwitch = false;
-    Search.EarlyExitSwitch = false;
-  
+    Search.TranspositionSwitch = true;
 }
 
 List<string> GameHistory = new List<string>();
@@ -23,8 +21,8 @@ bool running = true;
 void PlayThePosition()
 {
     // Temporary solution 
-    int maxdepth = 10;
-    int maxTime = 15
+    int maxdepth = 12;
+    int maxTime = 70;
         ;
     while (running)
     {
@@ -50,38 +48,20 @@ void PlayThePosition()
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            running = false;
-            break;
-
             Console.WriteLine();
             foreach (var notation in GameHistory)
             {
                 Console.Write(notation);
             }
+            running = false;
+            break;
+
+            
         }
 
     }
 
-    if (Boards.whiteCheckmate)
-    {
-        Console.WriteLine("White checkmate");
-    }
 
-    else if (Boards.blackCheckmate)
-    {
-        Console.WriteLine("Black checkmate");
-    }
-    else
-    {
-        Console.WriteLine("Position solved");
-    }
-    Boards.DisplayBoard();
-    foreach (var move in GameHistory)
-    {
-        Console.Write(move);
-    }
-
-    //if (!Boards.whiteCheckmate && !Boards.blackCheckmate) PlayThePosition();
 }
 
 //**************** TEST POSITIONS ****************// 
@@ -116,13 +96,17 @@ string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1
 string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
 
 
+// It can't solve the endgames without thematic table
+string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+
+
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_5_Rxe8_Mid_High_Complex_Position);
+    IO.FenReader(RKkEndGame);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -153,7 +137,7 @@ void Run()
 
     ////*******************  ZOBRIST HASHING TEST
 
-    //Boards.DisplayBoard();
+    Boards.DisplayBoard();
 
     //PerftTeste.RunPerft(6, true);
 
@@ -446,8 +430,6 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
             Boards.ApplyTheMove(move); // Update internal board state
             log.WriteLine($"Move applied: {moveString}");
 
-
-
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
             Boards.DisplayBoard();
@@ -510,17 +492,15 @@ static int WinBoardParseMove(string moveString)
     return 0;
 }
 
-
-
 // Generates and sends the engine's best move
 static void MakeEngineMove(int depth, StreamWriter log)
 {
     
     try
     {
-
+        // --- Winboard search time and depth settings --
         var maxDepth = 10;
-        var maxSearchTime = 45;
+        var maxSearchTime = 60;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);
