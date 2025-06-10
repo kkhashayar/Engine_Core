@@ -17,7 +17,6 @@ public static class Search
     //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
-    public static bool EarlyExitSwitch { get; set; }
 
     // --- Variables to determine game phase ---
     public static int NumberOfAllPieces { get; set; }

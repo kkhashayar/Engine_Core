@@ -12,8 +12,6 @@ void InitAll()
     
     // **************************************** Search Settings for both (Play position and Winboard)
     Search.TranspositionSwitch = true;
-    Search.EarlyExitSwitch = false;
-  
 }
 
 List<string> GameHistory = new List<string>();
@@ -98,13 +96,16 @@ string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1
 string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
 
 
+string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+
+
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -139,7 +140,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    //PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -152,7 +153,7 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
     
     
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 

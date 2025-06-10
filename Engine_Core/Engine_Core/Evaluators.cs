@@ -143,7 +143,7 @@ public static class Evaluators
         }
 
         // Fewer opponent moves = better for current side
-        int mobilityFactor = 8;
+        int mobilityFactor = 5;
         score -= opponentMovesCount * mobilityFactor;
 
         // Restore side
