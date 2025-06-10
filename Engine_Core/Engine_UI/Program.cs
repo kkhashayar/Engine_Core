@@ -21,7 +21,7 @@ bool running = true;
 void PlayThePosition()
 {
     // Temporary solution 
-    int maxdepth = 10;
+    int maxdepth = 12;
     int maxTime = 70;
         ;
     while (running)
