@@ -96,7 +96,7 @@ string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1
 string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
 
 
-// It can't solve the endgames without thematic table
+// It can't solve the endgames without thematic table.
 string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
 
 
