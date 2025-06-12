@@ -106,7 +106,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader("");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -432,7 +432,7 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
-            // Boards.DisplayBoard();
+            Boards.DisplayBoard();
 
 
             if (!forceMode && engineGo)
@@ -499,8 +499,8 @@ static void MakeEngineMove(int depth, StreamWriter log)
     try
     {
         // --- Winboard search time and depth settings --
-        var maxDepth = 12;
-        var maxSearchTime = 70;
+        var maxDepth = 10;
+        var maxSearchTime = 60;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);

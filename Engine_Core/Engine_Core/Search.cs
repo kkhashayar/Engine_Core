@@ -50,7 +50,7 @@ public static class Search
     public static ulong[,] pieceKeysOnSquare = new ulong[12, 64];
 
     // Random En-passant key and square 
-    public static ulong[] enpassantKey = new ulong[64];
+    public static ulong[] enPassantKey = new ulong[64];
 
     // Random Side to play key 
 
@@ -77,7 +77,7 @@ public static class Search
 
         for (int square = 0; square < 8; square++)
         {
-            enpassantKey[square] = Globals.GetPolyglotKey(index++);
+            enPassantKey[square] = Globals.GetPolyglotKey(index++);
         }
 
         sideKey = Globals.GetPolyglotKey(index++);
@@ -130,7 +130,7 @@ public static class Search
 
                 if (leftCapture || rightCapture)
                 {
-                    positionHashKey ^= enpassantKey[epFile];
+                    positionHashKey ^= enPassantKey[epFile];
                 }
             }
             else if (Boards.Side == (int)Colors.black && epRank == 2)
@@ -141,7 +141,7 @@ public static class Search
 
                 if (leftCapture || rightCapture)
                 {
-                    positionHashKey ^= enpassantKey[epFile];
+                    positionHashKey ^= enPassantKey[epFile];
                 }
             }
         }
