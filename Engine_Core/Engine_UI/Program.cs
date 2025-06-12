@@ -106,7 +106,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(RKkEndGame);
+    IO.FenReader("");
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -141,7 +141,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    PlayThePosition();
+    //PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -154,7 +154,7 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
     
     
-    //WinBoardLoop();
+    WinBoardLoop();
 
 }
 
