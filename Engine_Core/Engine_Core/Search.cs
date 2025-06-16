@@ -174,10 +174,12 @@ public static class Search
     // --- Iterative Deepening Search Negamax entry --- 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
+        GetGamePhase(); 
+
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-
         SortMoves(moveList);
+        
         int bestScore = -5000;
         int bestMove = 0;
         ply = 0;
