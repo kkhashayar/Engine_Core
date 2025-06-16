@@ -432,7 +432,7 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
-            Boards.DisplayBoard();
+            //Boards.DisplayBoard();
 
 
             if (!forceMode && engineGo)
