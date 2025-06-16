@@ -21,7 +21,7 @@ bool running = true;
 void PlayThePosition()
 {
     // Temporary solution 
-    int maxdepth = 12;
+    int maxdepth = 10;
     int maxTime = 70;
         ;
     while (running)
@@ -85,15 +85,8 @@ string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPP
 string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
 
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
-string bratkoKopec_02 = "r2q1rk1/pp2bppp/2n1bn2/2pp4/3P4/2P2NP1/PP1NPPBP/R1BQ1RK1 w - - 0 9";    // Best move: ...dxc5
-string bratkoKopec_03 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/2PB1NP1/PP2PPBP/R1BQ1RK1 b - - 0 9";   // Best move: ...cxd4
-string bratkoKopec_04 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 b - - 0 9";   // Best move: ...c4
-string bratkoKopec_05 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 w - - 0 10";  // Best move: ...e4
-string bratkoKopec_06 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 1 11";  // Best move: ...e4
-string bratkoKopec_07 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 2 11";  // Best move: ...f5
-string bratkoKopec_08 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 0 11";  // Best move: ...c4
-string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 3 11";  // Best move: ...cxd4
-string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
+
+
 
 
 // It can't solve the endgames without thematic table.
@@ -106,7 +99,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -141,7 +134,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    //PlayThePosition();
+    PlayThePosition();
 
     //// DebugSearchMethods();
 
@@ -154,7 +147,7 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
     
     
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 

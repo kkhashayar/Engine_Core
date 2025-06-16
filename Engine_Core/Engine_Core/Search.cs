@@ -204,16 +204,18 @@ public static class Search
 
             // --- Maybe this will cause the problem of using burned move instead of the best move ---
             bestMove = pvTable[0, 0];
-            if (score >= 48000 || bestScore <= -48000)
-            {
-                bestScore = score;
-                bestMove = pvTable[0, 0];
-            }
-            else if (score > bestScore)
-            {
-                bestScore = score;
-                bestMove = pvTable[0, 0];
-            }
+
+            // Have no effects on engines behaviour
+            //if (score >= 48000 || bestScore <= -48000)
+            //{
+            //    bestScore = score;
+            //    bestMove = pvTable[0, 0];
+            //}
+            //else if (score > bestScore)
+            //{
+            //    bestScore = score;
+            //    bestMove = pvTable[0, 0];
+            //}
             // --- 
 
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
