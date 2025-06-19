@@ -93,7 +93,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(RKkEndGame);
 
     ///////******************  ZOBRIST HASHING TEST  
 
