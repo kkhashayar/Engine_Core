@@ -88,10 +88,7 @@ public static class Search
             castlingKeys[i] = Globals.GetPolyglotKey(index++);
         }
     }
-
-
-
-    // Generate hash key. 
+ 
     public static ulong GeneratePositionHashKey()
     {
         positionHashKey = 0;
