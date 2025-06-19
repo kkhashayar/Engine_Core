@@ -450,38 +450,66 @@ public static class Search
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
     public static GamePhase GetGamePhase()
     {
-        int numberOfPiece = CountPieces();
+        int numberOfPieces = CountPieces();
 
-        if (numberOfPiece == 32)
+        // Full starting position
+        if (numberOfPieces == 32)
         {
-            Console.WriteLine();
-            Console.WriteLine($"GamePhase: Opening");
-            Console.WriteLine();
-
+            Console.WriteLine("\nGamePhase: Opening\n");
             return GamePhase.Opening;
         }
-        else
+
+        // Simplified check for pure endgames
+        if (numberOfPieces <= 3)
         {
-            if ((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+            bool whiteHasPawn = Boards.Bitboards[(int)Pieces.P] != 0;
+            bool blackHasPawn = Boards.Bitboards[(int)Pieces.p] != 0;
+            bool whiteHasBishop = MoveGenerator.wb == 1;
+            bool blackHasBishop = MoveGenerator.bb == 1;
+            bool whiteHasKnight = MoveGenerator.wn == 1;
+            bool blackHasKnight = MoveGenerator.bn == 1;
+
+            // King and Pawn vs King
+            if ((whiteHasPawn && numberOfPieces == 3) || (blackHasPawn && numberOfPieces == 3))
             {
-                Console.WriteLine();
-                Console.WriteLine($"GamePhase: Middle game");
-                Console.WriteLine();
-                return GamePhase.MiddleGame;
+                Console.WriteLine("King and Pawn vs King");
+                return GamePhase.KPvK;
+            }
+            // King and Bishop vs King
+            if ((whiteHasBishop && numberOfPieces == 3) || (blackHasBishop && numberOfPieces == 3))
+            {
+                Console.WriteLine("King and Bishop vs King");
+                return GamePhase.KBvK;
+            }
+            // King and Knight + Bishop vs King
+            if ((MoveGenerator.wn == 1 && MoveGenerator.wb == 1 && numberOfPieces == 4) ||
+                (MoveGenerator.bn == 1 && MoveGenerator.bb == 1 && numberOfPieces == 4))
+            {
+                Console.WriteLine("King and Knight + Bishop vs King");
+                return GamePhase.KBNvK;
+            }
+            // Two bishops vs king
+            if ((MoveGenerator.wb == 2 && numberOfPieces == 4) ||
+                (MoveGenerator.bb == 2 && numberOfPieces == 4))
+            {
+                Console.WriteLine("Two bishops vs king");
+                return GamePhase.K2BvK;
             }
 
+            Console.WriteLine("Unspecified End game");
+            return GamePhase.EndGame;
         }
 
-        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
-        Console.WriteLine();
-        Console.WriteLine($"GamePhase: Middle game");
-        Console.WriteLine();
+        // Midgame: some trades but queens still around
+        if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        {
+            Console.WriteLine("\nGamePhase: Middle game\n");
+            return GamePhase.MiddleGame;
+        }
 
+        // Console.WriteLine("\nGamePhase: EndGame\n");
         return GamePhase.EndGame;
-
     }
-
-
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)

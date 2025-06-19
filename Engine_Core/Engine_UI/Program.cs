@@ -99,7 +99,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader(RKkEndGame);
 
     ///////******************  ZOBRIST HASHING TEST  
 
