@@ -267,6 +267,6 @@ public static class IO
 
 
         Search.positionHashKey = 0; 
-        Search.GeneratepositionHashKey(); 
+        Search.GeneratePositionHashKey(); 
     }
 }

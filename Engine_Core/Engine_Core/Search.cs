@@ -1,4 +1,5 @@
 ﻿using Engine;
+using Microsoft.Extensions.Logging;
 using System.Numerics;
 using static Engine_Core.Enumes;
 
@@ -91,7 +92,7 @@ public static class Search
 
 
     // Generate hash key. 
-    public static ulong GeneratepositionHashKey()
+    public static ulong GeneratePositionHashKey()
     {
         positionHashKey = 0;
         // Temp board 
@@ -170,8 +171,8 @@ public static class Search
         return total;
     }
 
-    // **********************************************************************************************
-    // --- Iterative Deepening Search Negamax entry --- 
+    // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
+
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
         GetGamePhase(); 
@@ -179,16 +180,16 @@ public static class Search
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
         SortMoves(moveList);
-        
-        int bestScore = -5000;
+
         int bestMove = 0;
         ply = 0;
         var startTime = DateTime.UtcNow;
 
         ClearKillerAndHistoryMoves();
         ClearPV();
+
         //--- Turn on or off from program.cs ---    
-        if (TranspositionSwitch) GeneratepositionHashKey();
+        if (TranspositionSwitch) GeneratePositionHashKey();
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
@@ -198,34 +199,19 @@ public static class Search
             int score = Negamax(-50000, 50000, currentDepth);
 
             Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
-
+            
             ExecutablePv.Clear();
             for (int i = 0; i < pvLength[0]; i++)
                 ExecutablePv.Add(pvTable[0, i]);
 
-
-            // --- Maybe this will cause the problem of using burned move instead of the best move ---
             bestMove = pvTable[0, 0];
-
-            // Have no effects on engines behaviour
-            //if (score >= 48000 || bestScore <= -48000)
-            //{
-            //    bestScore = score;
-            //    bestMove = pvTable[0, 0];
-            //}
-            //else if (score > bestScore)
-            //{
-            //    bestScore = score;
-            //    bestMove = pvTable[0, 0];
-            //}
-            // --- 
 
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
             {
                 Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
                 bestMove = pvTable[0, 0];
-                return bestMove;
+                //return bestMove;
             }
 
         }
@@ -239,49 +225,27 @@ public static class Search
         {   //--- I dont know why when entry.depth >= depth, engine will stop after finding the right move!
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
-                if (depth >= 8)  Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-                
+                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+
                 if (entry.flag == NodeType.Exact) return entry.score;
-                
+
                 else if (entry.flag == NodeType.Alpha && entry.score <= alpha) return alpha;
-                
-                else if (entry.flag == NodeType.Beta && entry.score >= beta)   return beta;
-                
+
+                else if (entry.flag == NodeType.Beta && entry.score >= beta) return beta;
+
             }
         }
-
-
         pvLength[ply] = ply;
 
         if (depth == 0) return Quiescence(alpha, beta);
-
-        //else if (ply > maxPly - 1) return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         nodes++;
 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
-        //FlagCheckmate(moveList);
-
         bool inCheck = false;
-
-        if (Boards.Side == (int)Colors.white)
-        {
-            int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
-            if (whiteKingSq < 0 || whiteKingSq >= 64)
-                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
-            if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
-                inCheck = true;
-        }
-        else
-        {
-            int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
-            if (blackKingSq < 0 || blackKingSq >= 64)
-                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
-            if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
-                inCheck = true;
-        }
+        inCheck = IsCheck(inCheck);
 
         if (inCheck)
         {
@@ -320,7 +284,7 @@ public static class Search
 
                 if (TranspositionSwitch)
                 {
-                    positionHashKey = GeneratepositionHashKey();
+                    positionHashKey = GeneratePositionHashKey();
                 }
 
                 legalMoves++;
@@ -445,6 +409,28 @@ public static class Search
             }
         }
         return alpha;
+    }
+
+    private static bool IsCheck(bool inCheck)
+    {
+        if (Boards.Side == (int)Colors.white)
+        {
+            int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            if (whiteKingSq < 0 || whiteKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
+            if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
+                inCheck = true;
+        }
+        else
+        {
+            int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            if (blackKingSq < 0 || blackKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
+            if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
+                inCheck = true;
+        }
+
+        return inCheck;
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
@@ -583,47 +569,7 @@ public static class Search
         return alpha;
     }
 
-    // Sort moves by MVV-LVA, killer, history (bubble sort)
-    //public static void SortMoves(MoveObjects moveList)
-    //{
-    //    int count = moveList.counter;
-
-    //    // Simple array for scores
-    //    int[] scores = new int[count];
-    //    int index = 0;
-    //    while (index < count)
-    //    {
-    //        int move = moveList.moves[index];
-    //        scores[index] = ScoreMove(move);
-    //        index++;
-    //    }
-
-    //    // Bubble-sort by descending
-    //    int current = 0;
-    //    while (current < count)
-    //    {
-    //        int next = current + 1;
-    //        while (next < count)
-    //        {
-    //            if (scores[current] < scores[next])
-    //            {
-    //                // Swap scores
-    //                int tempScore = scores[current];
-    //                scores[current] = scores[next];
-    //                scores[next] = tempScore;
-
-    //                // Swap moves
-    //                int tempMove = moveList.moves[current];
-    //                moveList.moves[current] = moveList.moves[next];
-    //                moveList.moves[next] = tempMove;
-    //            }
-    //            next++;
-    //        }
-    //        current++;
-    //    }
-    //}
-
-    // Using Insertion sort.  will see if it works faster , but for sure will use less memory
+   
     public static void SortMoves(MoveObjects movelIst)
     {
         int count = movelIst.counter;
@@ -766,20 +712,7 @@ public static class Search
         }
         return line;
     }
-    private static void FlagCheckmate(MoveObjects moveList)
-    {
-        if (moveList.counter == 0)
-        {
-            if (Boards.Side == 0)
-            {
-                Boards.whiteCheckmate = true;
-            }
-            else if (Boards.Side == 1)
-            {
-                Boards.blackCheckmate = true;
-            }
-        }
-    }
+    
 
     private static int FindVictimPiece(int move)
     {

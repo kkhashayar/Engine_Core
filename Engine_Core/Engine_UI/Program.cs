@@ -3,6 +3,8 @@ using Engine_Core;
 using Microsoft.ML;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+
 void InitAll()
 {
     Attacks.InitLeapersAttacks();
@@ -26,17 +28,13 @@ void PlayThePosition()
         ;
     while (running)
     {
-        //Console.Clear();    
-        Thread.Sleep(500);
-        //Console.Clear();
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
         Boards.DisplayBoard();
         int move = 0;
 
-        
-        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); 
         
         Console.Beep(1000, 200);
         
@@ -48,19 +46,18 @@ void PlayThePosition()
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            Console.WriteLine();
-            foreach (var notation in GameHistory)
-            {
-                Console.Write(notation);
-            }
+            
             running = false;
             break;
-
-            
+           
         }
-
     }
-
+    Console.WriteLine();
+    foreach (var notation in GameHistory)
+    {
+        Console.Write(notation);
+    }
+    
 
 }
 
@@ -86,9 +83,6 @@ string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3
 
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
-
-
-
 // It can't solve the endgames without thematic table.
 string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
 
@@ -99,7 +93,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(RKkEndGame);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -147,7 +141,7 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
     
     
-    WinBoardLoop();
+    //WinBoardLoop();
 
 }
 
