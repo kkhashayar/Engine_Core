@@ -172,7 +172,12 @@ public static class Search
 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        GetGamePhase(); 
+        var gamePhase = GetGamePhase(); 
+
+        if(gamePhase == GamePhase.EndGame)
+        {
+
+        }
 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
