@@ -280,7 +280,7 @@ public static class IO
             return; 
         }
 
-        var files = Directory.GetFiles(folderPath, "*.rtb", SearchOption.AllDirectories);    
+        var files = Directory.GetFiles(folderPath, "*.rtbz", SearchOption.AllDirectories);    
         if(files.Length == 0)
         {
             Console.WriteLine($"[Syzygy] No Syzygy table files found in: {folderPath}");
