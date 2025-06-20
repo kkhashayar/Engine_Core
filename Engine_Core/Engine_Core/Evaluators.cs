@@ -85,7 +85,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        var gamePhase = GetGamePhase();     
+        //var gamePhase = GetGamePhase();     
 
         int score = 0;
 
