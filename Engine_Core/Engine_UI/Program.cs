@@ -12,8 +12,8 @@ void InitAll()
     Attacks.InitRooksAttacks();
     Search.InitializeRandomKeys();
 
-    // Loading tables 
-    IO.LoadSyzygyTables("D:\\Data\\Repo\\K_Chess_2\\Engine_Core\\Engine_Core\\Tables\\syzygy");
+    // Loading tables .... I am not sure if this is a good idea! 
+    // IO.LoadSyzygyTables("D:\\Data\\Repo\\K_Chess_2\\Engine_Core\\Engine_Core\\Tables\\syzygy");
 
     // **************************************** Search Settings for both (Play position and Winboard)
     Search.TranspositionSwitch = true;

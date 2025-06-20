@@ -157,28 +157,12 @@ public static class Search
         return positionHashKey;
     }
 
-    //One of the factors in determining the game phase.
-    private static int CountPieces()
-    {
-        int total = 0;
-        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
-        {
-            total += BitOperations.PopCount(Boards.Bitboards[piece]);
-        }
-        return total;
-    }
-
+   
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        var gamePhase = GetGamePhase(); 
-
-        if(gamePhase == GamePhase.EndGame)
-        {
-
-        }
-
+      
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
         SortMoves(moveList);
@@ -220,6 +204,8 @@ public static class Search
 
         return bestMove;
     }
+
+
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
@@ -436,34 +422,7 @@ public static class Search
     }
 
     // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    public static GamePhase GetGamePhase()
-    {
-        int numberOfPieces = CountPieces();
-
-        // Full starting position
-        if (numberOfPieces == 32)
-        {
-            Console.WriteLine("\nGamePhase: Opening\n");
-            return GamePhase.Opening;
-        }
-
-        // Simplified check for pure endgames
-        if (numberOfPieces == 3)
-        {
-            var fen = IO.FenWriter(); 
-            Console.WriteLine("\nGamePhase: Eng Game\n");
-            return GamePhase.EndGame;   
-        }
-
-        // Midgame: some trades but queens still around
-        if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
-        {
-            Console.WriteLine("\nGamePhase: Middle game\n");
-            return GamePhase.MiddleGame;
-        }
-
-        return GamePhase.None; // Default case, should not happen
-    }
+    
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)

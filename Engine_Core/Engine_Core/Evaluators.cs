@@ -1,4 +1,5 @@
 ﻿using Engine_Core;
+using System.Numerics;
 using static Engine_Core.Enumes;
 
 namespace Engine;
@@ -84,6 +85,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
+        var gamePhase = GetGamePhase();     
 
         int score = 0;
 
@@ -158,6 +160,44 @@ public static class Evaluators
         {
             return -score;
         }
+    }
+
+    public static GamePhase GetGamePhase()
+    {
+        int numberOfPieces = CountPieces();
+
+        // Full starting position
+        if (numberOfPieces == 32)
+        {
+            Console.WriteLine("\nGamePhase: Opening\n");
+            return GamePhase.Opening;
+        }
+
+        // Simplified check for pure endgames
+        if (numberOfPieces == 3)
+        {
+            var fen = IO.FenWriter();
+            Console.WriteLine("\nGamePhase: Eng Game\n");
+            return GamePhase.EndGame;
+        }
+
+        // Midgame: some trades but queens still around
+        if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        {
+            Console.WriteLine("\nGamePhase: Middle game\n");
+            return GamePhase.MiddleGame;
+        }
+
+        return GamePhase.None; // Default case, should not happen
+    }
+    public static int CountPieces()
+    {
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
     }
 
 }
