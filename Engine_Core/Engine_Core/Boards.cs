@@ -1,4 +1,6 @@
-﻿namespace Engine_Core;
+﻿using System;
+
+namespace Engine_Core;
 
 public static class Boards
 {
@@ -52,9 +54,7 @@ public static class Boards
 
     public static void DisplayBoard()
     {
-        
-        Console.Beep(1500, 300);
-
+        Console.Clear();        
         Console.WriteLine();
         // Loop the ranks
         for (int rank = 0; rank < 8; rank++)
@@ -91,6 +91,7 @@ public static class Boards
 
             // Print new line for each rank
             Console.WriteLine();
+            
         }
 
         // Print file letters
@@ -156,6 +157,7 @@ public static class Boards
         Console.WriteLine("\n");
         Console.WriteLine($"Position Key: {Search.positionHashKey}");
         Console.WriteLine("------------------------------------");
+        
     }
 
 

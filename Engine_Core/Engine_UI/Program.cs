@@ -23,12 +23,9 @@ List<string> GameHistory = new List<string>();
 
 
 bool running = true;
-void PlayThePosition()
+void PlayPosition(int maxTime, int maxDepth)
 {
-    // Temporary solution 
-    int maxdepth = 14;
-    int maxTime = 60;
-        ;
+
     while (running)
     {
         Console.WriteLine();
@@ -36,12 +33,10 @@ void PlayThePosition()
         Console.WriteLine();
         Boards.DisplayBoard();
         int move = 0;
-
-        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); 
         
-        Console.Beep(1000, 200);
-        
-        if(MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
+        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxDepth);
+        Console.Beep(800, 300);
+        if (MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
         
         Boards.ApplyTheMove(move);
         
@@ -87,7 +82,7 @@ string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
 // It can't solve the endgames without thematic table.
-string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+string KRvK = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
 
 
 
@@ -96,7 +91,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(RKkEndGame);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -131,7 +126,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    PlayThePosition();
+    PlayPosition(45, 10);
 
     //// DebugSearchMethods();
 

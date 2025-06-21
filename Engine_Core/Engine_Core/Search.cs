@@ -165,6 +165,10 @@ public static class Search
       
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
+
+        // save some times 
+        if (moveList.counter == 1) return moveList.moves[0];
+
         SortMoves(moveList);
 
         int bestMove = 0;
@@ -194,10 +198,13 @@ public static class Search
 
             if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
+                Console.ResetColor(); 
                 bestMove = pvTable[0, 0];
-                //return bestMove;
+                Thread.Sleep(500);
+                return bestMove;
             }
 
         }

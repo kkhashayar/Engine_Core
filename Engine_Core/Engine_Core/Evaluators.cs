@@ -6,6 +6,7 @@ namespace Engine;
 
 public static class Evaluators
 {
+    public static GamePhase GamePhase { get; private set; } = GamePhase.None;       
 
     private static readonly int[] materialScore = new int[]
     {
@@ -85,7 +86,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        //var gamePhase = GetGamePhase();     
+        GamePhase = GetGamePhase();     
 
         int score = 0;
 
@@ -100,20 +101,24 @@ public static class Evaluators
                 Globals.PopBit(ref bitboard, square);
 
                 score += materialScore[bbPiece];
-                switch (bbPiece)
+                if(GamePhase is not GamePhase.EndGame)
                 {
-                    case (int)Pieces.P: score += pawnScore[square]; break;
-                    case (int)Pieces.N: score += knightScore[square]; break;
-                    case (int)Pieces.B: score += bishopScore[square]; break;
-                    case (int)Pieces.R: score += rookScore[square]; break;
-                    case (int)Pieces.K: score += kingScore[square]; break;
+                    switch (bbPiece)
+                    {
+                        case (int)Pieces.P: score += pawnScore[square]; break;
+                        case (int)Pieces.N: score += knightScore[square]; break;
+                        case (int)Pieces.B: score += bishopScore[square]; break;
+                        case (int)Pieces.R: score += rookScore[square]; break;
+                        case (int)Pieces.K: score += kingScore[square]; break;
 
-                    case (int)Pieces.p: score -= pawnScore[63 - square]; break;
-                    case (int)Pieces.n: score -= knightScore[63 - square]; break;
-                    case (int)Pieces.b: score -= bishopScore[63 - square]; break;
-                    case (int)Pieces.r: score -= rookScore[63 - square]; break;
-                    case (int)Pieces.k: score -= kingScore[63 - square]; break;
+                        case (int)Pieces.p: score -= pawnScore[63 - square]; break;
+                        case (int)Pieces.n: score -= knightScore[63 - square]; break;
+                        case (int)Pieces.b: score -= bishopScore[63 - square]; break;
+                        case (int)Pieces.r: score -= rookScore[63 - square]; break;
+                        case (int)Pieces.k: score -= kingScore[63 - square]; break;
+                    }
                 }
+                
             }
         }
 
@@ -161,7 +166,7 @@ public static class Evaluators
             return -score;
         }
     }
-
+    // Maybe I should call this also from search class to implement sort of dynamic max depth/Time? 
     public static GamePhase GetGamePhase()
     {
         int numberOfPieces = CountPieces();
@@ -169,22 +174,22 @@ public static class Evaluators
         // Full starting position
         if (numberOfPieces == 32)
         {
-            Console.WriteLine("\nGamePhase: Opening\n");
+            //Console.WriteLine("\nGamePhase: Opening\n");
             return GamePhase.Opening;
         }
 
         // Simplified check for pure endgames
         if (numberOfPieces == 3)
         {
-            var fen = IO.FenWriter();
-            Console.WriteLine("\nGamePhase: Eng Game\n");
+            // var fen = IO.FenWriter();  // jus case we want to see the position or use it later
+            //Console.WriteLine("\nGamePhase: Eng Game\n");
             return GamePhase.EndGame;
         }
 
         // Midgame: some trades but queens still around
         if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
         {
-            Console.WriteLine("\nGamePhase: Middle game\n");
+            //Console.WriteLine("\nGamePhase: Middle game\n");
             return GamePhase.MiddleGame;
         }
 
