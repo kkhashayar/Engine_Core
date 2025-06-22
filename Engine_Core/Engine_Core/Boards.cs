@@ -54,6 +54,7 @@ public static class Boards
 
     public static void DisplayBoard()
     {
+        Console.ForegroundColor = ConsoleColor.Black;
         Console.Clear();        
         Console.WriteLine();
         // Loop the ranks
@@ -154,9 +155,13 @@ public static class Boards
             Console.Write("-");
         }
         
+        Console.ForegroundColor = ConsoleColor.DarkBlue;    
         Console.WriteLine("\n");
         Console.WriteLine($"Position Key: {Search.positionHashKey}");
         Console.WriteLine("------------------------------------");
+        Console.ResetColor();
+        Console.Beep(1000, 200);
+        Console.ResetColor();
         
     }
 

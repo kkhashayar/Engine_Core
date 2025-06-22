@@ -6,7 +6,7 @@ namespace Engine;
 
 public static class Evaluators
 {
-    public static GamePhase GamePhase { get; private set; } = GamePhase.None;       
+    public static GamePhase GamePhase { get; private set; } = GamePhase.None;
 
     private static readonly int[] materialScore = new int[]
     {
@@ -48,6 +48,19 @@ public static class Evaluators
         -5, -10,   0,   0,   0,   0, -10,  -5
     };
 
+    private static readonly int[] kingEndgameScore = new int[]
+    {
+         0,   5,  10,  15,  15,  10,   5,   0,
+         5,  10,  15,  20,  20,  15,  10,   5,
+        10,  15,  20,  25,  25,  20,  15,  10,
+        15,  20,  25,  30,  30,  25,  20,  15,
+        15,  20,  25,  30,  30,  25,  20,  15,
+        10,  15,  20,  25,  25,  20,  15,  10,
+         5,  10,  15,  20,  20,  15,  10,   5,
+         0,   5,  10,  15,  15,  10,   5,   0
+    };
+
+
     private static readonly int[] bishopScore = new int[]
     {
          0,   0,   0,   0,   0,   0,   0,   0,
@@ -71,6 +84,18 @@ public static class Evaluators
          0,   0,  10,  20,  20,  10,   0,   0,
          0,   0,   0,  20,  20,   0,   0,   0
     };
+    private static readonly int[] rookEndgameScore = new int[]
+    {
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20,
+        20,  20,  20,  30,  30,  20,  20,  20
+    };
+
 
     private static readonly int[] kingScore = new int[]
     {
@@ -86,7 +111,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        GamePhase = GetGamePhase();     
+        GamePhase = GetGamePhase();
 
         int score = 0;
 
@@ -94,31 +119,43 @@ public static class Evaluators
         for (int bbPiece = (int)Pieces.P; bbPiece <= (int)Pieces.k; bbPiece++)
         {
             ulong bitboard = bitboards[bbPiece];
-           
+
             while (bitboard != 0)
             {
                 int square = Globals.GetLs1bIndex(bitboard);
                 Globals.PopBit(ref bitboard, square);
 
                 score += materialScore[bbPiece];
-                if(GamePhase is not GamePhase.EndGame)
+                // Includes opening and middle game
+                if (GamePhase is not GamePhase.EndGame)
                 {
                     switch (bbPiece)
                     {
-                        case (int)Pieces.P: score += pawnScore[square]; break;
+                        case (int)Pieces.P: score += pawnScore[square];   break;
                         case (int)Pieces.N: score += knightScore[square]; break;
                         case (int)Pieces.B: score += bishopScore[square]; break;
-                        case (int)Pieces.R: score += rookScore[square]; break;
-                        case (int)Pieces.K: score += kingScore[square]; break;
+                        case (int)Pieces.R: score += rookScore[square];   break;
+                        case (int)Pieces.K: score += kingScore[square];   break;
 
-                        case (int)Pieces.p: score -= pawnScore[63 - square]; break;
+                        case (int)Pieces.p: score -= pawnScore[63 - square];   break;
                         case (int)Pieces.n: score -= knightScore[63 - square]; break;
                         case (int)Pieces.b: score -= bishopScore[63 - square]; break;
-                        case (int)Pieces.r: score -= rookScore[63 - square]; break;
-                        case (int)Pieces.k: score -= kingScore[63 - square]; break;
+                        case (int)Pieces.r: score -= rookScore[63 - square];   break;
+                        case (int)Pieces.k: score -= kingScore[63 - square];   break;
                     }
                 }
-                
+                // Experimental :| 
+                else if(GamePhase is GamePhase.EndGame)
+                {
+                    switch (bbPiece)
+                    {
+                        case (int)Pieces.K: score += kingEndgameScore[square];      break;
+                        case (int)Pieces.k: score -= kingEndgameScore[63 - square]; break;
+                        case (int)Pieces.R: score += rookEndgameScore[square];      break;
+                        case (int)Pieces.r: score -= rookEndgameScore[63 - square]; break;
+                    }
+                }
+
             }
         }
 

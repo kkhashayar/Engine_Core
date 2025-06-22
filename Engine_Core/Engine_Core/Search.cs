@@ -1,6 +1,7 @@
 ﻿using Engine;
 using Microsoft.Extensions.Logging;
 using System.Numerics;
+using System.Web.Helpers;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -162,13 +163,10 @@ public static class Search
 
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-      
+       
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-
-        // save some times 
-        if (moveList.counter == 1) return moveList.moves[0];
-
+   
         SortMoves(moveList);
 
         int bestMove = 0;
@@ -183,13 +181,14 @@ public static class Search
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
+   
             var depthStartTime = DateTime.UtcNow;
             nodes = 0;
 
             int score = Negamax(-50000, 50000, currentDepth);
-
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
-            
+            Console.ResetColor();   
             ExecutablePv.Clear();
             for (int i = 0; i < pvLength[0]; i++)
                 ExecutablePv.Add(pvTable[0, i]);
@@ -220,8 +219,9 @@ public static class Search
         {   //--- I dont know why when entry.depth >= depth, engine will stop after finding the right move!
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-
+                Console.ResetColor();
                 if (entry.flag == NodeType.Exact) return entry.score;
 
                 else if (entry.flag == NodeType.Alpha && entry.score <= alpha) return alpha;

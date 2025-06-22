@@ -25,7 +25,7 @@ List<string> GameHistory = new List<string>();
 bool running = true;
 void PlayPosition(int maxTime, int maxDepth)
 {
-
+    
     while (running)
     {
         Console.WriteLine();
@@ -91,7 +91,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -126,7 +126,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    PlayPosition(45, 10);
+    // PlayPosition(45, 10);
 
     //// DebugSearchMethods();
 
@@ -137,9 +137,9 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    
-    
-    //WinBoardLoop();
+
+    // maxTime, maxDepth, displayBoard on/offe4d5
+    WinBoardLoop(45, 10, true);
 
 }
 
@@ -199,7 +199,7 @@ static void DebugSearchMethods()
     Console.WriteLine(score2);
 }
 
-static void WinBoardLoop()
+static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 {
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
@@ -292,7 +292,7 @@ static void WinBoardLoop()
                             string response = "# Engine is thinking...";
                             Console.WriteLine(response);
                             log.WriteLine($"Sent: {response}");
-                            MakeEngineMove(depth, log);
+                            MakeEngineMove(maxTime, maxDepth, log);
                             break;
                         }
 
@@ -326,7 +326,7 @@ static void WinBoardLoop()
                         {
                             if (tokens.Length > 1)
                             {
-                                HandleMove(tokens[1], forceMode, engineGo, depth, log);
+                                HandleMove(tokens[1], forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
                             }
                             break;
                         }
@@ -379,7 +379,7 @@ static void WinBoardLoop()
                                input.StartsWith("g")  ||
                                input.StartsWith("h"))
                             {
-                                HandleMove(input, forceMode, engineGo, depth, log);
+                                HandleMove(input, forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
                             }
 
                             else if (!input.StartsWith("#"))
@@ -404,7 +404,7 @@ static void WinBoardLoop()
 }
 
 
-static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log)
+static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log, bool displayBoard, int maxSearchTime, int maxDepth)
 {
     try
     {
@@ -417,12 +417,14 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
-            Boards.DisplayBoard();
-
-
+            if (displayBoard)
+            {
+                Boards.DisplayBoard();
+            }
+            
             if (!forceMode && engineGo)
             {
-                MakeEngineMove(depth, log); // Respond with engine's move
+                MakeEngineMove(maxSearchTime, maxDepth, log); // Respond with engine's move
             }
         }
         else
@@ -478,14 +480,12 @@ static int WinBoardParseMove(string moveString)
 }
 
 // Generates and sends the engine's best move
-static void MakeEngineMove(int depth, StreamWriter log)
+static void MakeEngineMove(int maxSearchTime, int maxDepth, StreamWriter log)
 {
     
     try
     {
         // --- Winboard search time and depth settings --
-        var maxDepth = 10;
-        var maxSearchTime = 70;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);
