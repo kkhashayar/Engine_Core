@@ -126,7 +126,7 @@ public static class Evaluators
                 Globals.PopBit(ref bitboard, square);
 
                 score += materialScore[bbPiece];
-                // Includes opening and middle game
+                // Includes opening and middle game -- I really don't like this :( it is just temporary.
                 if (GamePhase is not GamePhase.EndGame)
                 {
                     switch (bbPiece)
@@ -147,13 +147,15 @@ public static class Evaluators
                 // Experimental :| 
                 else if(GamePhase is GamePhase.EndGame)
                 {
-                    switch (bbPiece)
-                    {
-                        case (int)Pieces.K: score += kingEndgameScore[square];      break;
-                        case (int)Pieces.k: score -= kingEndgameScore[63 - square]; break;
-                        case (int)Pieces.R: score += rookEndgameScore[square];      break;
-                        case (int)Pieces.r: score -= rookEndgameScore[63 - square]; break;
-                    }
+                    //switch (bbPiece)
+                    //{
+                    //    case (int)Pieces.K: score += kingEndgameScore[square];      break;
+                    //    case (int)Pieces.k: score -= kingEndgameScore[63 - square]; break;
+                    //    case (int)Pieces.R: score += rookEndgameScore[square];      break;
+                    //    case (int)Pieces.r: score -= rookEndgameScore[63 - square]; break;
+                    //}
+
+                    return EvaluateKRvK(bitboards); // Special case for KR vs K endgame
                 }
 
             }
@@ -241,7 +243,62 @@ public static class Evaluators
         }
         return total;
     }
+    
 
+    private static int EvaluateKRvK(ulong[] bitboards)
+    {
+        int score = 0;
+
+        int usRook, usKing, enemyKing;
+        if(Boards.Side == (int)Colors.white)
+        {
+            usRook = (int)Pieces.R; 
+            usKing = (int)Pieces.K;
+            enemyKing = (int)Pieces.k;      
+        }
+        else
+        {
+            usRook = (int)Pieces.r;
+            usKing = (int)Pieces.k;
+            enemyKing = (int)Pieces.K;
+        }
+
+        int rookSquare = Globals.GetLs1bIndex(bitboards[usRook]);   
+        int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);        
+        int enemyKingSquare = Globals.GetLs1bIndex(bitboards[enemyKing]);
+        
+        int enemyKingRank = enemyKingSquare / 8;
+        int enemyKingFile = enemyKingSquare % 8;
+
+        // Enemy king closer to edge is good   
+        int rankDistanceToEdge = Math.Min(enemyKingRank, 7 - enemyKingRank);
+        int fileDistanceToEdge = Math.Min(enemyKingFile, 7 - enemyKingFile);
+        int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20; 
+        score += edgeScore;
+
+
+        // Rook cutting off enemy king
+        if (rookSquare / 8 == enemyKingRank || rookSquare % 8 == enemyKingFile)
+        {
+            score += 50;
+        }
+
+        // King attacks to corner the enemy king
+        int distanceBetweenKings = ManhattanDistance(ourKingSquare, enemyKingSquare);
+        score += (14 - distanceBetweenKings) * 10;
+
+        int distanceBetweenRookAndEnemyKing = ManhattanDistance(rookSquare, enemyKingSquare);
+        if(distanceBetweenRookAndEnemyKing < 2)
+        {
+            score -= 30;
+        }
+        return score;
+    }
+
+    private static int ManhattanDistance(int a, int b)
+    {
+        return Math.Abs((a % 8) - (b % 8)) + Math.Abs((a / 8) - (b / 8));   
+    }
 }
 
 

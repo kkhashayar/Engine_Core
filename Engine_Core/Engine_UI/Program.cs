@@ -91,7 +91,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
+    IO.FenReader(KRvK);
 
     ///////******************  ZOBRIST HASHING TEST  
 
