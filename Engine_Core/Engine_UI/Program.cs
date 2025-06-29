@@ -36,6 +36,8 @@ void PlayPosition(int maxTime, int maxDepth)
         
         move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxDepth);
         Console.Beep(800, 300);
+        
+        // safety guard.  
         if (MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
         
         Boards.ApplyTheMove(move);
@@ -91,7 +93,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(KRvK);
+    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -126,7 +128,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    // PlayPosition(45, 10);
+    PlayPosition(60 , 10);
 
     //// DebugSearchMethods();
 
@@ -139,7 +141,9 @@ void Run()
     //TrainingEngine.SaveTrainingData(outputFilePath);        
 
     // maxTime, maxDepth, displayBoard on/offe4d5
-    WinBoardLoop(45, 10, true);
+
+
+    // WinBoardLoop(45, 10, true);
 
 }
 
@@ -201,6 +205,7 @@ static void DebugSearchMethods()
 
 static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 {
+ 
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
         log.WriteLine($"[{DateTime.Now}] Engine started.");
@@ -406,6 +411,7 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 
 static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log, bool displayBoard, int maxSearchTime, int maxDepth)
 {
+   
     try
     {
         

@@ -6,7 +6,7 @@ namespace Engine;
 
 public static class Evaluators
 {
-    public static GamePhase GamePhase { get; private set; } = GamePhase.None;
+    public static GamePhase CurrentGamePhase { get; private set; } = GamePhase.None;
 
     private static readonly int[] materialScore = new int[]
     {
@@ -111,7 +111,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        GamePhase = GetGamePhase();
+        CurrentGamePhase = GetGamePhase();  
 
         int score = 0;
 
@@ -127,35 +127,22 @@ public static class Evaluators
 
                 score += materialScore[bbPiece];
                 // Includes opening and middle game -- I really don't like this :( it is just temporary.
-                if (GamePhase is not GamePhase.EndGame)
+                if(CurrentGamePhase != GamePhase.KingRookVsKing)
                 {
                     switch (bbPiece)
                     {
-                        case (int)Pieces.P: score += pawnScore[square];   break;
+                        case (int)Pieces.P: score += pawnScore[square]; break;
                         case (int)Pieces.N: score += knightScore[square]; break;
                         case (int)Pieces.B: score += bishopScore[square]; break;
-                        case (int)Pieces.R: score += rookScore[square];   break;
-                        case (int)Pieces.K: score += kingScore[square];   break;
+                        case (int)Pieces.R: score += rookScore[square]; break;
+                        case (int)Pieces.K: score += kingScore[square]; break;
 
-                        case (int)Pieces.p: score -= pawnScore[63 - square];   break;
+                        case (int)Pieces.p: score -= pawnScore[63 - square]; break;
                         case (int)Pieces.n: score -= knightScore[63 - square]; break;
                         case (int)Pieces.b: score -= bishopScore[63 - square]; break;
-                        case (int)Pieces.r: score -= rookScore[63 - square];   break;
-                        case (int)Pieces.k: score -= kingScore[63 - square];   break;
+                        case (int)Pieces.r: score -= rookScore[63 - square]; break;
+                        case (int)Pieces.k: score -= kingScore[63 - square]; break;
                     }
-                }
-                // Experimental :| 
-                else if(GamePhase is GamePhase.EndGame)
-                {
-                    //switch (bbPiece)
-                    //{
-                    //    case (int)Pieces.K: score += kingEndgameScore[square];      break;
-                    //    case (int)Pieces.k: score -= kingEndgameScore[63 - square]; break;
-                    //    case (int)Pieces.R: score += rookEndgameScore[square];      break;
-                    //    case (int)Pieces.r: score -= rookEndgameScore[63 - square]; break;
-                    //}
-
-                    return EvaluateKRvK(bitboards); // Special case for KR vs K endgame
                 }
 
             }
@@ -195,6 +182,15 @@ public static class Evaluators
         // Restore side
         Boards.Side = currentSide;
 
+
+        // ===== Endgame evaluation for KRvK positions =====    
+        CurrentGamePhase = GetGamePhase();  
+        if (CurrentGamePhase == GamePhase.KingRookVsKing)
+        {
+            int endGameScore = EvaluateKingRookVsKing(bitboards) *-1;   
+            score += endGameScore;
+        }
+
         // Final perspective
         if (currentSide == (int)Colors.white)
         {
@@ -205,9 +201,33 @@ public static class Evaluators
             return -score;
         }
     }
-    // Maybe I should call this also from search class to implement sort of dynamic max depth/Time? 
+
+
+
+    //**********************************************   Game Phase and Piece Counting  End game evaluators ***************************************************** //
+
+    public static int CountPieces()
+    {
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
+    }
     public static GamePhase GetGamePhase()
     {
+        int whiteRookNumber = MoveGenerator.wr;
+        int whiteBishopNumber = MoveGenerator.wb;
+        int whiteKnightNumber = MoveGenerator.wn;  
+        
+        int blackRookNumber = MoveGenerator.br; 
+        int blackBishopNumber = MoveGenerator.bb;
+        int blackKnightNumber = MoveGenerator.bn;
+
+       
+
+
         int numberOfPieces = CountPieces();
 
         // Full starting position
@@ -218,15 +238,13 @@ public static class Evaluators
         }
 
         // Simplified check for pure endgames
-        if (numberOfPieces == 3)
+        else if (numberOfPieces == 3)
         {
-            // var fen = IO.FenWriter();  // jus case we want to see the position or use it later
-            //Console.WriteLine("\nGamePhase: Eng Game\n");
-            return GamePhase.EndGame;
+            if(whiteRookNumber == 1 || blackRookNumber == 1) return GamePhase.KingRookVsKing;
         }
 
         // Midgame: some trades but queens still around
-        if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
         {
             //Console.WriteLine("\nGamePhase: Middle game\n");
             return GamePhase.MiddleGame;
@@ -234,27 +252,16 @@ public static class Evaluators
 
         return GamePhase.None; // Default case, should not happen
     }
-    public static int CountPieces()
-    {
-        int total = 0;
-        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
-        {
-            total += BitOperations.PopCount(Boards.Bitboards[piece]);
-        }
-        return total;
-    }
-    
-
-    private static int EvaluateKRvK(ulong[] bitboards)
+    private static int EvaluateKingRookVsKing(ulong[] bitboards)
     {
         int score = 0;
-
+        var side = Boards.Side;
         int usRook, usKing, enemyKing;
-        if(Boards.Side == (int)Colors.white)
+        if (Boards.Side == (int)Enumes.Colors.white)
         {
-            usRook = (int)Pieces.R; 
+            usRook = (int)Pieces.R;
             usKing = (int)Pieces.K;
-            enemyKing = (int)Pieces.k;      
+            enemyKing = (int)Pieces.k;
         }
         else
         {
@@ -263,17 +270,17 @@ public static class Evaluators
             enemyKing = (int)Pieces.K;
         }
 
-        int rookSquare = Globals.GetLs1bIndex(bitboards[usRook]);   
-        int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);        
+        int rookSquare = Globals.GetLs1bIndex(bitboards[usRook]);
+        int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);
         int enemyKingSquare = Globals.GetLs1bIndex(bitboards[enemyKing]);
-        
+
         int enemyKingRank = enemyKingSquare / 8;
         int enemyKingFile = enemyKingSquare % 8;
 
         // Enemy king closer to edge is good   
         int rankDistanceToEdge = Math.Min(enemyKingRank, 7 - enemyKingRank);
         int fileDistanceToEdge = Math.Min(enemyKingFile, 7 - enemyKingFile);
-        int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20; 
+        int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20;
         score += edgeScore;
 
 
@@ -288,16 +295,15 @@ public static class Evaluators
         score += (14 - distanceBetweenKings) * 10;
 
         int distanceBetweenRookAndEnemyKing = ManhattanDistance(rookSquare, enemyKingSquare);
-        if(distanceBetweenRookAndEnemyKing < 2)
+        if (distanceBetweenRookAndEnemyKing < 2)
         {
             score -= 30;
         }
         return score;
     }
-
     private static int ManhattanDistance(int a, int b)
     {
-        return Math.Abs((a % 8) - (b % 8)) + Math.Abs((a / 8) - (b / 8));   
+        return Math.Abs((a % 8) - (b % 8)) + Math.Abs((a / 8) - (b / 8));
     }
 }
 

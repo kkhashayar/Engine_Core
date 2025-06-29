@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Microsoft.Extensions.Logging;
+using System.CodeDom;
 using System.Numerics;
 using System.Web.Helpers;
 using static Engine_Core.Enumes;
@@ -16,6 +17,12 @@ public struct Transposition
 
 public static class Search
 {
+    public static DateTime SearchStartTime { get; set; } 
+    public static int MaxSearchTimeSeconds { get; set; }
+
+
+
+    public static GamePhase GamePhase { get; set; } = GamePhase.None;       
     //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
@@ -160,10 +167,10 @@ public static class Search
 
    
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
-
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-       
+  
+        int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
    
@@ -185,7 +192,8 @@ public static class Search
             var depthStartTime = DateTime.UtcNow;
             nodes = 0;
 
-            int score = Negamax(-50000, 50000, currentDepth);
+            score = Negamax(-50000, 50000, currentDepth);
+            
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
             Console.ResetColor();   
@@ -195,7 +203,7 @@ public static class Search
 
             bestMove = pvTable[0, 0];
 
-            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
+            if ((DateTime.UtcNow - startTime).TotalSeconds > maxTimeSeconds)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
@@ -204,6 +212,7 @@ public static class Search
                 bestMove = pvTable[0, 0];
                 Thread.Sleep(500);
                 return bestMove;
+
             }
 
         }
@@ -215,12 +224,14 @@ public static class Search
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
+        var negamaxMaxTimeStart = DateTime.UtcNow;  
+
         if (TranspositionSwitch)
         {   //--- I dont know why when entry.depth >= depth, engine will stop after finding the right move!
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
+                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
                 Console.ResetColor();
                 if (entry.flag == NodeType.Exact) return entry.score;
 
@@ -403,6 +414,7 @@ public static class Search
                 };
             }
         }
+     
         return alpha;
     }
 
@@ -435,7 +447,7 @@ public static class Search
     public static int Quiescence(int alpha, int beta)
     {
         nodes++;
-
+        
         int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         if (eval >= beta)
@@ -682,6 +694,7 @@ public static class Search
         // fallback
         return (int)Pieces.P;
     }
+
 }
 /*
 *      Inspired by Code monkey King channel
