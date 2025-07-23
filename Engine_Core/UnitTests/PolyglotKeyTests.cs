@@ -1,4 +1,5 @@
 using Engine_Core;
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,28 +10,19 @@ namespace Tests;
 
 public class PolyglotKeyTests
 {
-    [Fact]
-    public void GetPolyglotKey_FirstValidIndex_ReturnExceptedValue()
+    [Theory]
+    [InlineData(0, 0x9D39247E33776D41)]
+    public void GetPolyglotKey_FirstValidIndex_ReturnExceptedValue(int index, ulong expected)
     {
-        // Arrange 
-        ulong expected = 0x9D39247E33776D41;
-        // Act
-        var sut = Globals.GetPolyglotKey(0);
-        // Assert
-        Assert.Equal(expected, sut);    
+        var result = Polyglot.PolyglotRandomKeys[index];
+        result.Should().Be(expected);   
     }
+
     [Fact]
     public void GetPolyglotKey_LastValidIndex_ReturnExceptedValue()
     {
-        // Arrange 
-        var lastIndex = Polyglot.PolyglotRandomKeys.Count() - 1;  
-        ulong expected = 0xBE5CC29389B0A011;
-        // Act
-        var sut = Globals.GetPolyglotKey(lastIndex);
-        // Assert
-        Assert.Equal(expected, sut);
+        var result = Polyglot.PolyglotRandomKeys[^1];
+        result.Should().Be(0xBE5CC29389B0A011);
     }
-
-
 
 }

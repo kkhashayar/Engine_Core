@@ -73,11 +73,12 @@ public static class Enumes
 
     public enum GamePhase
     {
-        None = 0,
-        Opening = 1,
-        MiddleGame = 2,
-        EndGame = 3,    
+        None,
+        Opening,
+        MiddleGame,
+        KingRookVsKing,
     }
+
 
     public enum NodeType
     {

@@ -7,10 +7,10 @@ public class SquareToCoordinateTests
     [Fact]
     public void SquareToCoordinate_Throws_OutOfRTange_Exception()
     {
-        Assert.Throws<IndexOutOfRangeException>(() =>
-        {
-            var _ = Globals.SquareToCoordinates[65];
-        });
+        // Arrange 
+        var index = 65;
+        // Act & Assert 
+        Assert.Throws<IndexOutOfRangeException>(() => Globals.SquareToCoordinates[index]);  
     }
 
 

@@ -5,6 +5,7 @@ namespace Engine_Core;
 
 public static class IO
 {
+    public static List<string> SyzygyFiles { get; set; } = new();  
 
     private static ushort SwapEndian(ushort value) => (ushort)((value >> 8) | (value << 8));
 
@@ -74,7 +75,7 @@ public static class IO
         return entries;
     }
 
-
+    // Is out of use for now(my zobrist hashing still is not standard )
     public static List<PolyglotEntry> ReadPolyglotBook(string path, ulong positionHash)
     {
         var entries = new List<PolyglotEntry>();
@@ -267,6 +268,26 @@ public static class IO
 
 
         Search.positionHashKey = 0; 
-        Search.GeneratepositionHashKey(); 
+        Search.GeneratePositionHashKey(); 
+    }
+
+    public static void LoadSyzygyTables(string folderPath)
+    {
+
+        if (!Directory.Exists(folderPath))
+        {
+            Console.WriteLine($"[Syzygy] folder not found: {folderPath}");
+            return; 
+        }
+
+        var files = Directory.GetFiles(folderPath, "*.rtbz", SearchOption.AllDirectories);    
+        if(files.Length == 0)
+        {
+            Console.WriteLine($"[Syzygy] No Syzygy table files found in: {folderPath}");
+            return;
+        }
+
+        SyzygyFiles = files.ToList();       
+        Console.WriteLine($"[Syzygy] Loaded {SyzygyFiles.Count} Syzygy table files from: {folderPath}");
     }
 }

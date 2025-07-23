@@ -2,14 +2,20 @@
 using Engine_Core;
 using Microsoft.ML;
 
+
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+
 void InitAll()
 {
     Attacks.InitLeapersAttacks();
     Attacks.InitBishopsAttacks();
     Attacks.InitRooksAttacks();
     Search.InitializeRandomKeys();
-    
+
+    // Loading tables .... I am not sure if this is a good idea! 
+    // IO.LoadSyzygyTables("D:\\Data\\Repo\\K_Chess_2\\Engine_Core\\Engine_Core\\Tables\\syzygy");
+
     // **************************************** Search Settings for both (Play position and Winboard)
     Search.TranspositionSwitch = true;
 }
@@ -18,29 +24,23 @@ List<string> GameHistory = new List<string>();
 
 
 bool running = true;
-void PlayThePosition()
+void PlayPosition(int maxTime, int maxDepth)
 {
-    // Temporary solution 
-    int maxdepth = 12;
-    int maxTime = 70;
-        ;
+    
     while (running)
     {
-        //Console.Clear();    
-        Thread.Sleep(500);
-        //Console.Clear();
+        
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
         Boards.DisplayBoard();
         int move = 0;
-
         
-        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxdepth); // TODO: Implement total fixed time, and fixed tipe per depth, is not working as i want!  
+        move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxDepth);
+        Console.Beep(800, 300);
         
-        Console.Beep(1000, 200);
-        
-        if(MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
+        // safety guard.  
+        if (MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
         
         Boards.ApplyTheMove(move);
         
@@ -48,19 +48,18 @@ void PlayThePosition()
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            Console.WriteLine();
-            foreach (var notation in GameHistory)
-            {
-                Console.Write(notation);
-            }
+            
             running = false;
             break;
-
-            
+           
         }
-
     }
-
+    Console.WriteLine();
+    foreach (var notation in GameHistory)
+    {
+        Console.Write(notation);
+    }
+    
 
 }
 
@@ -85,20 +84,10 @@ string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPP
 string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
 
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
-string bratkoKopec_02 = "r2q1rk1/pp2bppp/2n1bn2/2pp4/3P4/2P2NP1/PP1NPPBP/R1BQ1RK1 w - - 0 9";    // Best move: ...dxc5
-string bratkoKopec_03 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/2PB1NP1/PP2PPBP/R1BQ1RK1 b - - 0 9";   // Best move: ...cxd4
-string bratkoKopec_04 = "r2q1rk1/pp1n1ppp/2n1bp2/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 b - - 0 9";   // Best move: ...c4
-string bratkoKopec_05 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2Q1RK1 w - - 0 10";  // Best move: ...e4
-string bratkoKopec_06 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 1 11";  // Best move: ...e4
-string bratkoKopec_07 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 2 11";  // Best move: ...f5
-string bratkoKopec_08 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 0 11";  // Best move: ...c4
-string bratkoKopec_09 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 b - - 3 11";  // Best move: ...cxd4
-string bratkoKopec_10 = "r1bq1rk1/pp1n1ppp/2n1p3/2pp4/3P4/1NPB1NP1/PP2PPBP/R2QR1K1 w - - 4 12";  // Best move: ...e4
-
 
 // It can't solve the endgames without thematic table.
-string RKkEndGame = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
-
+string KRvk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+string PPKVpk = "8/4k3/p7/8/6PP/4K3/8/8 w - - 0 1";
 
 
 Run();
@@ -106,7 +95,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("");
+    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -141,7 +130,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    //PlayThePosition();
+    PlayPosition(45 , 10);
 
     //// DebugSearchMethods();
 
@@ -152,9 +141,11 @@ void Run()
 
     // Saving the  extracted training data
     //TrainingEngine.SaveTrainingData(outputFilePath);        
-    
-    
-    WinBoardLoop();
+
+    // maxTime, maxDepth, displayBoard on/offe4d5
+
+
+    //WinBoardLoop(45, 10, true);
 
 }
 
@@ -214,8 +205,9 @@ static void DebugSearchMethods()
     Console.WriteLine(score2);
 }
 
-static void WinBoardLoop()
+static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 {
+ 
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
         log.WriteLine($"[{DateTime.Now}] Engine started.");
@@ -307,7 +299,7 @@ static void WinBoardLoop()
                             string response = "# Engine is thinking...";
                             Console.WriteLine(response);
                             log.WriteLine($"Sent: {response}");
-                            MakeEngineMove(depth, log);
+                            MakeEngineMove(maxTime, maxDepth, log);
                             break;
                         }
 
@@ -341,7 +333,7 @@ static void WinBoardLoop()
                         {
                             if (tokens.Length > 1)
                             {
-                                HandleMove(tokens[1], forceMode, engineGo, depth, log);
+                                HandleMove(tokens[1], forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
                             }
                             break;
                         }
@@ -394,7 +386,7 @@ static void WinBoardLoop()
                                input.StartsWith("g")  ||
                                input.StartsWith("h"))
                             {
-                                HandleMove(input, forceMode, engineGo, depth, log);
+                                HandleMove(input, forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
                             }
 
                             else if (!input.StartsWith("#"))
@@ -419,8 +411,9 @@ static void WinBoardLoop()
 }
 
 
-static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log)
+static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log, bool displayBoard, int maxSearchTime, int maxDepth)
 {
+   
     try
     {
         
@@ -432,12 +425,14 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
 
             //********* To use in CMD mode uncomment DisplayBoard() method.
             //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
-            Boards.DisplayBoard();
-
-
+            if (displayBoard)
+            {
+                Boards.DisplayBoard();
+            }
+            
             if (!forceMode && engineGo)
             {
-                MakeEngineMove(depth, log); // Respond with engine's move
+                MakeEngineMove(maxSearchTime, maxDepth, log); // Respond with engine's move
             }
         }
         else
@@ -493,14 +488,12 @@ static int WinBoardParseMove(string moveString)
 }
 
 // Generates and sends the engine's best move
-static void MakeEngineMove(int depth, StreamWriter log)
+static void MakeEngineMove(int maxSearchTime, int maxDepth, StreamWriter log)
 {
     
     try
     {
         // --- Winboard search time and depth settings --
-        var maxDepth = 10;
-        var maxSearchTime = 60;
         
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);

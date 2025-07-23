@@ -9,7 +9,6 @@ public class PolyGlotTests
     public void ReadPolyglotBook_ShouldLoadEntries()
     {
         // Arrange 
-
         var path = "D:\\Data\\Repo\\K_Chess_2\\komodo.bin";
 
         var hash = 0ul;
@@ -17,7 +16,6 @@ public class PolyGlotTests
         // Act 
 
         var entries = sut;
-
         // Assert 
 
         entries.Should().BeOfType<List<IO.PolyglotEntry>>();   

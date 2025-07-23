@@ -1,5 +1,8 @@
 ﻿using Engine;
+using Microsoft.Extensions.Logging;
+using System.CodeDom;
 using System.Numerics;
+using System.Web.Helpers;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -14,6 +17,12 @@ public struct Transposition
 
 public static class Search
 {
+    public static DateTime SearchStartTime { get; set; } 
+    public static int MaxSearchTimeSeconds { get; set; }
+
+
+
+    public static GamePhase GamePhase { get; set; } = GamePhase.None;       
     //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
@@ -87,11 +96,8 @@ public static class Search
             castlingKeys[i] = Globals.GetPolyglotKey(index++);
         }
     }
-
-
-
-    // Generate hash key. 
-    public static ulong GeneratepositionHashKey()
+ 
+    public static ulong GeneratePositionHashKey()
     {
         positionHashKey = 0;
         // Temp board 
@@ -159,69 +165,55 @@ public static class Search
         return positionHashKey;
     }
 
-    //One of the factors in determining the game phase.
-    private static int CountPieces()
-    {
-        int total = 0;
-        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
-        {
-            total += BitOperations.PopCount(Boards.Bitboards[piece]);
-        }
-        return total;
-    }
-
-    // **********************************************************************************************
-    // --- Iterative Deepening Search Negamax entry --- 
+   
+    // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
+        //var currentGamePhase = GetGamePhase();  
+
+        int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-
+   
         SortMoves(moveList);
-        int bestScore = -5000;
+
         int bestMove = 0;
         ply = 0;
         var startTime = DateTime.UtcNow;
 
         ClearKillerAndHistoryMoves();
         ClearPV();
+
         //--- Turn on or off from program.cs ---    
-        if (TranspositionSwitch) GeneratepositionHashKey();
+        if (TranspositionSwitch) GeneratePositionHashKey();
 
         for (int currentDepth = 1; currentDepth <= maxDepth; currentDepth++)
         {
+   
             var depthStartTime = DateTime.UtcNow;
             nodes = 0;
 
-            int score = Negamax(-50000, 50000, currentDepth);
-
+            score = Negamax(-50000, 50000, currentDepth);
+            
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine($"Depth:{currentDepth} Nodes:{nodes} Score:{score} Time:{(DateTime.UtcNow - depthStartTime).TotalSeconds}Sec Pv:{PrintPVLine()}");
-
+            Console.ResetColor();   
             ExecutablePv.Clear();
             for (int i = 0; i < pvLength[0]; i++)
                 ExecutablePv.Add(pvTable[0, i]);
 
-
-            // --- Maybe this will cause the problem of using burned move instead of the best move ---
             bestMove = pvTable[0, 0];
-            if (score >= 48000 || bestScore <= -48000)
-            {
-                bestScore = score;
-                bestMove = pvTable[0, 0];
-            }
-            else if (score > bestScore)
-            {
-                bestScore = score;
-                bestMove = pvTable[0, 0];
-            }
-            // --- 
 
-            if ((DateTime.UtcNow - startTime).TotalSeconds >= maxTimeSeconds)
+            if ((DateTime.UtcNow - startTime).TotalSeconds > maxTimeSeconds)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Max time reached ({maxTimeSeconds * maxDepth}s). Stopping search.");
                 Console.WriteLine($"bestmove {Globals.MoveToString(bestMove)}");
+                Console.ResetColor(); 
                 bestMove = pvTable[0, 0];
+                Thread.Sleep(500);
                 return bestMove;
+
             }
 
         }
@@ -231,53 +223,34 @@ public static class Search
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
+        var negamaxMaxTimeStart = DateTime.UtcNow;  
+
         if (TranspositionSwitch)
         {   //--- I dont know why when entry.depth >= depth, engine will stop after finding the right move!
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
-                if (depth >= 8)  Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score}");
-                
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
+                Console.ResetColor();
                 if (entry.flag == NodeType.Exact) return entry.score;
-                
+
                 else if (entry.flag == NodeType.Alpha && entry.score <= alpha) return alpha;
-                
-                else if (entry.flag == NodeType.Beta && entry.score >= beta)   return beta;
-                
+
+                else if (entry.flag == NodeType.Beta && entry.score >= beta) return beta;
+
             }
         }
-
-
         pvLength[ply] = ply;
 
         if (depth == 0) return Quiescence(alpha, beta);
-
-        //else if (ply > maxPly - 1) return Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         nodes++;
 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
-        //FlagCheckmate(moveList);
-
         bool inCheck = false;
-
-        if (Boards.Side == (int)Colors.white)
-        {
-            int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
-            if (whiteKingSq < 0 || whiteKingSq >= 64)
-                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
-            if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
-                inCheck = true;
-        }
-        else
-        {
-            int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
-            if (blackKingSq < 0 || blackKingSq >= 64)
-                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
-            if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
-                inCheck = true;
-        }
+        inCheck = IsCheck(inCheck);
 
         if (inCheck)
         {
@@ -316,7 +289,7 @@ public static class Search
 
                 if (TranspositionSwitch)
                 {
-                    positionHashKey = GeneratepositionHashKey();
+                    positionHashKey = GeneratePositionHashKey();
                 }
 
                 legalMoves++;
@@ -440,50 +413,40 @@ public static class Search
                 };
             }
         }
+     
         return alpha;
     }
 
-    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
-    public static GamePhase GetGamePhase()
+    private static bool IsCheck(bool inCheck)
     {
-        int numberOfPiece = CountPieces();
-
-        if (numberOfPiece == 32)
+        if (Boards.Side == (int)Colors.white)
         {
-            Console.WriteLine();
-            Console.WriteLine($"GamePhase: Opening");
-            Console.WriteLine();
-
-            return GamePhase.Opening;
+            int whiteKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.K]);
+            if (whiteKingSq < 0 || whiteKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid white king square index: {whiteKingSq}");
+            if (Attacks.IsSquareAttacked(whiteKingSq, Colors.black) > 0)
+                inCheck = true;
         }
         else
         {
-            if ((numberOfPiece < 32 && numberOfPiece > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
-            {
-                Console.WriteLine();
-                Console.WriteLine($"GamePhase: Middle game");
-                Console.WriteLine();
-                return GamePhase.MiddleGame;
-            }
-
+            int blackKingSq = Globals.GetLs1bIndex(Boards.Bitboards[(int)Pieces.k]);
+            if (blackKingSq < 0 || blackKingSq >= 64)
+                Console.WriteLine($"Warning: Invalid black king square index: {blackKingSq}");
+            if (Attacks.IsSquareAttacked(blackKingSq, Colors.white) > 0)
+                inCheck = true;
         }
 
-        // Beside using the game phase for time management, We can use available pieces to determinate end-game types, king movements etc..
-        Console.WriteLine();
-        Console.WriteLine($"GamePhase: Middle game");
-        Console.WriteLine();
-
-        return GamePhase.EndGame;
-
+        return inCheck;
     }
 
-
+    // TODO: Find a way to return game phase first , time and other parameters should be adjusted based on game phase.
+    
 
     // Not sure if I implement it correctly 
     public static int Quiescence(int alpha, int beta)
     {
         nodes++;
-
+        
         int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
 
         if (eval >= beta)
@@ -551,47 +514,7 @@ public static class Search
         return alpha;
     }
 
-    // Sort moves by MVV-LVA, killer, history (bubble sort)
-    //public static void SortMoves(MoveObjects moveList)
-    //{
-    //    int count = moveList.counter;
-
-    //    // Simple array for scores
-    //    int[] scores = new int[count];
-    //    int index = 0;
-    //    while (index < count)
-    //    {
-    //        int move = moveList.moves[index];
-    //        scores[index] = ScoreMove(move);
-    //        index++;
-    //    }
-
-    //    // Bubble-sort by descending
-    //    int current = 0;
-    //    while (current < count)
-    //    {
-    //        int next = current + 1;
-    //        while (next < count)
-    //        {
-    //            if (scores[current] < scores[next])
-    //            {
-    //                // Swap scores
-    //                int tempScore = scores[current];
-    //                scores[current] = scores[next];
-    //                scores[next] = tempScore;
-
-    //                // Swap moves
-    //                int tempMove = moveList.moves[current];
-    //                moveList.moves[current] = moveList.moves[next];
-    //                moveList.moves[next] = tempMove;
-    //            }
-    //            next++;
-    //        }
-    //        current++;
-    //    }
-    //}
-
-    // Using Insertion sort.  will see if it works faster , but for sure will use less memory
+   
     public static void SortMoves(MoveObjects movelIst)
     {
         int count = movelIst.counter;
@@ -734,20 +657,7 @@ public static class Search
         }
         return line;
     }
-    private static void FlagCheckmate(MoveObjects moveList)
-    {
-        if (moveList.counter == 0)
-        {
-            if (Boards.Side == 0)
-            {
-                Boards.whiteCheckmate = true;
-            }
-            else if (Boards.Side == 1)
-            {
-                Boards.blackCheckmate = true;
-            }
-        }
-    }
+    
 
     private static int FindVictimPiece(int move)
     {
@@ -782,6 +692,60 @@ public static class Search
 
         // fallback
         return (int)Pieces.P;
+    }
+
+
+    // Detecting game phase // 
+    public static int CountPieces()
+    {
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
+    }
+    public static GamePhase GetGamePhase()
+    {
+        int whiteRookNumber = MoveGenerator.wr;
+        int whiteBishopNumber = MoveGenerator.wb;
+        int whiteKnightNumber = MoveGenerator.wn;
+        int whiteQueenNumber = MoveGenerator.wq;    
+        int whitePawnNumber = MoveGenerator.wp; 
+
+        int blackRookNumber = MoveGenerator.br;
+        int blackBishopNumber = MoveGenerator.bb;
+        int blackKnightNumber = MoveGenerator.bn;
+        int blackQueenNumber = MoveGenerator.bq;
+        int blackPawnNumber = MoveGenerator.bp; 
+
+        int numberOfPieces = CountPieces();
+        //Console.WriteLine($"Number of pieces: {numberOfPieces}");
+        // Full starting position
+        if (numberOfPieces == 32)
+        {
+            Console.WriteLine("\nGamePhase: Opening\n");
+            return GamePhase.Opening;
+        }
+
+        // Simplified check for pure endgames
+        else if (numberOfPieces == 3)
+        {
+            if (whiteRookNumber == 1 || blackRookNumber == 1)
+            {
+                Console.WriteLine("\nGamePhase: King vs rook end game\n");
+                return GamePhase.KingRookVsKing;
+            }
+        }
+
+        // Midgame: some trades but queens still around
+        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        {
+            //Console.WriteLine("\nGamePhase: Middle game\n");
+            return GamePhase.MiddleGame;
+        }
+
+        return GamePhase.None; // Default case, should not happen
     }
 }
 /*
