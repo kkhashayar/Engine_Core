@@ -268,9 +268,6 @@ public static class Boards
         return true;
     }
 
-
-
-
     public static int GetCapturedPiece(int target)
     {
         for (int i = 0; i < Bitboards.Length; i++)

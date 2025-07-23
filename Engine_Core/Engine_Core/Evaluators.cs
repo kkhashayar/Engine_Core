@@ -111,7 +111,7 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        CurrentGamePhase = GetGamePhase();  
+        //CurrentGamePhase = GetGamePhase();  
 
         int score = 0;
 
@@ -127,7 +127,7 @@ public static class Evaluators
 
                 score += materialScore[bbPiece];
                 // Includes opening and middle game -- I really don't like this :( it is just temporary.
-                if(CurrentGamePhase != GamePhase.KingRookVsKing)
+                if (CurrentGamePhase != GamePhase.KingRookVsKing)
                 {
                     switch (bbPiece)
                     {
@@ -161,6 +161,31 @@ public static class Evaluators
             opponentSide = (int)Colors.white;
         }
 
+        // It is little bit expensive but some how working as penalty safety!
+        score = GetMobility(score, currentSide, opponentSide);
+
+
+        // ===== Endgame evaluation for KRvK positions =====  --> not working good
+        //CurrentGamePhase = Search.GetGamePhase();
+        //if (CurrentGamePhase == GamePhase.KingRookVsKing)
+        //{
+        //    int endGameScore = EvaluateKingRookVsKing(bitboards) *-1;   
+        //    score += endGameScore;
+        //}
+
+        // Final perspective
+        if (currentSide == (int)Colors.white)
+        {
+            return score;
+        }
+        else
+        {
+            return -score;
+        }
+    }
+
+    private static int GetMobility(int score, int currentSide, int opponentSide)
+    {
         Boards.Side = opponentSide;
 
         MoveObjects opponentMoveList = new MoveObjects();
@@ -181,77 +206,16 @@ public static class Evaluators
 
         // Restore side
         Boards.Side = currentSide;
-
-
-        // ===== Endgame evaluation for KRvK positions =====    
-        CurrentGamePhase = GetGamePhase();  
-        if (CurrentGamePhase == GamePhase.KingRookVsKing)
-        {
-            int endGameScore = EvaluateKingRookVsKing(bitboards) *-1;   
-            score += endGameScore;
-        }
-
-        // Final perspective
-        if (currentSide == (int)Colors.white)
-        {
-            return score;
-        }
-        else
-        {
-            return -score;
-        }
+        return score;
     }
 
 
 
     //**********************************************   Game Phase and Piece Counting  End game evaluators ***************************************************** //
 
-    public static int CountPieces()
-    {
-        int total = 0;
-        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
-        {
-            total += BitOperations.PopCount(Boards.Bitboards[piece]);
-        }
-        return total;
-    }
-    public static GamePhase GetGamePhase()
-    {
-        int whiteRookNumber = MoveGenerator.wr;
-        int whiteBishopNumber = MoveGenerator.wb;
-        int whiteKnightNumber = MoveGenerator.wn;  
-        
-        int blackRookNumber = MoveGenerator.br; 
-        int blackBishopNumber = MoveGenerator.bb;
-        int blackKnightNumber = MoveGenerator.bn;
-
-       
+    
 
 
-        int numberOfPieces = CountPieces();
-
-        // Full starting position
-        if (numberOfPieces == 32)
-        {
-            //Console.WriteLine("\nGamePhase: Opening\n");
-            return GamePhase.Opening;
-        }
-
-        // Simplified check for pure endgames
-        else if (numberOfPieces == 3)
-        {
-            if(whiteRookNumber == 1 || blackRookNumber == 1) return GamePhase.KingRookVsKing;
-        }
-
-        // Midgame: some trades but queens still around
-        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
-        {
-            //Console.WriteLine("\nGamePhase: Middle game\n");
-            return GamePhase.MiddleGame;
-        }
-
-        return GamePhase.None; // Default case, should not happen
-    }
     private static int EvaluateKingRookVsKing(ulong[] bitboards)
     {
         int score = 0;

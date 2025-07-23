@@ -169,7 +169,8 @@ public static class Search
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-  
+        //var currentGamePhase = GetGamePhase();  
+
         int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
@@ -219,8 +220,6 @@ public static class Search
 
         return bestMove;
     }
-
-
     // **********************************************************************************************  Negamax
     private static int Negamax(int alpha, int beta, int depth)
     {
@@ -695,6 +694,59 @@ public static class Search
         return (int)Pieces.P;
     }
 
+
+    // Detecting game phase // 
+    public static int CountPieces()
+    {
+        int total = 0;
+        for (int piece = 0; piece < Boards.Bitboards.Length; piece++)
+        {
+            total += BitOperations.PopCount(Boards.Bitboards[piece]);
+        }
+        return total;
+    }
+    public static GamePhase GetGamePhase()
+    {
+        int whiteRookNumber = MoveGenerator.wr;
+        int whiteBishopNumber = MoveGenerator.wb;
+        int whiteKnightNumber = MoveGenerator.wn;
+        int whiteQueenNumber = MoveGenerator.wq;    
+        int whitePawnNumber = MoveGenerator.wp; 
+
+        int blackRookNumber = MoveGenerator.br;
+        int blackBishopNumber = MoveGenerator.bb;
+        int blackKnightNumber = MoveGenerator.bn;
+        int blackQueenNumber = MoveGenerator.bq;
+        int blackPawnNumber = MoveGenerator.bp; 
+
+        int numberOfPieces = CountPieces();
+        //Console.WriteLine($"Number of pieces: {numberOfPieces}");
+        // Full starting position
+        if (numberOfPieces == 32)
+        {
+            Console.WriteLine("\nGamePhase: Opening\n");
+            return GamePhase.Opening;
+        }
+
+        // Simplified check for pure endgames
+        else if (numberOfPieces == 3)
+        {
+            if (whiteRookNumber == 1 || blackRookNumber == 1)
+            {
+                Console.WriteLine("\nGamePhase: King vs rook end game\n");
+                return GamePhase.KingRookVsKing;
+            }
+        }
+
+        // Midgame: some trades but queens still around
+        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        {
+            //Console.WriteLine("\nGamePhase: Middle game\n");
+            return GamePhase.MiddleGame;
+        }
+
+        return GamePhase.None; // Default case, should not happen
+    }
 }
 /*
 *      Inspired by Code monkey King channel

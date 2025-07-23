@@ -2,6 +2,7 @@
 using Engine_Core;
 using Microsoft.ML;
 
+
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 
@@ -28,6 +29,7 @@ void PlayPosition(int maxTime, int maxDepth)
     
     while (running)
     {
+        
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
@@ -84,8 +86,8 @@ string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
 // It can't solve the endgames without thematic table.
-string KRvK = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
-
+string KRvk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+string PPKVpk = "8/4k3/p7/8/6PP/4K3/8/8 w - - 0 1";
 
 
 Run();
@@ -93,7 +95,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_7_Qxh7_Complex_Position);
+    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -128,7 +130,7 @@ void Run()
 
     //PerftTeste.RunPerft(6, true);
 
-    PlayPosition(60 , 10);
+    PlayPosition(45 , 10);
 
     //// DebugSearchMethods();
 
@@ -143,7 +145,7 @@ void Run()
     // maxTime, maxDepth, displayBoard on/offe4d5
 
 
-    // WinBoardLoop(45, 10, true);
+    //WinBoardLoop(45, 10, true);
 
 }
 

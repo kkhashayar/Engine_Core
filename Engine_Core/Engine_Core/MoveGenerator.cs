@@ -14,15 +14,17 @@ public class MoveObjects
 
 public static class MoveGenerator
 {
-    public static int wq { get; set; } = 0;
-    public static int wr { get; set; } = 0;
-    public static int wb { get; set; } = 0;
-    public static int wn { get; set; } = 0;
-    public static int bq { get; set; } = 0;
-    public static int br { get; set; } = 0;
-    public static int bb { get; set; } = 0;
-    public static int bn { get; set; } = 0;
+    public static int wq { get; set; }
+    public static int wr { get; set; }
+    public static int wb { get; set; }
+    public static int wn { get; set; }
+    public static int wp { get; set; }
 
+    public static int bq { get; set; }
+    public static int br { get; set; }
+    public static int bb { get; set; }
+    public static int bn { get; set; }
+    public static int bp { get; set; }
 
     public static readonly int[] CastlingRights = new int[]
     {
@@ -198,7 +200,10 @@ public static class MoveGenerator
             | (Convert.ToInt32(castling) << 23);
     }
 
-    //**********************  Make a move function  ***********************
+
+    //*********************************************************************//
+    //**********************  Make a move function  ***********************//
+    //*********************************************************************//
     public static bool IsLegal(int move, bool onlyCaptures = false)
     {
         if (move == 0 || GetMoveStartSquare(move) == GetMoveTarget(move)) return false;
@@ -383,10 +388,23 @@ public static class MoveGenerator
         
         return true;
     }
-
-    //***********************  Move Generator Main Loop  ***************************//
+    //*********************************************************************//
+    //******************  Move Generator Main Loop  ***********************//
+    //*********************************************************************//
     public static void GenerateMoves(MoveObjects moveList)
     {
+        wb = 0; 
+        wr = 0;
+        wn = 0;
+        wq = 0;
+        wp = 0;
+
+        bb = 0;
+        br = 0;
+        bn = 0;
+        bq = 0;
+        bp = 0;
+
         // Trying to create a local copy, maybe have some positive impact 
         ulong localOccupancyBoth = Boards.OccupanciesBitBoards[(int)Colors.both];
         ulong localOccupancyWhite = Boards.OccupanciesBitBoards[(int)Colors.white];
@@ -406,6 +424,7 @@ public static class MoveGenerator
             {
                 if (piece == (int)Enumes.Pieces.P)
                 {
+                    wp++;
                     while (bitboard != 0UL)
                     {
                         sourceSquare = GetLs1bIndex(bitboard);
@@ -460,6 +479,7 @@ public static class MoveGenerator
                         PopBit(ref bitboard, sourceSquare);
                     }
                 }
+
                 if (piece == (int)Enumes.Pieces.K)
                 {
                     if ((Boards.CastlePerm & (int)Enumes.Castling.WKCA) != 0)
@@ -493,6 +513,7 @@ public static class MoveGenerator
             {
                 if (piece == (int)Enumes.Pieces.p)
                 {
+                    bp++;   
                     while (bitboard != 0UL)
                     {
                         sourceSquare = GetLs1bIndex(bitboard);
@@ -547,6 +568,7 @@ public static class MoveGenerator
                         PopBit(ref bitboard, sourceSquare);
                     }
                 }
+
                 if (piece == (int)Enumes.Pieces.k)
                 {
                     if ((Boards.CastlePerm & (int)Enumes.Castling.BKCA) != 0)
@@ -699,6 +721,7 @@ public static class MoveGenerator
                     PopBit(ref bitboard, sourceSquare);
                 }
             }
+
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.r)
             {
                 br++;   
@@ -748,6 +771,7 @@ public static class MoveGenerator
                     PopBit(ref bitboard, sourceSquare);
                 }
             }
+
             else if (Boards.Side == (int)Enumes.Colors.black && piece == (int)Enumes.Pieces.q)
             {
                 bq++;   
