@@ -111,8 +111,6 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        //CurrentGamePhase = GetGamePhase();  
-
         int score = 0;
 
         // ===== Existing material + position evaluation =====
@@ -165,14 +163,6 @@ public static class Evaluators
         score = GetMobility(score, currentSide, opponentSide);
 
 
-        // ===== Endgame evaluation for KRvK positions =====  --> not working good
-        //CurrentGamePhase = Search.GetGamePhase();
-        //if (CurrentGamePhase == GamePhase.KingRookVsKing)
-        //{
-        //    int endGameScore = EvaluateKingRookVsKing(bitboards) *-1;   
-        //    score += endGameScore;
-        //}
-
         // Final perspective
         if (currentSide == (int)Colors.white)
         {
@@ -212,10 +202,6 @@ public static class Evaluators
 
 
     //**********************************************   Game Phase and Piece Counting  End game evaluators ***************************************************** //
-
-    
-
-
     private static int EvaluateKingRookVsKing(ulong[] bitboards)
     {
         int score = 0;

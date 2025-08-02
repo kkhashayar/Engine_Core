@@ -86,8 +86,8 @@ string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
 // It can't solve the endgames without thematic table.
-string KRvk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
-string PPKVpk = "8/4k3/p7/8/6PP/4K3/8/8 w - - 0 1";
+string Wkrk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+string Bkrk = "8/8/3kr3/8/8/3K4/8/8 b - - 0 1";
 
 
 Run();

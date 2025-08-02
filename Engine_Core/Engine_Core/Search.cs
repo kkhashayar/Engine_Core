@@ -1,8 +1,5 @@
 ﻿using Engine;
-using Microsoft.Extensions.Logging;
-using System.CodeDom;
 using System.Numerics;
-using System.Web.Helpers;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -19,8 +16,6 @@ public static class Search
 {
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
-
-
 
     public static GamePhase GamePhase { get; set; } = GamePhase.None;       
     //--- Search configuration switches ---
