@@ -54,9 +54,7 @@ public static class Boards
 
     public static void DisplayBoard()
     {
-        
-        Console.Clear();        
-        
+        Console.Clear();          
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         // Loop the ranks

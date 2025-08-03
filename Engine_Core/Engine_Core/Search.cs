@@ -17,7 +17,7 @@ public static class Search
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
 
-    public static GamePhase GamePhase { get; set; } = GamePhase.None;       
+    public static GamePhase CurrentGamePhase { get; set; }  
     //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
@@ -169,9 +169,9 @@ public static class Search
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
-        GamePhase = GetGamePhase();
+        CurrentGamePhase = GetGamePhase();
         
-
+        
         SortMoves(moveList);
 
         int bestMove = 0;
@@ -227,7 +227,7 @@ public static class Search
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
+                if (depth >= 9) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
                 Console.ResetColor();
                 if (entry.flag == NodeType.Exact) return entry.score;
 
@@ -702,34 +702,52 @@ public static class Search
         }
         return total;
     }
+
+
     public static GamePhase GetGamePhase()
     {
         // Count pieces by bitboards directly
-        int whiteRooks = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.R]);
+        int whiteRooks   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.R]);
         int whiteBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.B]);
         int whiteKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.N]);
-        int whiteQueens = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.Q]);
-        int whitePawns = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.P]);
+        int whiteQueens  = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.Q]);
+        int whitePawns   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.P]);
 
-        int blackRooks = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.r]);
+        int blackRooks   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.r]);
         int blackBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.b]);
         int blackKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.n]);
-        int blackQueens = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.q]);
-        int blackPawns = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.p]);
+        int blackQueens  = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.q]);
+        int blackPawns   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.p]);
 
         int totalPieces = whiteRooks + whiteBishops + whiteKnights + whiteQueens + whitePawns +
                           blackRooks + blackBishops + blackKnights + blackQueens + blackPawns + 2; // +2 kings
 
         // Opening
-        if (totalPieces == 32) return GamePhase.Opening;
+        if (totalPieces == 32) 
+        {
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
+            return GamePhase.Opening;
+        } 
 
         // King vs rook endgame
-        if (totalPieces == 3 && (whiteRooks == 1 || blackRooks == 1))
-            return GamePhase.KingRookVsKing;
+        else if (totalPieces == 3 && (whiteRooks == 1 || blackRooks == 1))
+        {
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
+            return GamePhase.KRK;
+        }
+
+        else if (totalPieces == 3 && (whiteQueens == 1 || blackQueens == 1)) 
+        {
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
+            return GamePhase.KQK;
+        } 
 
         // Middle game: queens still on board, but some trades
         if (totalPieces < 32 && totalPieces > 24 && whiteQueens >= 1 && blackQueens >= 1)
+        {
             return GamePhase.MiddleGame;
+        }
+            
 
         return GamePhase.None;
     }

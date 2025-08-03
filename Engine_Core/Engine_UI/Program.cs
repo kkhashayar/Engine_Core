@@ -86,13 +86,16 @@ string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1
 string Wkrk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
 string Bkrk = "8/8/3kr3/8/8/3K4/8/8 b - - 0 1";
 
+string WKQK = "8/8/3k4/8/8/3KQ3/8/8 w - - 0 1";
+string BKQK = "8/8/3kq3/8/8/3K4/8/8 b - - 0 1";
+
 
 Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
+    IO.FenReader(checkmate_In_3_Qh7_Simple_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 
