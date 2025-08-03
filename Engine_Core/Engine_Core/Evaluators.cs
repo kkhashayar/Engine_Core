@@ -111,67 +111,90 @@ public static class Evaluators
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
     {
-        //CurrentGamePhase = GetGamePhase();  
-
         int score = 0;
 
         // ===== Existing material + position evaluation =====
         for (int bbPiece = (int)Pieces.P; bbPiece <= (int)Pieces.k; bbPiece++)
         {
             ulong bitboard = bitboards[bbPiece];
-
             while (bitboard != 0)
             {
                 int square = Globals.GetLs1bIndex(bitboard);
                 Globals.PopBit(ref bitboard, square);
 
-                score += materialScore[bbPiece];
-                // Includes opening and middle game -- I really don't like this :( it is just temporary.
-                if (CurrentGamePhase != GamePhase.KingRookVsKing)
+                score += materialScore[bbPiece]; // This covers all natural piece values
+
+                switch (bbPiece)
                 {
-                    switch (bbPiece)
-                    {
-                        case (int)Pieces.P: score += pawnScore[square]; break;
-                        case (int)Pieces.N: score += knightScore[square]; break;
-                        case (int)Pieces.B: score += bishopScore[square]; break;
-                        case (int)Pieces.R: score += rookScore[square]; break;
-                        case (int)Pieces.K: score += kingScore[square]; break;
+                    // White //
+                    case (int)Pieces.P: score += pawnScore[square]; break;
+                    case (int)Pieces.N: score += knightScore[square]; break;
+                    case (int)Pieces.B: score += bishopScore[square]; break;
 
-                        case (int)Pieces.p: score -= pawnScore[63 - square]; break;
-                        case (int)Pieces.n: score -= knightScore[63 - square]; break;
-                        case (int)Pieces.b: score -= bishopScore[63 - square]; break;
-                        case (int)Pieces.r: score -= rookScore[63 - square]; break;
-                        case (int)Pieces.k: score -= kingScore[63 - square]; break;
-                    }
+                    // Special condition for KRK endgame
+                    case (int)Pieces.R:
+                        if (Search.CurrentGamePhase == GamePhase.KRK)
+                            score += rookEndgameScore[square];
+                        else
+                            score += rookScore[square];
+                        break;
+                    
+                    case (int)Pieces.K:
+                        if (Search.CurrentGamePhase == GamePhase.KRK)
+                            score += kingEndgameScore[square];
+                        else
+                            score += kingScore[square];
+                        break;
+                    
+                    // Black //
+                    case (int)Pieces.p: score -= pawnScore[63 - square]; break;
+                    case (int)Pieces.n: score -= knightScore[63 - square]; break;
+                    case (int)Pieces.b: score -= bishopScore[63 - square]; break;
+
+                    // Special condition for KRK endgame
+                    case (int)Pieces.r:
+                        if (Search.CurrentGamePhase == GamePhase.KRK)
+                            score -= rookEndgameScore[63 - square];
+                        else
+                            score -= rookScore[63 - square];
+                        break;
+                    
+                    case (int)Pieces.k:
+                        if (Search.CurrentGamePhase == GamePhase.KRK)
+                            score -= kingEndgameScore[63 - square];
+                        else
+                            score -= kingScore[63 - square];
+                        break;
                 }
-
             }
         }
 
         // ===== Mobility bonus/penalty for restricting opponent’s moves =====
         int currentSide = Boards.Side;
-        int opponentSide;
+            int opponentSide;
 
-        if (currentSide == (int)Colors.white)
-        {
-            opponentSide = (int)Colors.black;
-        }
-        else
-        {
-            opponentSide = (int)Colors.white;
-        }
+            if (currentSide == (int)Colors.white)
+            {
+                opponentSide = (int)Colors.black;
+            }
+            else
+            {
+                opponentSide = (int)Colors.white;
+            }
 
-        // It is little bit expensive but some how working as penalty safety!
-        score = GetMobility(score, currentSide, opponentSide);
+            // It is little bit expensive but some how working as penalty safety!
+            score = GetMobility(score, currentSide, opponentSide);
 
 
-        // ===== Endgame evaluation for KRvK positions =====  --> not working good
-        //CurrentGamePhase = Search.GetGamePhase();
-        //if (CurrentGamePhase == GamePhase.KingRookVsKing)
-        //{
-        //    int endGameScore = EvaluateKingRookVsKing(bitboards) *-1;   
-        //    score += endGameScore;
-        //}
+            if (Search.CurrentGamePhase == GamePhase.KRK)
+            {
+              score += EvaluateKRK(bitboards);
+            }
+
+            if (Search.CurrentGamePhase == GamePhase.KQK)
+            {
+               score += EvaluateKQK(bitboards);
+            }
 
         // Final perspective
         if (currentSide == (int)Colors.white)
@@ -182,6 +205,7 @@ public static class Evaluators
         {
             return -score;
         }
+        
     }
 
     private static int GetMobility(int score, int currentSide, int opponentSide)
@@ -212,11 +236,7 @@ public static class Evaluators
 
 
     //**********************************************   Game Phase and Piece Counting  End game evaluators ***************************************************** //
-
-    
-
-
-    private static int EvaluateKingRookVsKing(ulong[] bitboards)
+    private static int EvaluateKRK(ulong[] bitboards)
     {
         int score = 0;
         var side = Boards.Side;
@@ -256,9 +276,60 @@ public static class Evaluators
 
         // King attacks to corner the enemy king
         int distanceBetweenKings = ManhattanDistance(ourKingSquare, enemyKingSquare);
-        score += (14 - distanceBetweenKings) * 10;
+        score += (14 - distanceBetweenKings) * 20;
 
         int distanceBetweenRookAndEnemyKing = ManhattanDistance(rookSquare, enemyKingSquare);
+        if (distanceBetweenRookAndEnemyKing < 2)
+        {
+            score -= 30;
+        }
+        return score;
+    }
+
+
+    private static int EvaluateKQK(ulong[] bitboards)
+    {
+        int score = 0;
+        var side = Boards.Side;
+        int usQueen, usKing, enemyKing;
+        if (Boards.Side == (int)Enumes.Colors.white)
+        {
+            usQueen = (int)Pieces.Q;
+            usKing = (int)Pieces.K;
+            enemyKing = (int)Pieces.k;
+        }
+        else
+        {
+            usQueen = (int)Pieces.q;
+            usKing = (int)Pieces.k;
+            enemyKing = (int)Pieces.K;
+        }
+
+        int queenSquare = Globals.GetLs1bIndex(bitboards[usQueen]);
+        int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);
+        int enemyKingSquare = Globals.GetLs1bIndex(bitboards[enemyKing]);
+
+        int enemyKingRank = enemyKingSquare / 8;
+        int enemyKingFile = enemyKingSquare % 8;
+
+        // Enemy king closer to edge is good   
+        int rankDistanceToEdge = Math.Min(enemyKingRank, 7 - enemyKingRank);
+        int fileDistanceToEdge = Math.Min(enemyKingFile, 7 - enemyKingFile);
+        int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20;
+        score += edgeScore;
+
+
+        // Rook cutting off enemy king
+        if (queenSquare / 8 == enemyKingRank || queenSquare % 8 == enemyKingFile)
+        {
+            score += 50;
+        }
+
+        // King attacks to corner the enemy king
+        int distanceBetweenKings = ManhattanDistance(ourKingSquare, enemyKingSquare);
+        score += (14 - distanceBetweenKings) * 30;
+
+        int distanceBetweenRookAndEnemyKing = ManhattanDistance(queenSquare, enemyKingSquare);
         if (distanceBetweenRookAndEnemyKing < 2)
         {
             score -= 30;

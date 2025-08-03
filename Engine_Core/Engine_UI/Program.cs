@@ -29,7 +29,6 @@ void PlayPosition(int maxTime, int maxDepth)
     
     while (running)
     {
-        
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
@@ -48,10 +47,8 @@ void PlayPosition(int maxTime, int maxDepth)
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            
             running = false;
-            break;
-           
+            break;  
         }
     }
     Console.WriteLine();
@@ -86,8 +83,11 @@ string kille_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
 // It can't solve the endgames without thematic table.
-string KRvk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
-string PPKVpk = "8/4k3/p7/8/6PP/4K3/8/8 w - - 0 1";
+string Wkrk = "8/3k4/8/8/8/4R3/3K4/8 w - - 0 1";
+string Bkrk = "8/8/3kr3/8/8/3K4/8/8 b - - 0 1";
+
+string WKQK = "8/8/3k4/8/8/3KQ3/8/8 w - - 0 1";
+string BKQK = "8/8/3kq3/8/8/3K4/8/8 b - - 0 1";
 
 
 Run();
@@ -95,7 +95,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_3_Rxh3_Simple_Position);
+    IO.FenReader(checkmate_In_3_Qh7_Simple_Position);
 
     ///////******************  ZOBRIST HASHING TEST  
 

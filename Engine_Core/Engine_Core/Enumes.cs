@@ -76,7 +76,8 @@ public static class Enumes
         None,
         Opening,
         MiddleGame,
-        KingRookVsKing,
+        KRK,
+        KQK
     }
 
 

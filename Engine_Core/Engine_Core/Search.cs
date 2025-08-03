@@ -1,8 +1,5 @@
 ﻿using Engine;
-using Microsoft.Extensions.Logging;
-using System.CodeDom;
 using System.Numerics;
-using System.Web.Helpers;
 using static Engine_Core.Enumes;
 
 namespace Engine_Core;
@@ -20,9 +17,7 @@ public static class Search
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
 
-
-
-    public static GamePhase GamePhase { get; set; } = GamePhase.None;       
+    public static GamePhase CurrentGamePhase { get; set; }  
     //--- Search configuration switches ---
     public static bool TranspositionSwitch { get; set; }
     public static bool TimeLimitDeepeningSwitch { get; set; }
@@ -169,12 +164,14 @@ public static class Search
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        //var currentGamePhase = GetGamePhase();  
-
+     
         int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-   
+
+        CurrentGamePhase = GetGamePhase();
+        
+        
         SortMoves(moveList);
 
         int bestMove = 0;
@@ -230,7 +227,7 @@ public static class Search
             if (transpositionTable.TryGetValue(positionHashKey, out var entry) && entry.depth == depth)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                if (depth >= 8) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
+                if (depth >= 9) Console.WriteLine($"Hit! Key:{positionHashKey} - depth: {entry.depth} - score: {entry.score} Time: {negamaxMaxTimeStart.Millisecond}");
                 Console.ResetColor();
                 if (entry.flag == NodeType.Exact) return entry.score;
 
@@ -705,48 +702,56 @@ public static class Search
         }
         return total;
     }
+
+
     public static GamePhase GetGamePhase()
     {
-        int whiteRookNumber = MoveGenerator.wr;
-        int whiteBishopNumber = MoveGenerator.wb;
-        int whiteKnightNumber = MoveGenerator.wn;
-        int whiteQueenNumber = MoveGenerator.wq;    
-        int whitePawnNumber = MoveGenerator.wp; 
+        // Count pieces by bitboards directly
+        int whiteRooks   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.R]);
+        int whiteBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.B]);
+        int whiteKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.N]);
+        int whiteQueens  = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.Q]);
+        int whitePawns   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.P]);
 
-        int blackRookNumber = MoveGenerator.br;
-        int blackBishopNumber = MoveGenerator.bb;
-        int blackKnightNumber = MoveGenerator.bn;
-        int blackQueenNumber = MoveGenerator.bq;
-        int blackPawnNumber = MoveGenerator.bp; 
+        int blackRooks   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.r]);
+        int blackBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.b]);
+        int blackKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.n]);
+        int blackQueens  = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.q]);
+        int blackPawns   = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.p]);
 
-        int numberOfPieces = CountPieces();
-        //Console.WriteLine($"Number of pieces: {numberOfPieces}");
-        // Full starting position
-        if (numberOfPieces == 32)
+        int totalPieces = whiteRooks + whiteBishops + whiteKnights + whiteQueens + whitePawns +
+                          blackRooks + blackBishops + blackKnights + blackQueens + blackPawns + 2; // +2 kings
+
+        // Opening
+        if (totalPieces == 32) 
         {
-            Console.WriteLine("\nGamePhase: Opening\n");
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
             return GamePhase.Opening;
+        } 
+
+        // King vs rook endgame
+        else if (totalPieces == 3 && (whiteRooks == 1 || blackRooks == 1))
+        {
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
+            return GamePhase.KRK;
         }
 
-        // Simplified check for pure endgames
-        else if (numberOfPieces == 3)
+        else if (totalPieces == 3 && (whiteQueens == 1 || blackQueens == 1)) 
         {
-            if (whiteRookNumber == 1 || blackRookNumber == 1)
-            {
-                Console.WriteLine("\nGamePhase: King vs rook end game\n");
-                return GamePhase.KingRookVsKing;
-            }
-        }
+            Console.WriteLine($"Game phase: {CurrentGamePhase}");
+            return GamePhase.KQK;
+        } 
 
-        // Midgame: some trades but queens still around
-        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
+        // Middle game: queens still on board, but some trades
+        if (totalPieces < 32 && totalPieces > 24 && whiteQueens >= 1 && blackQueens >= 1)
         {
-            //Console.WriteLine("\nGamePhase: Middle game\n");
             return GamePhase.MiddleGame;
         }
+            
 
-        return GamePhase.None; // Default case, should not happen
+        return GamePhase.None;
     }
+
 }
 /*
 *      Inspired by Code monkey King channel
