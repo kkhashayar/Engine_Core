@@ -164,12 +164,14 @@ public static class Search
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-        //var currentGamePhase = GetGamePhase();  
-
+     
         int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
-   
+
+        GamePhase = GetGamePhase();
+        
+
         SortMoves(moveList);
 
         int bestMove = 0;
@@ -702,46 +704,36 @@ public static class Search
     }
     public static GamePhase GetGamePhase()
     {
-        int whiteRookNumber = MoveGenerator.wr;
-        int whiteBishopNumber = MoveGenerator.wb;
-        int whiteKnightNumber = MoveGenerator.wn;
-        int whiteQueenNumber = MoveGenerator.wq;    
-        int whitePawnNumber = MoveGenerator.wp; 
+        // Count pieces by bitboards directly
+        int whiteRooks = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.R]);
+        int whiteBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.B]);
+        int whiteKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.N]);
+        int whiteQueens = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.Q]);
+        int whitePawns = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.P]);
 
-        int blackRookNumber = MoveGenerator.br;
-        int blackBishopNumber = MoveGenerator.bb;
-        int blackKnightNumber = MoveGenerator.bn;
-        int blackQueenNumber = MoveGenerator.bq;
-        int blackPawnNumber = MoveGenerator.bp; 
+        int blackRooks = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.r]);
+        int blackBishops = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.b]);
+        int blackKnights = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.n]);
+        int blackQueens = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.q]);
+        int blackPawns = BitOperations.PopCount(Boards.Bitboards[(int)Pieces.p]);
 
-        int numberOfPieces = CountPieces();
-        //Console.WriteLine($"Number of pieces: {numberOfPieces}");
-        // Full starting position
-        if (numberOfPieces == 32)
-        {
-            Console.WriteLine("\nGamePhase: Opening\n");
-            return GamePhase.Opening;
-        }
+        int totalPieces = whiteRooks + whiteBishops + whiteKnights + whiteQueens + whitePawns +
+                          blackRooks + blackBishops + blackKnights + blackQueens + blackPawns + 2; // +2 kings
 
-        // Simplified check for pure endgames
-        else if (numberOfPieces == 3)
-        {
-            if (whiteRookNumber == 1 || blackRookNumber == 1)
-            {
-                Console.WriteLine("\nGamePhase: King vs rook end game\n");
-                return GamePhase.KingRookVsKing;
-            }
-        }
+        // Opening
+        if (totalPieces == 32) return GamePhase.Opening;
 
-        // Midgame: some trades but queens still around
-        else if ((numberOfPieces < 32 && numberOfPieces > 24) && MoveGenerator.wq >= 1 && MoveGenerator.bq >= 1)
-        {
-            //Console.WriteLine("\nGamePhase: Middle game\n");
+        // King vs rook endgame
+        if (totalPieces == 3 && (whiteRooks == 1 || blackRooks == 1))
+            return GamePhase.KingRookVsKing;
+
+        // Middle game: queens still on board, but some trades
+        if (totalPieces < 32 && totalPieces > 24 && whiteQueens >= 1 && blackQueens >= 1)
             return GamePhase.MiddleGame;
-        }
 
-        return GamePhase.None; // Default case, should not happen
+        return GamePhase.None;
     }
+
 }
 /*
 *      Inspired by Code monkey King channel

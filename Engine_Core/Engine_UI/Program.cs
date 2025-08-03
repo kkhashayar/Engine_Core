@@ -29,7 +29,6 @@ void PlayPosition(int maxTime, int maxDepth)
     
     while (running)
     {
-        
         Console.WriteLine();
         Console.WriteLine("  Calculating...");
         Console.WriteLine();
@@ -48,10 +47,8 @@ void PlayPosition(int maxTime, int maxDepth)
         
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
-            
             running = false;
-            break;
-           
+            break;  
         }
     }
     Console.WriteLine();
