@@ -1,7 +1,5 @@
 ﻿using Engine_Core;
-using System.Numerics;
 using static Engine_Core.Enumes;
-
 namespace Engine;
 
 public static class Evaluators
@@ -24,32 +22,21 @@ public static class Evaluators
         -10000  // k
     };
 
-    private static readonly int[] pawnScore = new int[]
+    //** King weight tables **// 
+    private static readonly int[] kingOpeningMidGameScore = new int[]
     {
-        90,  90,  90,  90,  90,  90,  90,  90,
-        30,  30,  30,  40,  40,  30,  30,  30,
-        20,  20,  20,  30,  30,  30,  20,  20,
-        10,  10,  10,  20,  20,  10,  10,  10,
-         5,   5,  10,  20,  20,   5,   5,   5,
-         0,   0,   0,   5,   5,   0,   0,   0,
-         0,   0,   0, -10, -10,   0,   0,   0,
-         0,   0,   0,   0,   0,   0,   0,   0
-    };
-
-    private static readonly int[] knightScore = new int[]
-    {
-        -5,   0,   0,   0,   0,   0,   0,  -5,
-        -5,   0,   0,  10,  10,   0,   0,  -5,
-        -5,   5,  20,  20,  20,  20,   5,  -5,
-        -5,  10,  20,  30,  30,  20,  10,  -5,
-        -5,  10,  20,  30,  30,  20,  10,  -5,
-        -5,   5,  20,  10,  10,  20,   5,  -5,
-        -5,   0,   0,   0,   0,   0,   0,  -5,
-        -5, -10,   0,   0,   0,   0, -10,  -5
+         0,   0,   0,   0,   0,   0,   0,   0,
+         0,   0,   5,   5,   5,   5,   0,   0,
+         0,   5,   5,  10,  10,   5,   5,   0,
+         0,   5,  10,  20,  20,  10,   5,   0,
+         0,   5,  10,  20,  20,  10,   5,   0,
+         0,   0,   5,  10,  10,   5,   0,   0,
+         0,   5,   5,  -5,  -5,   0,   5,   0,
+         0,   0,   5,   0, -15,   0,  10,   0
     };
 
     private static readonly int[] kingEndgameScore = new int[]
-    {
+   {
          0,   5,  10,  15,  15,  10,   5,   0,
          5,  10,  15,  20,  20,  15,  10,   5,
         10,  15,  20,  25,  25,  20,  15,  10,
@@ -58,9 +45,35 @@ public static class Evaluators
         10,  15,  20,  25,  25,  20,  15,  10,
          5,  10,  15,  20,  20,  15,  10,   5,
          0,   5,  10,  15,  15,  10,   5,   0
+   };
+
+    //** Pawn weight tables **//
+    private static readonly int[] pawnOpeningScore = new int[]
+    {
+        90,  90,  90,  90,  90,  90,  90,  90,
+        30,  30,  30,  40,  40,  30,  30,  30,
+        20,  20,  20,  30,  30,  30,  20,  20,
+        10,  10,  10,  25,  25,  10,  10,  10,
+         5,   5,  10,  25,  25,   5,   5,   5,
+         0,   0,   0,   5,   5,   0,   0,   0,
+         0,   0,   0, -10, -10,   0,   0,   0,
+         0,   0,   0,   0,   0,   0,   0,   0
     };
 
+    //** Knight weight tables **//
+    private static readonly int[] knightScore = new int[]
+    {
+        -10,   0,   0,   0,   0,   0,   0,  -10,
+        -10,   0,   0,  10,  10,   0,   0,  -10,
+        -10,   5,  30,  20,  20,  30,   5,  -10,
+        -10,  10,  20,  30,  30,  20,  10,  -10,
+        -10,  10,  20,  30,  30,  20,  10,  -10,
+        -10,   5,  30,  10,  10,  30,   5,  -10,
+        -10,   0,   0,   0,   0,   0,   0,  -10,
+        -10, -10,   0,   0,   0,   0, -10,  -10
+    };
 
+    //** Bishop weight tables **//
     private static readonly int[] bishopScore = new int[]
     {
          0,   0,   0,   0,   0,   0,   0,   0,
@@ -72,7 +85,7 @@ public static class Evaluators
          0,  30,   0,   0,   0,   0,  30,   0,
          0,   0, -10,   0,   0, -10,   0,   0
     };
-
+    //** Rook weight tables **//
     private static readonly int[] rookScore = new int[]
     {
         50,  50,  50,  50,  50,  50,  50,  50,
@@ -96,17 +109,17 @@ public static class Evaluators
         20,  20,  20,  30,  30,  20,  20,  20
     };
 
-
-    private static readonly int[] kingScore = new int[]
+    //** Queen weight tables **//
+    private static readonly int[] QueenOpeningScore = new int[]
     {
-         0,   0,   0,   0,   0,   0,   0,   0,
-         0,   0,   5,   5,   5,   5,   0,   0,
-         0,   5,   5,  10,  10,   5,   5,   0,
-         0,   5,  10,  20,  20,  10,   5,   0,
-         0,   5,  10,  20,  20,  10,   5,   0,
-         0,   0,   5,  10,  10,   5,   0,   0,
-         0,   5,   5,  -5,  -5,   0,   5,   0,
-         0,   0,   5,   0, -15,   0,  10,   0
+        0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,  -10,
+       -10,  0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,  -5,  -5,  -5,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0
     };
 
     public static int GetByMaterialAndPosition(ulong[] bitboards)
@@ -127,10 +140,10 @@ public static class Evaluators
                 switch (bbPiece)
                 {
                     // White //
-                    case (int)Pieces.P: score += pawnScore[square]; break;
+                    case (int)Pieces.P: score += pawnOpeningScore[square]; break;
                     case (int)Pieces.N: score += knightScore[square]; break;
                     case (int)Pieces.B: score += bishopScore[square]; break;
-
+                    case (int)Pieces.Q: score += QueenOpeningScore[square]; break;  
                     // Special condition for KRK endgame
                     case (int)Pieces.R:
                         if (Search.CurrentGamePhase == GamePhase.KRK)
@@ -143,14 +156,14 @@ public static class Evaluators
                         if (Search.CurrentGamePhase == GamePhase.KRK)
                             score += kingEndgameScore[square];
                         else
-                            score += kingScore[square];
+                            score += kingOpeningMidGameScore[square];
                         break;
                     
                     // Black //
-                    case (int)Pieces.p: score -= pawnScore[63 - square]; break;
+                    case (int)Pieces.p: score -= pawnOpeningScore[63 - square]; break;
                     case (int)Pieces.n: score -= knightScore[63 - square]; break;
                     case (int)Pieces.b: score -= bishopScore[63 - square]; break;
-
+                    case (int)Pieces.q: score -= QueenOpeningScore[63 - square]; break;
                     // Special condition for KRK endgame
                     case (int)Pieces.r:
                         if (Search.CurrentGamePhase == GamePhase.KRK)
@@ -163,7 +176,7 @@ public static class Evaluators
                         if (Search.CurrentGamePhase == GamePhase.KRK)
                             score -= kingEndgameScore[63 - square];
                         else
-                            score -= kingScore[63 - square];
+                            score -= kingOpeningMidGameScore[63 - square];
                         break;
                 }
             }

@@ -158,6 +158,7 @@ public static class Boards
         Console.ForegroundColor = ConsoleColor.DarkBlue;    
         Console.WriteLine("\n");
         Console.WriteLine($"Position Key: {Search.positionHashKey}");
+        
         Console.WriteLine("------------------------------------");
         Console.ResetColor(); 
     }

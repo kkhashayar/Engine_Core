@@ -14,6 +14,7 @@ public struct Transposition
 
 public static class Search
 {
+    
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
 
@@ -164,13 +165,11 @@ public static class Search
     // *****************************************    Iterative Deepening Search Negamax entry ***************************************************** //
     public static int GetBestMoveWithIterativeDeepening(int maxTimeSeconds, int maxDepth)
     {
-     
         int score = 0; 
         MoveObjects moveList = new MoveObjects();
         MoveGenerator.GenerateMoves(moveList);
 
         CurrentGamePhase = GetGamePhase();
-        
         
         SortMoves(moveList);
 
