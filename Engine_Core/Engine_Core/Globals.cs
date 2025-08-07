@@ -19,6 +19,7 @@ public static class Globals
      */
     private static readonly Random fixedRandom = new Random(1804289383);
 
+    
     public static int GetPieceOnSquare(int square)
     {
         for (int piece = (int)Pieces.P; piece <= (int)Pieces.k; piece++)
