@@ -96,7 +96,7 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader("8/3k4/8/6R1/8/8/3K4/8 w - - 0 1");
+    IO.FenReader(BKQK);
 
     ///////******************  ZOBRIST HASHING TEST  
 

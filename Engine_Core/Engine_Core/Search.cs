@@ -14,7 +14,7 @@ public struct Transposition
 
 public static class Search
 {
-    
+  
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
 
@@ -170,6 +170,11 @@ public static class Search
         MoveGenerator.GenerateMoves(moveList);
 
         CurrentGamePhase = GetGamePhase();
+
+        if(CurrentGamePhase is GamePhase.KQK || CurrentGamePhase is GamePhase.KRK)
+        {
+            maxTimeSeconds = 50; maxDepth = 12;
+        }
         
         SortMoves(moveList);
 
@@ -444,6 +449,7 @@ public static class Search
         nodes++;
         
         int eval = Evaluators.GetByMaterialAndPosition(Boards.Bitboards);
+       
 
         if (eval >= beta)
         {

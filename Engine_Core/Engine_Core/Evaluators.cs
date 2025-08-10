@@ -1,4 +1,5 @@
 ﻿using Engine_Core;
+using System.Numerics;
 using static Engine_Core.Enumes;
 namespace Engine;
 
@@ -252,34 +253,52 @@ public static class Evaluators
     private static int EvaluateKRK(ulong[] bitboards)
     {
         int score = 0;
-        var side = Boards.Side;
+
+        // CHANGE: detect the stronger side by rook ownership, not Boards.Side
+        int whiteRooks = BitOperations.PopCount(bitboards[(int)Pieces.R]);
+        int blackRooks = BitOperations.PopCount(bitboards[(int)Pieces.r]);
+
+        bool whiteStronger = false;
         int usRook, usKing, enemyKing;
-        if (Boards.Side == (int)Enumes.Colors.white)
+
+        if (whiteRooks == 1 && blackRooks == 0)
         {
+            whiteStronger = true;
             usRook = (int)Pieces.R;
             usKing = (int)Pieces.K;
             enemyKing = (int)Pieces.k;
         }
-        else
+        else if (blackRooks == 1 && whiteRooks == 0)
         {
+            whiteStronger = false;
             usRook = (int)Pieces.r;
             usKing = (int)Pieces.k;
             enemyKing = (int)Pieces.K;
+        }
+        else
+        {
+            // Not a clean KRK (either no rook or both have a rook)
+            return 0;
         }
 
         int rookSquare = Globals.GetLs1bIndex(bitboards[usRook]);
         int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);
         int enemyKingSquare = Globals.GetLs1bIndex(bitboards[enemyKing]);
 
+        // CHANGE: safety guards for invalid squares
+        if (rookSquare < 0 || ourKingSquare < 0 || enemyKingSquare < 0)
+        {
+            return 0;
+        }
+
         int enemyKingRank = enemyKingSquare / 8;
         int enemyKingFile = enemyKingSquare % 8;
 
-        // Enemy king closer to edge is good   
+        // Enemy king closer to edge is good
         int rankDistanceToEdge = Math.Min(enemyKingRank, 7 - enemyKingRank);
         int fileDistanceToEdge = Math.Min(enemyKingFile, 7 - enemyKingFile);
         int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20;
         score += edgeScore;
-
 
         // Rook cutting off enemy king
         if (rookSquare / 8 == enemyKingRank || rookSquare % 8 == enemyKingFile)
@@ -296,31 +315,59 @@ public static class Evaluators
         {
             score -= 30;
         }
-        return score;
+
+        // CHANGE: return white-centric score (positive if white is stronger)
+        if (whiteStronger)
+        {
+            return score;
+        }
+        else
+        {
+            return -score;
+        }
     }
 
 
     private static int EvaluateKQK(ulong[] bitboards)
     {
         int score = 0;
-        var side = Boards.Side;
+
+        // CHANGE: detect the stronger side by queen ownership, not Boards.Side
+        int whiteQueens = BitOperations.PopCount(bitboards[(int)Pieces.Q]);
+        int blackQueens = BitOperations.PopCount(bitboards[(int)Pieces.q]);
+
+        bool whiteStronger = false;
         int usQueen, usKing, enemyKing;
-        if (Boards.Side == (int)Enumes.Colors.white)
+
+        if (whiteQueens == 1 && blackQueens == 0)
         {
+            whiteStronger = true;
             usQueen = (int)Pieces.Q;
             usKing = (int)Pieces.K;
             enemyKing = (int)Pieces.k;
         }
-        else
+        else if (blackQueens == 1 && whiteQueens == 0)
         {
+            whiteStronger = false;
             usQueen = (int)Pieces.q;
             usKing = (int)Pieces.k;
             enemyKing = (int)Pieces.K;
+        }
+        else
+        {
+            // CHANGE: not a clean KQK (either no queen or both have a queen)
+            return 0;
         }
 
         int queenSquare = Globals.GetLs1bIndex(bitboards[usQueen]);
         int ourKingSquare = Globals.GetLs1bIndex(bitboards[usKing]);
         int enemyKingSquare = Globals.GetLs1bIndex(bitboards[enemyKing]);
+
+        // CHANGE: safety guards for invalid indices
+        if (queenSquare < 0 || ourKingSquare < 0 || enemyKingSquare < 0)
+        {
+            return 0;
+        }
 
         int enemyKingRank = enemyKingSquare / 8;
         int enemyKingFile = enemyKingSquare % 8;
@@ -330,7 +377,6 @@ public static class Evaluators
         int fileDistanceToEdge = Math.Min(enemyKingFile, 7 - enemyKingFile);
         int edgeScore = (6 - (rankDistanceToEdge + fileDistanceToEdge)) * 20;
         score += edgeScore;
-
 
         // Rook cutting off enemy king
         if (queenSquare / 8 == enemyKingRank || queenSquare % 8 == enemyKingFile)
@@ -342,13 +388,24 @@ public static class Evaluators
         int distanceBetweenKings = ManhattanDistance(ourKingSquare, enemyKingSquare);
         score += (14 - distanceBetweenKings) * 30;
 
-        int distanceBetweenRookAndEnemyKing = ManhattanDistance(queenSquare, enemyKingSquare);
-        if (distanceBetweenRookAndEnemyKing < 2)
+        // CHANGE: correct name and piece (queen vs enemy king)
+        int distanceBetweenQueenAndEnemyKing = ManhattanDistance(queenSquare, enemyKingSquare);
+        if (distanceBetweenQueenAndEnemyKing < 2)
         {
             score -= 30;
         }
-        return score;
+
+        // CHANGE: return white-centric score (positive if white is stronger)
+        if (whiteStronger)
+        {
+            return score;
+        }
+        else
+        {
+            return -score;
+        }
     }
+
     private static int ManhattanDistance(int a, int b)
     {
         return Math.Abs((a % 8) - (b % 8)) + Math.Abs((a / 8) - (b / 8));
