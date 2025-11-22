@@ -14,7 +14,8 @@ public struct Transposition
 
 public static class Search
 {
-  
+    // Test 
+    private static readonly MoveObjects[] moveLists = Enumerable.Range(0, 128).Select(_ => new MoveObjects()).ToArray();
     public static DateTime SearchStartTime { get; set; } 
     public static int MaxSearchTimeSeconds { get; set; }
 
@@ -247,7 +248,11 @@ public static class Search
 
         nodes++;
 
-        MoveObjects moveList = new MoveObjects();
+        //MoveObjects moveList = new MoveObjects();
+        //MoveGenerator.GenerateMoves(moveList);
+
+        MoveObjects moveList = moveLists[ply];
+        moveList.counter = 0;
         MoveGenerator.GenerateMoves(moveList);
 
         bool inCheck = false;
