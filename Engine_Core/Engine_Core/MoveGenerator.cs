@@ -383,8 +383,6 @@ public static class MoveGenerator
     //*********************************************************************//
     public static void GenerateMoves(MoveObjects moveList)
     {
-       
-
         // Trying to create a local copy, maybe have some positive impact 
         ulong localOccupancyBoth = Boards.OccupanciesBitBoards[(int)Colors.both];
         ulong localOccupancyWhite = Boards.OccupanciesBitBoards[(int)Colors.white];
@@ -400,6 +398,7 @@ public static class MoveGenerator
         {
             bitboard = Boards.Bitboards[piece];
 
+            // Generate white moves 
             if (Boards.Side == (int)Enumes.Colors.white)
             {
                 if (piece == (int)Enumes.Pieces.P)

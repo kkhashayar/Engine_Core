@@ -119,15 +119,15 @@ void RunTests()
 }
 
 
-RunTests(); 
+// RunTests(); 
 
 
-// Run();
+Run();
 void Run()
 {
     InitAll();
 
-    IO.FenReader(checkmate_In_4_Bf6_Mid_Complex_Position);
+    IO.FenReader(WKQK);
 
     ///////******************  ZOBRIST HASHING TEST  
 
@@ -160,7 +160,7 @@ void Run()
 
     Boards.DisplayBoard();
 
-    // PerftTeste.RunPerft(6, true);
+    // PerftTeste.RunPerft(7, true);
 
     PlayPosition(45 , 10);
 
