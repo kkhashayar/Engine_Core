@@ -1,7 +1,10 @@
-﻿// Entry point for using WinBoard or low-level engine functions.
+﻿
 using Engine_Core;
 using Microsoft.ML;
+using System.IO; // Required for StreamWriter
 
+// Check if running via API 
+bool isApiRuning = Console.IsInputRedirected || Console.IsOutputRedirected;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -26,51 +29,66 @@ List<string> GameHistory = new List<string>();
 bool running = true;
 void PlayPosition(int maxTime, int maxDepth)
 {
-    
+
     while (running)
     {
-        Console.WriteLine();
-        Console.WriteLine("  Calculating...");
-        Console.WriteLine();
-        Boards.DisplayBoard();
+        // CRASH FIX: Skip visual output if running via API
+        if (!isApiRuning)
+        {
+            Console.WriteLine();
+            Console.WriteLine("  Calculating...");
+            Console.WriteLine();
+            Boards.DisplayBoard();
+        }
+
         int move = 0;
-        
+
         move = Search.GetBestMoveWithIterativeDeepening(maxTime, maxDepth);
-        Console.Beep(800, 300);
-        
+
+        // CRASH FIX: Skip Beep if running via API
+        if (!isApiRuning)
+        {
+            Console.Beep(800, 300);
+        }
+
         // safety guard.  
-        if (MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move))break;
-        
+        if (MoveGenerator.GetMoveStartSquare(move) == MoveGenerator.GetMoveTarget(move)) break;
+
         Boards.ApplyTheMove(move);
-        
-        GameHistory.Add(Globals.MoveToString(move)+" ");
-        
+
+        GameHistory.Add(Globals.MoveToString(move) + " ");
+
         if (Boards.whiteCheckmate || Boards.blackCheckmate)
         {
             running = false;
-            break;  
+            break;
         }
     }
-    Console.WriteLine();
-    foreach (var notation in GameHistory)
+
+    // CRASH FIX: Skip visual output if running via API
+    if (!isApiRuning)
     {
-        Console.Write(notation);
+        Console.WriteLine();
+        foreach (var notation in GameHistory)
+        {
+            Console.Write(notation);
+        }
     }
-    
+
 
 }
 
-//**************** TEST POSITIONS ****************// 
+//**************** TEST POSITIONS ****************//  
 
-string emptyBoard =         "8/8/8/8/8/8/8/8 b - -";
-string standardPosition =   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
+string emptyBoard = "8/8/8/8/8/8/8/8 b - -";
+string standardPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
 
-string checkmate_In_3_Rxh3_Simple_Position     = "6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1";
-string checkmate_In_3_Qh7_Simple_Position      = "rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0";
+string checkmate_In_3_Rxh3_Simple_Position = "6k1/5p1p/2Q1p1p1/5n1r/N7/1B3P1P/1PP3PK/4q3 b - - 0 1";
+string checkmate_In_3_Qh7_Simple_Position = "rn4k1/pp1r1pp1/1q1b4/5QN1/5N2/4P3/PP3PPP/3R1RK1 w - - 1 0";
 // Search makes mistake with all switches on for this position --> fixed after using early exit only in PV without return 
-string checkmate_In_4_Bf6_Mid_Complex_Position = "r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0"; 
+string checkmate_In_4_Bf6_Mid_Complex_Position = "r1b1rk2/ppq3p1/2nbpp2/3pN1BQ/2PP4/7R/PP3PPP/R5K1 w - - 1 0";
 string checkmate_In_4_Bf7_Mid_Complex_Position = "br1qr1k1/b1pnnp2/p2p2p1/P4PB1/3NP2Q/2P3N1/B5PP/R3R1K1 w - - 1 0";
-string checkmate_In_7_Qxh7_Complex_Position    = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11";
+string checkmate_In_7_Qxh7_Complex_Position = "rn3rk1/pbppq1pp/1p2pb2/4N2Q/3PN3/3B4/PPP2PPP/R3K2R w KQ - 7 11";
 // NOt happy with this one, slow
 string checkmate_In_4_Qxh3_Mid_High_Complex_Position = "8/1pB1rnbk/6pn/7q/P3B2P/1P6/6P1/2Q1R2K b - - 0 1";
 string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1p3/1PP3PP/R2Q1R1K w - - 0";
@@ -78,7 +96,7 @@ string best_Move_For_White_Super_complex = "r1b2rk1/1p1nbppp/pq1p4/3B4/P2NP3/2N1
 string checkmate_In_5_Rxe8_Mid_High_Complex_Position = "2q1nk1r/4Rp2/1ppp1P2/6Pp/3p1B2/3P3P/PPP1Q3/6K1 w - - 0 1";
 
 string tricky_Position_For_White = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"; // (Positional)
-string killer_Move                = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
+string killer_Move = "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1";  // (Positional)
 
 string bratkoKopec_01 = "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9";  // Best move: ...Ne8 --> depth 7 score 340 nodes 17600143 pv f8e8 a2a3 c5e7 f3g5 e6d7 f1e1 f6e4
 
@@ -114,7 +132,7 @@ void RunTests()
     {
         IO.FenReader(testPosition);
         PlayPosition(45, 10);
-        
+
     }
 }
 
@@ -127,115 +145,144 @@ void Run()
 {
     InitAll();
 
-    IO.FenReader(WKQK);
+    IO.FenReader("");
 
-    ///////******************  ZOBRIST HASHING TEST  
+    ///////****************** ZOBRIST HASHING TEST  
 
-    ////Testing generated randoms-- >
-    //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
-    //{
-    //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
-    //    {
-    //        Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
-    //    }
-    //}
-    //Console.WriteLine("******************************************************************");
-    //for (int square = 0; square > 64; square++)
-    //{
-    //    Console.WriteLine(Search.enpassantKey[square]);
-    //}
-    //Console.WriteLine("******************************************************************");
+    // CRASH FIX: Skip visual output if running via API
+    if (!isApiRuning)
+    {
+        ////Testing generated randoms-- >
+        //for (int piece = 0; piece < Search.pieceKeysOnSquare.GetLength(0); piece++)
+        //{
+        //    for (int square = 0; square < Search.pieceKeysOnSquare.GetLength(1); square++)
+        //    {
+        //        Console.WriteLine($"Piece:{piece} - {square}: {Search.pieceKeysOnSquare[piece, square]} (Hex: 0x{Search.pieceKeysOnSquare[piece, square]:X16})");
+        //    }
+        //}
+        //Console.WriteLine("******************************************************************");
+        //for (int square = 0; square > 64; square++)
+        //{
+        //    Console.WriteLine(Search.enpassantKey[square]);
+        //}
+        //Console.WriteLine("******************************************************************");
 
-    //Console.WriteLine($"Side key: {Search.sideKey}");
+        //Console.WriteLine($"Side key: {Search.sideKey}");
 
-    //Console.WriteLine("******************************************************************");
+        //Console.WriteLine("******************************************************************");
 
-    //for (int index = 0; index < 16; index++)
-    //{
-    //    Console.WriteLine($"Castle key {Search.castlingKeys[index]}");
-    //}
+        //for (int index = 0; index < 16; index++)
+        //{
+        //    Console.WriteLine($"Castle key {Search.castlingKeys[index]}");
+        //    }
 
+        ////******************* ZOBRIST HASHING TEST
 
-    ////*******************  ZOBRIST HASHING TEST
-
-    Boards.DisplayBoard();
+        Boards.DisplayBoard(); // <-- Conditional Display
+    }
 
     // PerftTeste.RunPerft(7, true);
 
-    PlayPosition(45 , 10);
+    PlayPosition(45, 10);
 
     //// DebugSearchMethods();
-    ////*********************************  SML FLOW TEST  ********************************/ 
+    ////********************************* SML FLOW TEST  *******************************/ 
     //TriggerTrainingFlow();
-    //*********************************  SML FLOW TEST  *********************************// 
+    //********************************* SML FLOW TEST  ********************************// 
 
     // Saving the  extracted training data
-    //TrainingEngine.SaveTrainingData(outputFilePath);        
+    //TrainingEngine.SaveTrainingData(outputFilePath);         
 
-    // maxTime, maxDepth, displayBoard on/offe4d5
-    //WinBoardLoop(45, 10, true);
-
+    // If API is running, enter the WinBoard loop for command handling
+    if (isApiRuning)
+    {
+        // Set displayBoard to false when API is running to avoid crashes in HandleMove/MakeEngineMove
+        WinBoardLoop(45, 10, false);
+    }
+    else
+    {
+        // If not API, the interactive execution already occurred in PlayPosition(45, 10).
+    }
 }
 
-static void DebugSearchMethods()
+void DebugSearchMethods()
 {
     MoveObjects moveList = new MoveObjects();
     MoveGenerator.GenerateMoves(moveList);
-    MoveGenerator.PrintMoveList(moveList);
 
-    Console.WriteLine();
-    Console.WriteLine("********************************************************************");
-    Console.WriteLine();
-    Console.WriteLine("Scorring capture moves: ");
+    // CRASH FIX: Skip visual output if running via API
+    if (!isApiRuning)
+    {
+        MoveGenerator.PrintMoveList(moveList);
+
+        Console.WriteLine();
+        Console.WriteLine("********************************************************************");
+        Console.WriteLine();
+        Console.WriteLine("Scorring capture moves: ");
+    }
+
     foreach (var move in moveList.moves.Take(moveList.counter))
     {
-        Console.WriteLine(Search.ScoreMove(move));
+        // CRASH FIX: Skip visual output if running via API
+        if (!isApiRuning)
+        {
+            Console.WriteLine(Search.ScoreMove(move));
+        }
     }
-    Console.WriteLine();
-    Console.WriteLine("********************************************************************");
-    Console.WriteLine();
-    Console.WriteLine("Sorting scored capture moves: ");
+
+    // CRASH FIX: Skip visual output if running via API
+    if (!isApiRuning)
+    {
+        Console.WriteLine();
+        Console.WriteLine("********************************************************************");
+        Console.WriteLine();
+        Console.WriteLine("Sorting scored capture moves: ");
+    }
+
 
     Search.SortMoves(moveList);
 
-
-    foreach (var move in moveList.moves.Take(moveList.counter))
+    // CRASH FIX: Skip visual output if running via API
+    if (!isApiRuning)
     {
-        Console.WriteLine(Search.ScoreMove(move));
-    }
-
-    Console.WriteLine();
-    Console.WriteLine("********************************************************************");
-    Console.WriteLine();
-    Console.WriteLine("Sorting Only scored capture moves: ");
-
-    foreach (int move in moveList.moves.Take(moveList.counter))
-    {
-
-        if (MoveGenerator.GetMoveCapture(move))
+        foreach (var move in moveList.moves.Take(moveList.counter))
         {
-            MoveGenerator.PrintMove(move);
             Console.WriteLine(Search.ScoreMove(move));
-            Console.WriteLine();
         }
 
-        Search.killerMoves[0, 1] = moveList.moves[0];
+        Console.WriteLine();
+        Console.WriteLine("********************************************************************");
+        Console.WriteLine();
+        Console.WriteLine("Sorting Only scored capture moves: ");
+
+        foreach (int move in moveList.moves.Take(moveList.counter))
+        {
+
+            if (MoveGenerator.GetMoveCapture(move))
+            {
+                MoveGenerator.PrintMove(move);
+                Console.WriteLine(Search.ScoreMove(move));
+                Console.WriteLine();
+            }
+
+            Search.killerMoves[0, 1] = moveList.moves[0];
+        }
+        Console.WriteLine();
+        Console.WriteLine("********************************************************************");
+        Console.WriteLine();
+        Console.WriteLine("Adding killer moves: ");
+        var score1 = Search.killerMoves[0, 0] = moveList.moves[2];
+        var score2 = Search.killerMoves[0, 1] = moveList.moves[3];
+        MoveGenerator.PrintMove(moveList.moves[2]);
+        Console.WriteLine(score1);
+        MoveGenerator.PrintMove(moveList.moves[3]);
+        Console.WriteLine(score2);
     }
-    Console.WriteLine();
-    Console.WriteLine("********************************************************************");
-    Console.WriteLine();
-    Console.WriteLine("Adding killer moves: ");
-    var score1 = Search.killerMoves[0, 0] = moveList.moves[2];
-    var score2 = Search.killerMoves[0, 1] = moveList.moves[3];
-    MoveGenerator.PrintMove(moveList.moves[2]);
-    Console.WriteLine(score1);
-    MoveGenerator.PrintMove(moveList.moves[3]);
-    Console.WriteLine(score2);
 }
 
-static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
+void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 {
- 
+
     using (var log = new StreamWriter("Engine_Logs.txt", append: true) { AutoFlush = true })
     {
         log.WriteLine($"[{DateTime.Now}] Engine started.");
@@ -243,8 +290,7 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
         try
         {
             // Prepare I/O
-            Console.SetIn(new StreamReader(Console.OpenStandardInput(), System.Text.Encoding.Default, false, 1024));
-            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            // Removed Console.SetIn/SetOut calls as they conflict with API redirection
 
             string initialMessage = "# WinBoard engine ready";
             Console.WriteLine(initialMessage);
@@ -259,9 +305,14 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 
             while (true)
             {
-                Console.Write("Command: ");
-                string input = Console.ReadLine();
-                
+                // CRASH FIX: Skip interactive prompt if running via API
+                if (!isApiRuning)
+                {
+                    Console.Write("Command: ");
+                }
+
+                string? input = Console.ReadLine();
+
                 if (string.IsNullOrEmpty(input)) continue;
 
                 log.WriteLine($"Received: {input}");
@@ -331,7 +382,7 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
                             break;
                         }
 
-                    
+
                     case "time":
                         {
                             if (tokens.Length > 1 && int.TryParse(tokens[1], out int time))
@@ -361,7 +412,8 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
                         {
                             if (tokens.Length > 1)
                             {
-                                HandleMove(tokens[1], forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
+                                // Pass the API-friendly flag to HandleMove
+                                HandleMove(tokens[1], forceMode, engineGo, depth, log, !isApiRuning, maxTime, maxDepth);
                             }
                             break;
                         }
@@ -404,17 +456,18 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 
                     default:
                         {
-                            
+
                             if (input.StartsWith("a") ||
-                               input.StartsWith("b")  ||
-                               input.StartsWith("c")  ||
-                               input.StartsWith("d")  ||
-                               input.StartsWith("e")  ||
-                               input.StartsWith("f")  ||
-                               input.StartsWith("g")  ||
+                               input.StartsWith("b") ||
+                               input.StartsWith("c") ||
+                               input.StartsWith("d") ||
+                               input.StartsWith("e") ||
+                               input.StartsWith("f") ||
+                               input.StartsWith("g") ||
                                input.StartsWith("h"))
                             {
-                                HandleMove(input, forceMode, engineGo, depth, log, displayBoard, maxTime, maxDepth);
+                                // Pass the API-friendly flag to HandleMove
+                                HandleMove(input, forceMode, engineGo, depth, log, !isApiRuning, maxTime, maxDepth);
                             }
 
                             else if (!input.StartsWith("#"))
@@ -439,12 +492,12 @@ static void WinBoardLoop(int maxTime, int maxDepth, bool displayBoard)
 }
 
 
-static void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log, bool displayBoard, int maxSearchTime, int maxDepth)
+void HandleMove(string moveString, bool forceMode, bool engineGo, int depth, StreamWriter log, bool displayBoard, int maxSearchTime, int maxDepth)
 {
-   
+
     try
     {
-        
+
         int move = WinBoardParseMove(moveString);
         if (move != 0)
         {
@@ -457,7 +510,7 @@ static void HandleMove(string moveString, bool forceMode, bool engineGo, int dep
             {
                 Boards.DisplayBoard();
             }
-            
+
             if (!forceMode && engineGo)
             {
                 MakeEngineMove(maxSearchTime, maxDepth, log); // Respond with engine's move
@@ -516,13 +569,13 @@ static int WinBoardParseMove(string moveString)
 }
 
 // Generates and sends the engine's best move
-static void MakeEngineMove(int maxSearchTime, int maxDepth, StreamWriter log)
+void MakeEngineMove(int maxSearchTime, int maxDepth, StreamWriter log)
 {
-    
+
     try
     {
         // --- Winboard search time and depth settings --
-        
+
         // 3 sec total time for each depth , max depth will be set directly from search class. 
         int bestMove = Search.GetBestMoveWithIterativeDeepening(maxSearchTime, maxDepth);
         if (bestMove != 0)
@@ -548,7 +601,10 @@ static void MakeEngineMove(int maxSearchTime, int maxDepth, StreamWriter log)
     }
     //********* To use in CMD mode uncomment DisplayBoard() method.
     //********* To use in Arena Comment out DisplayBoard() method UTF8 not supported in Arena :(
-    Boards.DisplayBoard();
+    if (!isApiRuning) // CRASH FIX: Skip visual output if running via API
+    {
+        Boards.DisplayBoard();
+    }
 }
 
 static void TriggerTrainingFlow()
